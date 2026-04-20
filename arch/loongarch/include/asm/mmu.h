@@ -11,6 +11,7 @@
 typedef struct {
 	u64 asid[NR_CPUS];
 	void *vdso;
+	unsigned long end_brk;
 } mm_context_t;
 
 #endif /* __ASM_MMU_H */

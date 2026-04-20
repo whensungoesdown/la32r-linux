@@ -99,8 +99,10 @@ int arch_dup_task_struct(struct task_struct *dst, struct task_struct *src)
 	 */
 	preempt_disable();
 
+#ifdef CONFIG_CPU_HAS_FPU
 	if (is_fpu_owner())
 		save_fp(current);
+#endif
 
 	preempt_enable();
 

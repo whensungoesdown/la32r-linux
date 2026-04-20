@@ -9,6 +9,16 @@
 #include <asm/cpu-features.h>
 #include <asm/loongarchregs.h>
 
+#ifndef CONFIG_MMU
+
+#include <linux/pagemap.h>
+
+#define tlb_flush(tlb) ((void) (tlb))
+
+#include <asm-generic/tlb.h>
+
+#else
+
 /*
  * TLB Invalidate Flush
  */
@@ -213,4 +223,5 @@ extern void handle_tlb_rixi(void);
 extern void dump_tlb_all(void);
 extern void dump_tlb_regs(void);
 
+#endif /* CONFIG_MMU */
 #endif /* __ASM_TLB_H */

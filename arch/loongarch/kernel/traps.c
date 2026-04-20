@@ -474,6 +474,7 @@ out:
 	exception_exit(prev_state);
 }
 
+#ifdef CONFIG_CPU_HAS_FPU
 static void init_restore_fp(void)
 {
 	if (!used_math()) {
@@ -502,6 +503,7 @@ asmlinkage void do_fpu(struct pt_regs *regs)
 
 	exception_exit(prev_state);
 }
+#endif
 
 asmlinkage void do_lsx(struct pt_regs *regs)
 {
@@ -623,8 +625,10 @@ void __init boot_cpu_trap_init(void)
 	BUG_ON(current->mm);
 	enter_lazy_tlb(&init_mm, current);
 
+#ifdef CONFIG_MMU
 	tlb_init();
 	TLBMISS_HANDLER_SETUP();
+#endif
 }
 
 void nonboot_cpu_trap_init(void)
@@ -691,12 +695,14 @@ void __init trap_init(void)
 
 	set_handler(EXCCODE_GENERIC * vec_size , except_vec_vi_handler, vec_size);
 
+#ifdef CONFIG_MMU
 	set_handler(EXCCODE_TLBL * vec_size, handle_tlb_load, vec_size);
 	set_handler(EXCCODE_TLBS * vec_size, handle_tlb_store, vec_size);
 	set_handler(EXCCODE_TLBI * vec_size, handle_tlb_load, vec_size);
 	set_handler(EXCCODE_TLBM * vec_size, handle_tlb_modify, vec_size);
 	set_handler(EXCCODE_TLBRI * vec_size, handle_tlb_rixi, vec_size);
 	set_handler(EXCCODE_TLBXI * vec_size, handle_tlb_rixi, vec_size);
+#endif
 	set_handler(EXCCODE_ADE * vec_size, handle_ade, vec_size);
 	set_handler(EXCCODE_ALE * vec_size, handle_ale, vec_size);
 	set_handler(EXCCODE_SYS * vec_size, handle_syscall, vec_size);

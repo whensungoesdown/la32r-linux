@@ -65,6 +65,7 @@ struct extctx_layout {
         struct _ctx_layout end;
 };
 
+#ifdef CONFIG_CPU_HAS_FPU
 static void __user *get_ctx_through_ctxinfo(struct sctx_info *info)
 {
         return (void __user *)((char *)info + sizeof(struct sctx_info));
@@ -152,10 +153,12 @@ static int fcsr_pending(unsigned int __user *fcsr)
         }
         return err ?: sig;
 }
+#endif
 
 /*
  * Helper routines
  */
+#ifdef CONFIG_CPU_HAS_FPU
 static int protected_save_fpu_context(struct extctx_layout *extctx)
 {
         int err = 0;
@@ -224,6 +227,18 @@ static int protected_restore_fpu_context(struct extctx_layout *extctx)
 
         return err ?: sig;
 }
+
+#else
+static int protected_save_fpu_context(struct extctx_layout *extctx)
+{
+	return 0;
+}
+
+static int protected_restore_fpu_context(struct extctx_layout *extctx)
+{
+	return 0;
+}
+#endif
 
 static int protected_save_lsx_context(struct extctx_layout *extctx)
 {
@@ -547,7 +562,9 @@ struct loongarch_abi loongarch_abi = {
 	.off_sc_vcsr	= offsetof(struct lsx_context, fcsr),
 	.off_sc_flags	= offsetof(struct sigcontext, sc_flags),
 
+#ifdef CONFIG_VDSO
 	.vdso		= &vdso_info,
+#endif
 };
 
 static void handle_signal(struct ksignal *ksig, struct pt_regs *regs)

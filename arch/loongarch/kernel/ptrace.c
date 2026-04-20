@@ -417,8 +417,10 @@ asmlinkage long syscall_trace_enter(struct pt_regs *regs, long syscall)
 		return -1;
 #endif
 
+#ifdef CONFIG_HAVE_SYSCALL_TRACEPOINTS
 	if (unlikely(test_thread_flag(TIF_SYSCALL_TRACEPOINT)))
 		trace_sys_enter(regs, syscall);
+#endif
 
 	audit_syscall_entry(syscall, regs->regs[4], regs->regs[5],
 			    regs->regs[6], regs->regs[7]);
@@ -440,8 +442,10 @@ asmlinkage void syscall_trace_leave(struct pt_regs *regs)
 
 	audit_syscall_exit(regs);
 
+#ifdef CONFIG_HAVE_SYSCALL_TRACEPOINTS
 	if (unlikely(test_thread_flag(TIF_SYSCALL_TRACEPOINT)))
 		trace_sys_exit(regs, regs_return_value(regs));
+#endif
 
 	if (test_thread_flag(TIF_SYSCALL_TRACE))
 		tracehook_report_syscall_exit(regs, 0);

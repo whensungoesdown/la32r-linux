@@ -132,9 +132,11 @@ extern void (*_dma_cache_inv)(unsigned long start, unsigned long size);
 #define ioremap_cache(offset, size)				\
 	ioremap_prot((offset), (size), _CACHE_CC)
 
+#ifdef CONFIG_MMU
 static inline void iounmap(const volatile void __iomem *addr)
 {
 }
+#endif
 
 #define mmiowb() asm volatile ("dbar 0" ::: "memory")
 

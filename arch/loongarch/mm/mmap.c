@@ -121,12 +121,20 @@ static unsigned long arch_get_unmapped_area_common(struct file *filp,
 	return vm_unmapped_area(&info);
 }
 
+#ifdef CONFIG_VDSO
 unsigned long arch_get_unmapped_area(struct file *filp, unsigned long addr0,
 	unsigned long len, unsigned long pgoff, unsigned long flags)
 {
 	return arch_get_unmapped_area_common(filp,
 			addr0, len, pgoff, flags, UP);
 }
+#else
+unsigned long arch_get_unmapped_area(struct file *filp, unsigned long addr0,
+	unsigned long len, unsigned long pgoff, unsigned long flags)
+{
+	return 0;
+}
+#endif
 
 /*
  * There is no need to export this but sched.h declares the function as
