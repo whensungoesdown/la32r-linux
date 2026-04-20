@@ -66,6 +66,10 @@ config LS_SOC
 	bool
 	prompt "Loongson SOC"
 
+config SOC2_SOC
+	bool
+	prompt "uty SOC2"
+
 endchoice
 
 config LOONGSON_UART_BASE

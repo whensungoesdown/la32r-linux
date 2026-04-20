@@ -46,9 +46,12 @@ extern char __dtb_start[];
 #ifdef CONFIG_LS_SOC
 extern u32 __dtb_loongson32_ls_begin[];
 static u32 *__dtb_begin = __dtb_loongson32_ls_begin;
-#elif CONFIG_BX_SOC
+#elif defined(CONFIG_BX_SOC)
 extern u32 __dtb_loongson32_bx_begin[];
 static u32 *__dtb_begin = __dtb_loongson32_bx_begin;
+#elif defined(CONFIG_SOC2_SOC)
+extern u32 __dtb_loongson32_soc2_begin[];
+static u32 *__dtb_begin = __dtb_loongson32_soc2_begin;
 #endif
 extern void __init __dt_setup_arch(void *bph);
 extern bool __init early_init_dt_verify(void *params);
@@ -313,16 +316,21 @@ static void loongson_mem_init(void)
 
 void __init device_tree_init(void)
 {
-        if (!initial_boot_params)
-                return;
+	// uty: test
+        //if (!initial_boot_params)
+        //        return;
 
-        if (early_init_dt_verify(initial_boot_params))
-                unflatten_and_copy_device_tree();
+        //if (early_init_dt_verify(initial_boot_params))
+        //        unflatten_and_copy_device_tree();
 }
 
 
 void __init platform_init(void)
 {
+	// uty: test
+	
+	return;
+
 	//unsigned long fdt_addr, fdt_size;
 	/* init base address of io space */
 	set_io_port_base((unsigned long)

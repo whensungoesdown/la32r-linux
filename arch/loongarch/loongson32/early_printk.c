@@ -33,8 +33,10 @@ void prom_putchar(char c)
 
 #ifdef CONFIG_LS_SOC
 	uart_base = (unsigned char *)0x9fe001e0;
-#elif CONFIG_BX_SOC
+#elif defined(CONFIG_BX_SOC)
 	uart_base = (unsigned char *)0x9fe40000;
+#elif defined(CONFIG_SOC2_SOC)
+	uart_base = (unsigned char *)0x20000;
 #endif
 	timeout = 1024;
 
@@ -47,29 +49,29 @@ void prom_putchar(char c)
 
 void prom_printf(char *fmt, ...)
 {
-	va_list args;
-	/*
-	 * * CONFIG_FRAME_WARN is set to 1024 for Loongson3 platforms. It's
-	 * * value can be modified by the following menuconfig selection:
-	 * *    Kernel Hacking --->
-	 * *       (1024) Warn for stack frames larger than (needs gcc 4.4)
-	 * * We avoid this build check error by forcing stack size under 1024.
-	 * */
-	char ppbuf[1024 - 16];
-	char *bptr;
-
-	va_start(args, fmt);
-	vsprintf(ppbuf, fmt, args);
-
-	bptr = ppbuf;
-
-	while (*bptr != 0) {
-	if (*bptr == '\n')
-		prom_putchar('\r');
-
-	prom_putchar(*bptr++);
-}
-va_end(args);
+//	va_list args;
+//	/*
+//	 * * CONFIG_FRAME_WARN is set to 1024 for Loongson3 platforms. It's
+//	 * * value can be modified by the following menuconfig selection:
+//	 * *    Kernel Hacking --->
+//	 * *       (1024) Warn for stack frames larger than (needs gcc 4.4)
+//	 * * We avoid this build check error by forcing stack size under 1024.
+//	 * */
+//	char ppbuf[1024 - 16];
+//	char *bptr;
+//
+//	va_start(args, fmt);
+//	vsprintf(ppbuf, fmt, args);
+//
+//	bptr = ppbuf;
+//
+//	while (*bptr != 0) {
+//	if (*bptr == '\n')
+//		prom_putchar('\r');
+//
+//	prom_putchar(*bptr++);
+//}
+//va_end(args);
 }
 EXPORT_SYMBOL_GPL(prom_printf);
 

@@ -30,12 +30,14 @@ struct clk_hw *__init clk_hw_register_pll(struct device *dev,
 	init.num_parents = parent_name ? 1 : 0;
 	hw->init = &init;
 
+	// uty: test
+
 	/* register the clock */
-	ret = clk_hw_register(dev, hw);
-	if (ret) {
-		kfree(hw);
-		hw = ERR_PTR(ret);
-	}
+//	ret = clk_hw_register(dev, hw);
+//	if (ret) {
+//		kfree(hw);
+//		hw = ERR_PTR(ret);
+//	}
 
 	return hw;
 }

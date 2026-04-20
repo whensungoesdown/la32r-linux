@@ -85,9 +85,11 @@ cflags-y += -fno-stack-check
 #
 include arch/loongarch/Kbuild.platforms
 
-ifdef CONFIG_PHYSICAL_START
-load-y				= $(CONFIG_PHYSICAL_START)
-endif
+# uty: test
+#ifdef CONFIG_PHYSICAL_START
+#load-y				= $(CONFIG_PHYSICAL_START)
+#endif
+load-y				= 0x2000000
 
 drivers-$(CONFIG_PCI)		+= arch/loongarch/pci/
 

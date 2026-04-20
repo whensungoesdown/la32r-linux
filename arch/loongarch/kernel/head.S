@@ -19,6 +19,14 @@ SYM_ENTRY(_stext, SYM_L_GLOBAL, SYM_A_NONE)
 
 SYM_CODE_START(kernel_entry)    		# kernel entry point
 
+#ifdef CONFIG_SOC2_SOC
+
+	li.w    $r12, 0x41414141
+	li.w    $r13, 0x10018
+	st.w    $r12, $r13, 0
+
+#else
+
 	/* We might not get launched at the address the kernel is linked to,
 	   so we jump there.  */
 	la.abs		t0, 0f
@@ -78,6 +86,8 @@ dtb_found:
 	PTR_ADDU	sp, sp, tp
 	set_saved_sp	sp, t0, t1
 	PTR_ADDIU	sp, sp, -4 * SZREG      # init stack pointer
+
+#endif /* end of CONFIG_SOC2_SOC*/
 
 	b		start_kernel
 SYM_CODE_END(kernel_entry)
