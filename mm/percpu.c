@@ -1738,11 +1738,13 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 	void __percpu *ptr;
 	size_t bits, bit_align;
 
+
 	gfp = current_gfp_context(gfp);
 	/* whitelisted flags that can be passed to the backing allocators */
 	pcpu_gfp = gfp & (GFP_KERNEL | __GFP_NORETRY | __GFP_NOWARN);
 	is_atomic = (gfp & GFP_KERNEL) != GFP_KERNEL;
 	do_warn = !(gfp & __GFP_NOWARN);
+
 
 	/*
 	 * There is now a minimum allocation size of PCPU_MIN_ALLOC_SIZE,
@@ -1850,6 +1852,16 @@ restart:
 	goto restart;
 
 area_found:
+	//// uty: test
+	//if (chunk->immutable) {
+	//	pr_emerg("pcpu_alloc: IMMUTABLE chunk selected! reserved=%d, is_atomic=%d, size=%zu, align=%zu\n",
+	//			reserved, is_atomic, size, align);
+	//	pr_emerg("  chunk: base=%px, free_bytes=%zu, immutable=%d, nr_pages=%zu\n",
+	//			chunk->base_addr, chunk->free_bytes, chunk->immutable, chunk->nr_pages);
+	//	dump_stack();
+	//	while(1){}
+	//}
+
 	pcpu_stats_area_alloc(chunk, size);
 	spin_unlock_irqrestore(&pcpu_lock, flags);
 

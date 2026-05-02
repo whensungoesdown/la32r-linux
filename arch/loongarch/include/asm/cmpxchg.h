@@ -40,6 +40,8 @@ extern unsigned long __xchg_called_with_bad_pointer(void)
 #endif
 
 #ifdef CONFIG_32BIT
+// uty: test
+/*
 #define __xchg_asm(ld, st, m, val)				\
 ({								\
 	__typeof(val) __ret;					\
@@ -54,6 +56,20 @@ extern unsigned long __xchg_called_with_bad_pointer(void)
         : "t2","memory");                                       \
 								\
 	__ret;							\
+})
+*/
+#define __xchg_asm(ld, st, m, val)                              \
+({                                                              \
+        __typeof(val) __ret;                                    \
+                                                                \
+        __asm__ __volatile__(                                   \
+        "       ld.w   %0, %1                           \n"     \
+        "       st.w   %z2, %1                          \n"     \
+        : "=&r" (__ret), "+" GCC_OFF_SMALL_ASM() (*m)           \
+        : "Jr" (val)                                            \
+        : "memory");                                            \
+                                                                \
+        __ret;                                                  \
 })
 #endif
 extern unsigned long __xchg_small(volatile void *ptr, unsigned long val,
@@ -92,6 +108,8 @@ static inline unsigned long __xchg(volatile void *ptr, unsigned long x,
 	__res;								\
 })
 
+// uty: test
+#ifdef CONFIG_64BIT
 #define __cmpxchg_asm(ld, st, m, old, new)				\
 ({									\
 	__typeof(old) __ret;						\
@@ -110,6 +128,25 @@ static inline unsigned long __xchg(volatile void *ptr, unsigned long x,
 									\
 	__ret;								\
 })
+#endif
+
+#ifdef CONFIG_32BIT
+#define __cmpxchg_asm(ld, st, m, old, new)                              \
+({                                                                      \
+        __typeof(old) __ret;                                            \
+                                                                        \
+        __asm__ __volatile__(                                           \
+        "       ld.w   %0, %1          # 普通读取当前值   \n"            \
+        "       bne    %0, %z2, 1f     # 比较，不等则跳转   \n"          \
+        "       st.w   %z3, %1         # 普通写入新值     \n"            \
+        "1:                            # 完成标签         \n"            \
+        : "=&r" (__ret), "+" GCC_OFF_SMALL_ASM() (*m)                   \
+        : "Jr" (old), "Jr" (new)                                        \
+        : "memory");                                                    \
+                                                                        \
+        __ret;                                                          \
+})
+#endif
 
 extern unsigned long __cmpxchg_small(volatile void *ptr, unsigned long old,
 				     unsigned long new, unsigned int size);

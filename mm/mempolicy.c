@@ -2231,6 +2231,7 @@ struct page *alloc_pages(gfp_t gfp, unsigned order)
 	struct mempolicy *pol = &default_policy;
 	struct page *page;
 
+	printk("!!! current_thread_info()=0x%x\n", (int)current_thread_info());
 	if (!in_interrupt() && !(gfp & __GFP_THISNODE))
 		pol = get_task_policy(current);
 

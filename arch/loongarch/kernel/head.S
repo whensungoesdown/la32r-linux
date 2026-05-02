@@ -25,16 +25,15 @@ SYM_CODE_START(kernel_entry)    		# kernel entry point
 	li.w    $r13, 0x10018
 	st.w    $r12, $r13, 0
 
-#if 1
 	la		t0, __bss_start		# clear .bss
 	PTR_S		zero, t0, 0
 	la		t1, __bss_stop - LONGSIZE
-1:
+2:
 	PTR_ADDIU	t0, t0, LONGSIZE
 	PTR_S		zero, t0, 0
-	bne		t0, t1, 1b
-#endif
+	bne		t0, t1, 2b
 
+	la		tp, init_thread_union
 #else
 
 	/* We might not get launched at the address the kernel is linked to,

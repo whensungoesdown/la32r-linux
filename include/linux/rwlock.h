@@ -64,11 +64,19 @@ do {								\
  * regardless of whether CONFIG_SMP or CONFIG_PREEMPT are set. The various
  * methods are defined as nops in the case they are not required.
  */
-#define read_trylock(lock)	__cond_lock(lock, _raw_read_trylock(lock))
-#define write_trylock(lock)	__cond_lock(lock, _raw_write_trylock(lock))
+//#define read_trylock(lock)	__cond_lock(lock, _raw_read_trylock(lock))
+//#define write_trylock(lock)	__cond_lock(lock, _raw_write_trylock(lock))
 
-#define write_lock(lock)	_raw_write_lock(lock)
-#define read_lock(lock)		_raw_read_lock(lock)
+// 修改为始终返回 "成功"（非0值）
+#define read_trylock(lock)      ({ (void)(lock); 1; })
+#define write_trylock(lock)     ({ (void)(lock); 1; })
+
+//#define write_lock(lock)	_raw_write_lock(lock)
+//#define read_lock(lock)		_raw_read_lock(lock)
+
+// uty:test
+#define write_lock(lock)      do { (void)(lock); } while(0)
+#define read_lock(lock)       do { (void)(lock); } while(0)
 
 #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
 
@@ -102,8 +110,11 @@ do {								\
 #define read_lock_bh(lock)		_raw_read_lock_bh(lock)
 #define write_lock_irq(lock)		_raw_write_lock_irq(lock)
 #define write_lock_bh(lock)		_raw_write_lock_bh(lock)
-#define read_unlock(lock)		_raw_read_unlock(lock)
-#define write_unlock(lock)		_raw_write_unlock(lock)
+//#define read_unlock(lock)		_raw_read_unlock(lock)
+//#define write_unlock(lock)		_raw_write_unlock(lock)
+#define write_unlock(lock)      do { (void)(lock); } while(0)
+#define read_unlock(lock)       do { (void)(lock); } while(0)
+
 #define read_unlock_irq(lock)		_raw_read_unlock_irq(lock)
 #define write_unlock_irq(lock)		_raw_write_unlock_irq(lock)
 

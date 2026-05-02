@@ -115,6 +115,7 @@ void *__kfence_alloc(struct kmem_cache *s, size_t size, gfp_t flags);
  */
 static __always_inline void *kfence_alloc(struct kmem_cache *s, size_t size, gfp_t flags)
 {
+	printk("??? kfence_alloc()\n");
 #ifdef CONFIG_KFENCE_STATIC_KEYS
 	if (static_branch_unlikely(&kfence_allocation_key))
 #else
@@ -206,7 +207,7 @@ static inline bool is_kfence_address(const void *addr) { return false; }
 static inline void kfence_alloc_pool(void) { }
 static inline void kfence_init(void) { }
 static inline void kfence_shutdown_cache(struct kmem_cache *s) { }
-static inline void *kfence_alloc(struct kmem_cache *s, size_t size, gfp_t flags) { return NULL; }
+static inline void *kfence_alloc(struct kmem_cache *s, size_t size, gfp_t flags) { printk("!!! kfence alloc EMPTY\n"); return NULL; }
 static inline size_t kfence_ksize(const void *addr) { return 0; }
 static inline void *kfence_object_start(const void *addr) { return NULL; }
 static inline void __kfence_free(void *addr) { }

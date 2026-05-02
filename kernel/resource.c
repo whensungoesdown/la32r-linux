@@ -279,7 +279,10 @@ struct resource *request_resource_conflict(struct resource *root, struct resourc
 {
 	struct resource *conflict;
 
+	// uty: test
 	write_lock(&resource_lock);
+	
+	//printk("!!!!__request_resource, root 0x%x, new 0x%x\n", (int)root, (int)new);
 	conflict = __request_resource(root, new);
 	write_unlock(&resource_lock);
 	return conflict;

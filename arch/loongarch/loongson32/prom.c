@@ -102,8 +102,8 @@ int __init early_init_dt_reserve_memory_arch(phys_addr_t base,
 void __init __dt_setup_arch(void *bph)
 {
 	// uty: test
-	//if (!early_init_dt_scan(bph))
-	//	return;
+	if (!early_init_dt_scan(bph))
+		return;
 }
 
 int __init __dt_register_buses(const char *bus0, const char *bus1)

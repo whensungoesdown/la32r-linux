@@ -203,8 +203,11 @@ static void __init smbios_parse(void)
 
 void __init early_init(void)
 {
+	printk("		fw_init_cmdline()\n");
 	fw_init_cmdline();
-	fw_init_environ();
+	printk("		skip fw_init_environ()\n");
+	//fw_init_environ();
+	printk("		early_memblock_init()\n");
 	early_memblock_init();
 }
 
@@ -329,37 +332,53 @@ void __init platform_init(void)
 {
 	// uty: test
 	
-	return;
+	//return;
 
 	//unsigned long fdt_addr, fdt_size;
 	/* init base address of io space */
+	printk("		set_io_port_base()\n");
 	set_io_port_base((unsigned long)
 		ioremap(LOONGSON_LIO_BASE, LOONGSON_LIO_SIZE));
-	efi_init();
+	// uty: test
+	//efi_init();
 #ifdef CONFIG_ACPI_TABLE_UPGRADE
 	acpi_table_upgrade();
 #endif
 
 	loongson_fdt_blob = __dtb_begin;
+	printk("		__dt_setup_arch()\n");
 	__dt_setup_arch(loongson_fdt_blob);
+	printk("		early_init_fdt_reserve_self()\n");
 	early_init_fdt_reserve_self();
+	printk("		early_init_fdt_scan_reserved_mem()\n");
 	early_init_fdt_scan_reserved_mem();
 
+	printk("		loongson_mem_init()\n");
 	loongson_mem_init();
 	loongson_mem_map = &global_mem_map;
+	printk("		early_memblock_init()\n");
 	early_memblock_init();
+	printk("		device_tree_init()\n");
 	device_tree_init();
+	printk("		parse_dt_cpus()\n");
 	parse_dt_cpus();
+	printk("		parse_dt_topology()\n");
 	parse_dt_topology();
 
+	printk("		fw_init_memory()\n");
 	fw_init_memory();
+	printk("		dmi_setup()\n");
 	dmi_setup();
+	printk("		smbios_parse()\n");
 	smbios_parse();
 	pr_info("The BIOS Version: %s\n", b_info.bios_version);
 
-	efi_runtime_init();
+	// uty: test
+	//efi_runtime_init();
 
 }
+
+#include <linux/platform_device.h>
 
 static int __init register_gop_device(void)
 {

@@ -2604,11 +2604,14 @@ void set_cpu_online(unsigned int cpu, bool online)
 	 * concurrent hotplug operations.
 	 */
 	if (online) {
-		if (!cpumask_test_and_set_cpu(cpu, &__cpu_online_mask))
-			atomic_inc(&__num_online_cpus);
+		//if (!cpumask_test_and_set_cpu(cpu, &__cpu_online_mask))
+			//atomic_inc(&__num_online_cpus);
+			// uty: test
+			__num_online_cpus.counter = __num_online_cpus.counter + 1;
 	} else {
-		if (cpumask_test_and_clear_cpu(cpu, &__cpu_online_mask))
-			atomic_dec(&__num_online_cpus);
+		//if (cpumask_test_and_clear_cpu(cpu, &__cpu_online_mask))
+			//atomic_dec(&__num_online_cpus);
+			__num_online_cpus.counter = __num_online_cpus.counter - 1;
 	}
 }
 
@@ -2618,12 +2621,17 @@ void set_cpu_online(unsigned int cpu, bool online)
 void __init boot_cpu_init(void)
 {
 	int cpu = smp_processor_id();
+	printk("	smp_processor_id() cpu=0x%x\n", cpu);
 
 	/* Mark the boot cpu "present", "online" etc for SMP and UP case */
 	set_cpu_online(cpu, true);
+	printk("	set_cpu_online(), __num_online_cpus= %d\n", __num_online_cpus.counter);
 	set_cpu_active(cpu, true);
+	printk("	set_cpu_active(), __cpu_active_mask= %*pbl\n", cpumask_pr_args(&__cpu_active_mask));
 	set_cpu_present(cpu, true);
+	printk("	set_cpu_present(), __cpu_present_mask= %*pbl\n", cpumask_pr_args(&__cpu_present_mask));
 	set_cpu_possible(cpu, true);
+	printk("	set_cpu_possible(), __cpu_possible_mask= %*pbl\n", cpumask_pr_args(&__cpu_possible_mask));
 
 #ifdef CONFIG_SMP
 	__boot_cpu_id = cpu;

@@ -2874,13 +2874,16 @@ static __always_inline void *slab_alloc_node(struct kmem_cache *s,
 	struct obj_cgroup *objcg = NULL;
 	bool init = false;
 
+	printk("			 				 slab_pre_alloc_hook()\n");
 	s = slab_pre_alloc_hook(s, &objcg, 1, gfpflags);
 	if (!s)
 		return NULL;
 
+	printk("			 				 kfence_alloc()\n");
 	object = kfence_alloc(s, orig_size, gfpflags);
 	if (unlikely(object))
 		goto out;
+	printk("			 				 kfence_alloc() finish\n");
 
 redo:
 	/*
@@ -2894,7 +2897,11 @@ redo:
 	 * to check if it is matched or not.
 	 */
 	do {
+		printk("			 				 this_cpu_read() s=0x%x\n", (int)s);
+		printk("			 				 this_cpu_read() s->cpu_slab=0x%x\n", (int)(s->cpu_slab));
+		//printk("!!! __my_cpu_offset=0x%x\n", (int)__my_cpu_offset);
 		tid = this_cpu_read(s->cpu_slab->tid);
+		printk("			 				 raw_cpu_ptr()\n");
 		c = raw_cpu_ptr(s->cpu_slab);
 	} while (IS_ENABLED(CONFIG_PREEMPTION) &&
 		 unlikely(tid != READ_ONCE(c->tid)));
@@ -2907,6 +2914,7 @@ redo:
 	 * page could be one associated with next tid and our alloc/free
 	 * request will be failed. In this case, we will retry. So, no problem.
 	 */
+	printk("			 				barrier()\n");
 	barrier();
 
 	/*
@@ -2950,9 +2958,11 @@ redo:
 	}
 
 	maybe_wipe_obj_freeptr(s, object);
+	printk("			 				slab_want_init_on_alloc()\n");
 	init = slab_want_init_on_alloc(gfpflags, s);
 
 out:
+	printk("			 				slab_post_alloc_hook()\n");
 	slab_post_alloc_hook(s, objcg, gfpflags, 1, &object, init);
 
 	return object;
@@ -3572,17 +3582,33 @@ init_kmem_cache_node(struct kmem_cache_node *n)
 #endif
 }
 
+#include <linux/memblock.h>
 static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 {
+	struct kmem_cache_cpu *c = NULL;
+
 	BUILD_BUG_ON(PERCPU_DYNAMIC_EARLY_SIZE <
 			KMALLOC_SHIFT_HIGH * sizeof(struct kmem_cache_cpu));
+	// uty: test
+	/* 核心：确保仅在 memblock 活跃时使用 */
+	if (system_state < SYSTEM_RUNNING && !slab_is_available()) {
+		c = memblock_alloc(sizeof(struct kmem_cache_cpu), SMP_CACHE_BYTES);
+		if (!c)
+			return 0;
+		memset(c, 0, sizeof(*c));
+		c->tid = next_tid(0);
+		s->cpu_slab = (struct kmem_cache_cpu __percpu *)c;
+		// 设置标志，以便在释放函数中区分处理
+		s->cpu_slab_from_memblock = true;
+		return 1;
+	}
 
 	/*
 	 * Must align to double word boundary for the double cmpxchg
 	 * instructions to work; see __pcpu_double_call_return_bool().
 	 */
 	s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
-				     2 * sizeof(void *));
+			2 * sizeof(void *));
 
 	if (!s->cpu_slab)
 		return 0;
@@ -3653,7 +3679,11 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 void __kmem_cache_release(struct kmem_cache *s)
 {
 	cache_random_seq_destroy(s);
-	free_percpu(s->cpu_slab);
+	// uty: test
+	if (s->cpu_slab_from_memblock)
+		s->cpu_slab = NULL;
+	else
+		free_percpu(s->cpu_slab);
 	free_kmem_cache_nodes(s);
 }
 
@@ -3668,6 +3698,7 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 			early_kmem_cache_node_alloc(node);
 			continue;
 		}
+		printk("			 			kmem_cache_alloc_node()\n");
 		n = kmem_cache_alloc_node(kmem_cache_node,
 						GFP_KERNEL, node);
 
@@ -3676,6 +3707,7 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 			return 0;
 		}
 
+		printk("			 			init_kmem_cache_node()\n");
 		init_kmem_cache_node(n);
 		s->node[node] = n;
 	}
@@ -3866,6 +3898,7 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 
 static int kmem_cache_open(struct kmem_cache *s, slab_flags_t flags)
 {
+	printk("			 		kmem_cache_flags()\n");
 	s->flags = kmem_cache_flags(s->size, flags, s->name);
 #ifdef CONFIG_SLAB_FREELIST_HARDENED
 	s->random = get_random_long();
@@ -3897,8 +3930,10 @@ static int kmem_cache_open(struct kmem_cache *s, slab_flags_t flags)
 	 * The larger the object size is, the more pages we want on the partial
 	 * list to avoid pounding the page allocator excessively.
 	 */
+	printk("			 		set_min_partial()\n");
 	set_min_partial(s, ilog2(s->size) / 2);
 
+	printk("			 		set_cpu_partial()\n");
 	set_cpu_partial(s);
 
 #ifdef CONFIG_NUMA
@@ -3911,12 +3946,15 @@ static int kmem_cache_open(struct kmem_cache *s, slab_flags_t flags)
 			goto error;
 	}
 
+	printk("			 		init_kmem_cache_nodes()\n");
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 
+	printk("			 		alloc_kmem_cache_cpus()\n");
 	if (alloc_kmem_cache_cpus(s))
 		return 0;
 
+	printk("			 		free_kmem_cache_nodes()\n");
 	free_kmem_cache_nodes(s);
 error:
 	return -EINVAL;
@@ -4500,6 +4538,7 @@ void __init kmem_cache_init(void)
 		boot_kmem_cache_node;
 	int node;
 
+	printk("		kmem_cache_init()\n");
 	if (debug_guardpage_minorder())
 		slub_max_order = 0;
 
@@ -4517,29 +4556,38 @@ void __init kmem_cache_init(void)
 	for_each_node_state(node, N_NORMAL_MEMORY)
 		node_set(node, slab_nodes);
 
+	printk("		create_boot_cache()\n");
 	create_boot_cache(kmem_cache_node, "kmem_cache_node",
 		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN, 0, 0);
 
+	printk("		register_hotmemory_notifier()\n");
 	register_hotmemory_notifier(&slab_memory_callback_nb);
 
 	/* Able to allocate the per node structures */
 	slab_state = PARTIAL;
 
+	printk("		create_boot_cache()\n");
 	create_boot_cache(kmem_cache, "kmem_cache",
 			offsetof(struct kmem_cache, node) +
 				nr_node_ids * sizeof(struct kmem_cache_node *),
 		       SLAB_HWCACHE_ALIGN, 0, 0);
 
+	printk("		 bootstrap(&boot_kmem_cache)\n");
 	kmem_cache = bootstrap(&boot_kmem_cache);
+	printk("		 bootstrap(&boot_kmem_cache_node)\n");
 	kmem_cache_node = bootstrap(&boot_kmem_cache_node);
 
 	/* Now we can use the kmem_cache to allocate kmalloc slabs */
+	printk("		 setup_kmalloc_cache_index_table()\n");
 	setup_kmalloc_cache_index_table();
+	printk("		 create_kmalloc_caches()\n");
 	create_kmalloc_caches(0);
 
 	/* Setup random freelists for each cache */
+	printk("		 init_freelist_randomization()\n");
 	init_freelist_randomization();
 
+	printk("		 cpuhp_setup_state_nocalls()\n");
 	cpuhp_setup_state_nocalls(CPUHP_SLUB_DEAD, "slub:dead", NULL,
 				  slub_cpu_dead);
 
@@ -4583,6 +4631,7 @@ int __kmem_cache_create(struct kmem_cache *s, slab_flags_t flags)
 {
 	int err;
 
+	printk("			 	 kmem_cache_open()\n");
 	err = kmem_cache_open(s, flags);
 	if (err)
 		return err;
@@ -4591,9 +4640,13 @@ int __kmem_cache_create(struct kmem_cache *s, slab_flags_t flags)
 	if (slab_state <= UP)
 		return 0;
 
+	printk("			 	  sysfs_slab_add()\n");
 	err = sysfs_slab_add(s);
 	if (err)
+	{
+		printk("!!! err=0x%x\n", (int)err);
 		__kmem_cache_release(s);
+	}
 
 	if (s->flags & SLAB_STORE_USER)
 		debugfs_slab_add(s);
@@ -5606,6 +5659,7 @@ static int sysfs_slab_add(struct kmem_cache *s)
 		 * This is typically the case for debug situations. In that
 		 * case we can catch duplicate names easily.
 		 */
+		printk("					sysfs_remove_link()\n");
 		sysfs_remove_link(&slab_kset->kobj, s->name);
 		name = s->name;
 	} else {
@@ -5613,14 +5667,17 @@ static int sysfs_slab_add(struct kmem_cache *s)
 		 * Create a unique name for the slab as a target
 		 * for the symlinks.
 		 */
+		printk("					create_unique_id()\n");
 		name = create_unique_id(s);
 	}
 
 	s->kobj.kset = kset;
+	printk("					kobject_init_and_add()\n");
 	err = kobject_init_and_add(&s->kobj, &slab_ktype, NULL, "%s", name);
 	if (err)
 		goto out;
 
+	printk("					sysfs_create_group()\n");
 	err = sysfs_create_group(&s->kobj, &slab_attr_group);
 	if (err)
 		goto out_del_kobj;

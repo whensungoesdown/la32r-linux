@@ -47,7 +47,7 @@
 static inline void set_bit(unsigned long nr, volatile unsigned long *addr)
 {
 #ifdef CONFIG_32BIT
-	unsigned long temp;
+	//unsigned long temp;
 #endif
 	int bit = nr % BITS_PER_LONG;
 	volatile unsigned long *m = &addr[BIT_WORD(nr)];
@@ -59,13 +59,15 @@ static inline void set_bit(unsigned long nr, volatile unsigned long *addr)
 	: "r" (1UL << bit)
 	: "memory");
 #else
-	__asm__ __volatile__(
-	"1:     " __LL "%0, %1                  \n"
-	"       or      %0, %0, %2                      \n"
-	"       " __SC  "%0, %1                 \n"
-	"       beq     %0, $r0, 1b             \n"
-	: "=&r" (temp), "=" GCC_OFF_SMALL_ASM() (*m)
-	: "r" (1UL << bit));
+	//__asm__ __volatile__(
+	//"1:     " __LL "%0, %1                  \n"
+	//"       or      %0, %0, %2                      \n"
+	//"       " __SC  "%0, %1                 \n"
+	//"       beq     %0, $r0, 1b             \n"
+	//: "=&r" (temp), "=" GCC_OFF_SMALL_ASM() (*m)
+	//: "r" (1UL << bit));
+	
+	*m |= (1UL << bit);
 #endif
 }
 /*
@@ -81,7 +83,7 @@ static inline void set_bit(unsigned long nr, volatile unsigned long *addr)
 static inline void clear_bit(unsigned long nr, volatile unsigned long *addr)
 {
 #ifdef CONFIG_32BIT
-	unsigned long temp;
+	//unsigned long temp;
 #endif
 	int bit = nr % BITS_PER_LONG;
 	volatile unsigned long *m = &addr[BIT_WORD(nr)];
@@ -93,13 +95,15 @@ static inline void clear_bit(unsigned long nr, volatile unsigned long *addr)
 	: "r" (~(1UL << bit))
 	: "memory");
 #else
-        __asm__ __volatile__(
-        "1:     " __LL "%0, %1                  \n"
-        "       and     %0, %0, %2                      \n"
-        "       " __SC  "%0, %1                 \n"
-        "       beq     %0, $r0, 1b             \n"
-        : "=&r" (temp), "=" GCC_OFF_SMALL_ASM() (*m)
-        : "r" (~(1UL << bit)));
+        //__asm__ __volatile__(
+        //"1:     " __LL "%0, %1                  \n"
+        //"       and     %0, %0, %2                      \n"
+        //"       " __SC  "%0, %1                 \n"
+        //"       beq     %0, $r0, 1b             \n"
+        //: "=&r" (temp), "=" GCC_OFF_SMALL_ASM() (*m)
+        //: "r" (~(1UL << bit)));
+
+	*m &= ~(1UL << bit);
 #endif
 }
 
@@ -128,7 +132,7 @@ static inline void clear_bit_unlock(unsigned long nr, volatile unsigned long *ad
 static inline void change_bit(unsigned long nr, volatile unsigned long *addr)
 {
 #ifdef CONFIG_32BIT
-        unsigned long temp;
+        //unsigned long temp;
 #endif
 	int bit = nr % BITS_PER_LONG;
 	volatile unsigned long *m = &addr[BIT_WORD(nr)];
@@ -140,13 +144,14 @@ static inline void change_bit(unsigned long nr, volatile unsigned long *addr)
 	: "r" (1UL << bit)
 	: "memory");
 #else
-	__asm__ __volatile__(
-	"1:     "__LL "%0, %1           \n"
-	"       xor     %0, %0, %2      \n"
-	"       "__SC "%0, %1           \n"
-	"       beq     %0, $r0, 1b     \n"
-	: "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m)
-	: "r" (1UL << bit));
+	//__asm__ __volatile__(
+	//"1:     "__LL "%0, %1           \n"
+	//"       xor     %0, %0, %2      \n"
+	//"       "__SC "%0, %1           \n"
+	//"       beq     %0, $r0, 1b     \n"
+	//: "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m)
+	//: "r" (1UL << bit));
+	*m ^= (1UL << bit);
 #endif
 }
 /*
@@ -176,15 +181,18 @@ static inline int test_and_set_bit(unsigned long nr,
 
 	res = res & (1UL << bit);
 #else
-__asm__ __volatile__(
-	"1:     "__LL  "%0, %1          \n"
-	"       or      %2, %0, %3      \n"
-	"       "__SC   "%2, %1         \n"
-	"       beq     %2, $r0, 1b     \n"
-	: "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
-	: "r" (1UL << bit)
-	: "memory");
-	res = temp & (1UL << bit);
+//__asm__ __volatile__(
+//	"1:     "__LL  "%0, %1          \n"
+//	"       or      %2, %0, %3      \n"
+//	"       "__SC   "%2, %1         \n"
+//	"       beq     %2, $r0, 1b     \n"
+//	: "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
+//	: "r" (1UL << bit)
+//	: "memory");
+//	res = temp & (1UL << bit);
+        temp = *m;                    // 读取原值
+        res = temp & (1UL << bit);    // 测试指定位
+        *m = temp | (1UL << bit);     // 设置指定位
 #endif
 
 	return res != 0;
@@ -216,16 +224,21 @@ static inline int test_and_set_bit_lock(unsigned long nr,
 
 	res = res & (1UL << bit);
 #else
-        __asm__ __volatile__(
-        "1:     " __LL "%0, %1                          \n"
-        "       or      %2, %0, %3                      \n"
-        "       " __SC  "%2, %1                         \n"
-        "       beq %2, $r0, 1b                         \n"
-        : "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
-        : "r" (1UL << bit)
-        : "memory");
-
-        res = temp & (1UL << bit);
+//        __asm__ __volatile__(
+//        "1:     " __LL "%0, %1                          \n"
+//        "       or      %2, %0, %3                      \n"
+//        "       " __SC  "%2, %1                         \n"
+//        "       beq %2, $r0, 1b                         \n"
+//        : "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
+//        : "r" (1UL << bit)
+//        : "memory");
+//
+//        res = temp & (1UL << bit);
+        
+        // 32-bit 使用C语言实现（非原子版本）
+        temp = *m;                    // 读取原值
+        res = temp & (1UL << bit);    // 测试指定位
+        *m = temp | (1UL << bit);     // 设置指定位
 #endif
 	return res != 0;
 }
@@ -236,33 +249,32 @@ static inline int test_and_set_bit_lock(unsigned long nr,
  *
  * This operation is atomic and cannot be reordered.
  * It also implies a memory barrier.
+ *
+ * WARNING: This C language version is NOT atomic and does NOT provide
+ * memory barrier semantics. Only use on !CONFIG_SMP or when proper
+ * locking is already in place.
  */
 static inline int test_and_clear_bit(unsigned long nr,
-	volatile unsigned long *addr)
+        volatile unsigned long *addr)
 {
-	int bit = nr % BITS_PER_LONG;
-	unsigned long res, temp;
-	volatile unsigned long *m = &addr[BIT_WORD(nr)];
+        int bit = nr % BITS_PER_LONG;
+        unsigned long res, temp;
+        volatile unsigned long *m = &addr[BIT_WORD(nr)];
 
 #ifdef CONFIG_64BIT
-	__asm__ __volatile__(
-	"   " __AMAND_SYNC "%1, %2, %0      \n"
-	: "+ZB" (*m), "=&r" (temp)
-	: "r" (~(1UL << bit))
-	: "memory");
-#else
         __asm__ __volatile__(
-        "1:     " __LL  "%0, %1 # test_and_clear_bit    \n"
-        "       or      %2, %0, %3                      \n"
-        "       xor     %2, %2, %3                      \n"
-        "       " __SC  "%2, %1                         \n"
-        "       beq     %2, $r0, 1b                     \n"
-        : "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
-        : "r" (1UL << bit)
+        "   " __AMAND_SYNC "%1, %2, %0      \n"
+        : "+ZB" (*m), "=&r" (temp)
+        : "r" (~(1UL << bit))
         : "memory");
+#else
+        // 32-bit 使用C语言实现
+        temp = *m;                    // 读取原值
+        res = temp & (1UL << bit);    // 测试指定位
+        *m = temp & ~(1UL << bit);    // 清除指定位
 #endif
-        res = temp & (1UL << bit);
-	return res != 0;
+
+        return res != 0;
 }
 /*
  * test_and_change_bit - Change a bit and return its old value
@@ -271,35 +283,36 @@ static inline int test_and_clear_bit(unsigned long nr,
  *
  * This operation is atomic and cannot be reordered.
  * It also implies a memory barrier.
+ *
+ * WARNING: This C language version is NOT atomic and does NOT provide
+ * memory barrier semantics. Only use on !CONFIG_SMP or when proper
+ * locking is already in place.
  */
 static inline int test_and_change_bit(unsigned long nr,
-	volatile unsigned long *addr)
+        volatile unsigned long *addr)
 {
 #ifdef CONFIG_32BIT
         unsigned long temp;
 #endif
-	int bit = nr % BITS_PER_LONG;
-	unsigned long res;
-	volatile unsigned long *m = &addr[BIT_WORD(nr)];
+        int bit = nr % BITS_PER_LONG;
+        unsigned long res;
+        volatile unsigned long *m = &addr[BIT_WORD(nr)];
 
 #ifdef CONFIG_64BIT
-	__asm__ __volatile__(
-	"   " __AMXOR_SYNC "%1, %2, %0      \n"
-	: "+ZB" (*m), "=&r" (res)
-	: "r" (1UL << bit)
-	: "memory");
-	res = res & (1UL << bit);
-#else
         __asm__ __volatile__(
-        "1:     " __LL  "%0, %1 # test_and_change_bit   \n"
-        "       xor     %2, %0, %3                      \n"
-        "       " __SC  "\t%2, %1                       \n"
-        "       beq     %2, $r0, 1b"
-        : "=&r" (temp), "+" GCC_OFF_SMALL_ASM() (*m), "=&r" (res)
+        "   " __AMXOR_SYNC "%1, %2, %0      \n"
+        : "+ZB" (*m), "=&r" (res)
         : "r" (1UL << bit)
         : "memory");
+        res = res & (1UL << bit);
+#else
+        // 32-bit 使用C语言实现
+        temp = *m;                    // 读取原值
+        res = temp & (1UL << bit);    // 测试指定位
+        *m = temp ^ (1UL << bit);     // 翻转指定位
 #endif
-	return res != 0;
+
+        return res != 0;
 }
 
 #include <asm-generic/bitops/non-atomic.h>

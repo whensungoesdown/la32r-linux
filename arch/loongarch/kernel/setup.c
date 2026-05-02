@@ -358,6 +358,7 @@ static void __init resource_init(void)
 		res->flags = IORESOURCE_SYSTEM_RAM | IORESOURCE_BUSY;
 		res->name = "System RAM";
 
+		//printk("!!!!request_resource\n");
 		request_resource(&iomem_resource, res);
 
 		/*
@@ -365,8 +366,11 @@ static void __init resource_init(void)
 		 *  so we try it repeatedly and let the resource manager
 		 *  test it.
 		 */
+		//printk("!!!!request_resource\n");
 		request_resource(res, &code_resource);
+		//printk("!!!!request_resource\n");
 		request_resource(res, &data_resource);
+		//printk("!!!!request_resource\n");
 		request_resource(res, &bss_resource);
 	}
 }
@@ -399,28 +403,41 @@ extern void setup_early_printk(void);
 
 void __init setup_arch(char **cmdline_p)
 {
+	printk("	cpu_probe()\n");
 	cpu_probe();
+	printk("	early_init()\n");
 	early_init();
 
 #ifdef CONFIG_EARLY_PRINTK
 	setup_early_printk();
 #endif
+	printk("	bootcmdline_init()\n");
 	bootcmdline_init(cmdline_p);
 
+	printk("	init_initrd()\n");
 	init_initrd();
+	printk("	platform_init()\n");
 	platform_init();
+	printk("	finalize_initrd()\n");
 	finalize_initrd();
+	printk("	cpu_report()\n");
 	cpu_report();
 
+	printk("	arch_mem_init()\n");
 	arch_mem_init(cmdline_p);
 
+	printk("	resource_init()\n");
 	resource_init();
 #ifdef CONFIG_SMP
 	plat_smp_setup();
 #endif
+	printk("	prefill_possible_map()\n");
 	prefill_possible_map();
 
-	cpu_cache_init();
+	printk("	skip cpu_cache_init()\n");
+	//cpu_cache_init();
+	printk("	paging_init()\n");
 	paging_init();
-	boot_cpu_trap_init();
+	printk("	skip boot_cpu_trap_init()\n");
+	//boot_cpu_trap_init();
 }

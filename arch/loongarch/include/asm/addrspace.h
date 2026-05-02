@@ -56,7 +56,9 @@ extern unsigned long vm_map_base;
  * This handles the memory map.
  */
 #ifndef PAGE_OFFSET
-#define PAGE_OFFSET		(CAC_BASE + PHYS_OFFSET)
+// uty: test  soc2 physical and virtual address are the same
+//#define PAGE_OFFSET		(CAC_BASE + PHYS_OFFSET)
+#define PAGE_OFFSET		(0 + PHYS_OFFSET)
 #endif
 
 #ifndef FIXADDR_TOP

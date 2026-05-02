@@ -73,6 +73,7 @@ static inline int arch_atomic_fetch_##op##_relaxed(int i, atomic_t *v)	\
 #endif
 
 #ifdef CONFIG_32BIT   /* CONFIG_32BIT */
+/*
 #define ATOMIC_OP(op, I, asm_op)                                        \
 static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
 {                                                                       \
@@ -86,7 +87,21 @@ static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
         :"r" (I)                                               \
         );                                                      \
 }
+*/
+#define ATOMIC_OP(op, I, asm_op)                                        \
+static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
+{                                                                       \
+        int temp ;                                              \
+        __asm__ __volatile__(                                   \
+        "       ld.w        %0, %1                          \n"    \
+        "       " #asm_op " %0, %0, %2                   \n"    \
+        "       st.w        %0, %1                       \n"    \
+        :"=&r" (temp) , "+ZB"(v->counter)     \
+        :"r" (I)                                               \
+        );                                                      \
+}
 
+/*
 #define ATOMIC_OP_RETURN(op, I, asm_op)                                    \
 static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)       \
 {                                                                             \
@@ -104,7 +119,24 @@ static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)    
                 : "r" (I));                                                  \
         return result;                                                        \
 }
+*/
+#define ATOMIC_OP_RETURN(op, I, asm_op)                                    \
+static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)       \
+{                                                                             \
+        int result;                                                           \
+        int temp;                                                             \
+                                                                              \
+        __asm__ __volatile__(                                                 \
+                "       ld.w    %1, %2          # " #op "_return \n"   \
+                "       " #asm_op " %0, %1, %3                          \n"   \
+                "       st.w    %0, %2                                  \n"   \
+                : "=&r" (result), "=&r" (temp),                               \
+                  "+ZB"(v->counter)                        \
+                : "r" (I));                                                  \
+        return result;                                                        \
+}
 
+/*
 #define ATOMIC_FETCH_OP(op,I, asm_op)                                     \
 static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)        \
 {                                                                             \
@@ -122,6 +154,23 @@ static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)     
         : "r" (I));                                                  \
                                                                       \
         return result;                                                \
+}*/
+
+#define ATOMIC_FETCH_OP(op, I, asm_op)                                     \
+static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)        \
+{                                                                             \
+        int result;                                                           \
+        int temp;                                                             \
+                                                                              \
+        __asm__ __volatile__(                                                 \
+        "       ld.w    %1, %2          # atomic_fetch_" #op "  \n"   \
+        "       " #asm_op " %0, %1, %3                          \n"   \
+        "       st.w    %0, %2                                  \n"   \
+        : "=&r" (result), "=&r" (temp),                               \
+          "+ZB" (v->counter)                          \
+        : "r" (I));                                                  \
+                                                                      \
+        return temp;                                                         \
 }
 #endif
 
@@ -175,6 +224,7 @@ ATOMIC_OPS(xor, i, xor)
  * Atomically test @v and subtract @i if @v is greater or equal than @i.
  * The function returns the old value of @v minus @i.
  */
+/*
 static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 {
 	int result;
@@ -210,7 +260,36 @@ static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 
 	return result;
 }
+*/
+static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
+{
+        int result;
+        int temp;
 
+        if (__builtin_constant_p(i)) {
+                __asm__ __volatile__(
+                "       ld.w    %1, %2          # atomic_sub_if_positive\n"
+                "       addi.w  %0, %1, %3                              \n"
+                "       blt     %0, $zero, 1f                           \n"
+                "       st.w    %0, %2                                  \n"
+                "1:                                                     \n"
+                : "=&r" (result), "=&r" (temp),
+                  "+" GCC_OFF_SMALL_ASM() (v->counter)
+                : "I" (-i));
+        } else {
+                __asm__ __volatile__(
+                "       ld.w    %1, %2          # atomic_sub_if_positive\n"
+                "       sub.w   %0, %1, %3                              \n"
+                "       blt     %0, $zero, 1f                           \n"
+                "       st.w    %0, %2                                  \n"
+                "1:                                                     \n"
+                : "=&r" (result), "=&r" (temp),
+                  "+" GCC_OFF_SMALL_ASM() (v->counter)
+                : "r" (i));
+        }
+
+        return result;
+}
 #define arch_atomic_cmpxchg(v, o, n) (arch_cmpxchg(&((v)->counter), (o), (n)))
 #define arch_atomic_xchg(v, new) (arch_xchg(&((v)->counter), (new)))
 

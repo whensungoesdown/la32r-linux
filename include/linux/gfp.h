@@ -594,6 +594,7 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 #else
 static inline struct page *alloc_pages(gfp_t gfp_mask, unsigned int order)
 {
+	//printk("in alloc_pages()\n");
 	return alloc_pages_node(numa_node_id(), gfp_mask, order);
 }
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node, false)\

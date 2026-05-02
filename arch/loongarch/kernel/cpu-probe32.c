@@ -64,14 +64,19 @@ EXPORT_SYMBOL_GPL(vm_map_base);
 
 static void cpu_probe_addrbits(struct cpuinfo_loongarch *c)
 {
-#ifdef __NEED_ADDRBITS_PROBE
-	c->pabits = (read_cpucfg(LOONGARCH_CPUCFG1) & CPUCFG1_PABITS) >> 4;
-	c->vabits = (read_cpucfg(LOONGARCH_CPUCFG1) & CPUCFG1_VABITS) >> 12;
-	vm_map_base = 0UL - (1UL << c->vabits);
-#endif
-	c->pabits = 31;
-	c->vabits = 31;
-	vm_map_base = 0UL - (1UL << c->vabits);
+//#ifdef __NEED_ADDRBITS_PROBE
+//	c->pabits = (read_cpucfg(LOONGARCH_CPUCFG1) & CPUCFG1_PABITS) >> 4;
+//	c->vabits = (read_cpucfg(LOONGARCH_CPUCFG1) & CPUCFG1_VABITS) >> 12;
+//	vm_map_base = 0UL - (1UL << c->vabits);
+//#endif
+//	c->pabits = 31;
+//	c->vabits = 31;
+//	vm_map_base = 0UL - (1UL << c->vabits);
+
+	// uty: test
+	c->pabits = 32;
+	c->vabits = 32;
+	vm_map_base = 0x2000000;
 }
 
 static void set_isa(struct cpuinfo_loongarch *c, unsigned int isa)
@@ -106,8 +111,10 @@ static char cpu_full_name[MAX_NAME_LEN] = "        -        ";
 
 static inline void cpu_probe_loongson(struct cpuinfo_loongarch *c, unsigned int cpu)
 {
-	c->options = LOONGARCH_CPU_CPUCFG | LOONGARCH_CPU_CSR |
-		     LOONGARCH_CPU_TLB | LOONGARCH_CPU_VINT | LOONGARCH_CPU_WATCH;
+	// uty: test
+	//c->options = LOONGARCH_CPU_CPUCFG | LOONGARCH_CPU_CSR |
+	//	     LOONGARCH_CPU_TLB | LOONGARCH_CPU_VINT | LOONGARCH_CPU_WATCH;
+	c->options = LOONGARCH_CPU_CSR;
 
 	decode_configs(c);
 	elf_hwcap |= HWCAP_LOONGARCH_CRC32;

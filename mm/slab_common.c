@@ -657,6 +657,7 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name,
 	s->useroffset = useroffset;
 	s->usersize = usersize;
 
+	printk("			 __kmem_cache_create()\n");
 	err = __kmem_cache_create(s, flags);
 
 	if (err)

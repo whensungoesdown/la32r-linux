@@ -817,23 +817,38 @@ static void __init mm_init(void)
 	 * page_ext requires contiguous pages,
 	 * bigger than MAX_ORDER unless SPARSEMEM.
 	 */
+	printk("	page_ext_init_flatmem()\n");
 	page_ext_init_flatmem();
+	printk("	init_mem_debugging_and_hardening()\n");
 	init_mem_debugging_and_hardening();
+	printk("	kfence_alloc_pool()\n");
 	kfence_alloc_pool();
+	printk("	report_meminit()\n");
 	report_meminit();
+	printk("	stack_depot_init()\n");
 	stack_depot_init();
+	printk("	mem_init()\n");
 	mem_init();
+	printk("	mem_init_print_info()\n");
 	mem_init_print_info();
 	/* page_owner must be initialized after buddy is ready */
+	printk("	page_ext_init_flatmem_late()\n");
 	page_ext_init_flatmem_late();
+	printk("	kmem_cache_init()\n");
 	kmem_cache_init();
+	printk("	kmemleak_init()\n");
 	kmemleak_init();
+	printk("	pgtable_init()\n");
 	pgtable_init();
+	printk("	debug_objects_mem_init()\n");
 	debug_objects_mem_init();
+	printk("	vmalloc_init()\n");
 	vmalloc_init();
 	/* Should be run before the first non-init thread is created */
+	printk("	init_espfix_bsp()\n");
 	init_espfix_bsp();
 	/* Should be run after espfix64 is set up. */
+	printk("	pti_init()\n");
 	pti_init();
 }
 
@@ -911,43 +926,70 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
+	*(int*)0x1001c = 'BBBB';
+
+	//while(1){}
+
 	set_task_stack_end_magic(&init_task);
+
+	*(int*)0x10020 = 'CCCC';
+	printk("Hello from start_kernel()\n");
 	smp_setup_processor_id();
+	printk("smp_setup_processor_id()\n");
 	debug_objects_early_init();
+	printk("debug_objects_early_init()\n");
 	init_vmlinux_build_id();
+	printk("init_vmlinux_build_id()\n");
 
 	cgroup_init_early();
+	printk("cgroup_init_early()\n");
 
 	local_irq_disable();
+	printk("local_irq_disable()\n");
 	early_boot_irqs_disabled = true;
 
 	/*
 	 * Interrupts are still disabled. Do necessary setups, then
 	 * enable them.
 	 */
+	printk("boot_cpu_init()\n");
 	boot_cpu_init();
+	printk("page_address_init()\n");
 	page_address_init();
 	pr_notice("%s", linux_banner);
+	printk("early_security_init()\n");
 	early_security_init();
+	printk("setup_arch()\n");
 	setup_arch(&command_line);
+	printk("setup_boot_config()\n");
 	setup_boot_config();
+	printk("setup_command_line()\n");
 	setup_command_line(command_line);
+	printk("setup_nr_cpu_ids()\n");
 	setup_nr_cpu_ids();
+	printk("setup_per_cpu_areas()\n");
 	setup_per_cpu_areas();
+	printk("smp_prepare_boot_cpu()\n");
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
+	printk("boot_cpu_hotplug_init()\n");
 	boot_cpu_hotplug_init();
 
+	printk("build_all_zonelists()\n");
 	build_all_zonelists(NULL);
-	page_alloc_init();
+	printk("skip page_alloc_init()\n");
+	//page_alloc_init();
 
 	pr_notice("Kernel command line: %s\n", saved_command_line);
 	/* parameters may set static keys */
+	printk("jump_label_init()\n");
 	jump_label_init();
+	printk("parse_early_param()\n");
 	parse_early_param();
 	after_dashes = parse_args("Booting kernel",
 				  static_command_line, __start___param,
 				  __stop___param - __start___param,
 				  -1, -1, NULL, &unknown_bootoption);
+	printk("print_unknown_bootoptions()\n");
 	print_unknown_bootoptions();
 	if (!IS_ERR_OR_NULL(after_dashes))
 		parse_args("Setting init args", after_dashes, NULL, 0, -1, -1,
@@ -960,15 +1002,22 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * These use large bootmem allocations and must precede
 	 * kmem_cache_init()
 	 */
+	printk("setup_log_buf()\n");
 	setup_log_buf(0);
+	printk("vfs_caches_init_early()\n");
 	vfs_caches_init_early();
+	printk("sort_main_extable()\n");
 	sort_main_extable();
-	trap_init();
+	printk("skip trap_init()\n");
+	//trap_init();
+	printk("mm_init()\n");
 	mm_init();
 
+	printk("ftrace_init()\n");
 	ftrace_init();
 
 	/* trace_printk can be enabled here */
+	printk("early_trace_init()\n");
 	early_trace_init();
 
 	/*
@@ -976,6 +1025,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * timer interrupt). Full topology setup happens at smp_init()
 	 * time - but meanwhile we still have a functioning scheduler.
 	 */
+	printk("sched_init()\n");
 	sched_init();
 
 	if (WARN(!irqs_disabled(),
