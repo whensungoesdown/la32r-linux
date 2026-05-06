@@ -3288,8 +3288,10 @@ int schedule_on_each_cpu(work_func_t func)
 {
 	int cpu;
 	struct work_struct __percpu *works;
-
-	works = alloc_percpu(struct work_struct);
+	
+	// uty: test
+	//works = alloc_percpu(struct work_struct);
+	works = kzalloc(num_possible_cpus() * sizeof(struct work_struct), GFP_KERNEL);
 	if (!works)
 		return -ENOMEM;
 
@@ -3306,7 +3308,8 @@ int schedule_on_each_cpu(work_func_t func)
 		flush_work(per_cpu_ptr(works, cpu));
 
 	put_online_cpus();
-	free_percpu(works);
+	//free_percpu(works);
+	kfree(works);
 	return 0;
 }
 
@@ -3454,13 +3457,16 @@ static void wq_init_lockdep(struct workqueue_struct *wq)
 {
 	char *lock_name;
 
+	printk("			lockdep_register_key()\n");
 	lockdep_register_key(&wq->key);
 	lock_name = kasprintf(GFP_KERNEL, "%s%s", "(wq_completion)", wq->name);
 	if (!lock_name)
 		lock_name = wq->name;
 
 	wq->lock_name = lock_name;
+	printk("			lockdep_init_map()\n");
 	lockdep_init_map(&wq->lockdep_map, lock_name, &wq->key, 0);
+	printk("			lockdep_init_map() finish\n");
 }
 
 static void wq_unregister_lockdep(struct workqueue_struct *wq)
@@ -3495,7 +3501,9 @@ static void rcu_free_wq(struct rcu_head *rcu)
 	wq_free_lockdep(wq);
 
 	if (!(wq->flags & WQ_UNBOUND))
-		free_percpu(wq->cpu_pwqs);
+		// uty: test
+		//free_percpu(wq->cpu_pwqs);
+		kfree(wq->cpu_pwqs);
 	else
 		free_workqueue_attrs(wq->unbound_attrs);
 
@@ -4171,13 +4179,21 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	int cpu, ret;
 
 	if (!(wq->flags & WQ_UNBOUND)) {
-		wq->cpu_pwqs = alloc_percpu(struct pool_workqueue);
+		printk("			kzalloc()\n");
+		// uty: test
+		//wq->cpu_pwqs = alloc_percpu(struct pool_workqueue);
+		wq->cpu_pwqs = kzalloc(num_possible_cpus() * sizeof(struct pool_workqueue), GFP_KERNEL);
+
+		printk("!!! wq->cpu_pwqs=0x%x\n", (int)(wq->cpu_pwqs));
 		if (!wq->cpu_pwqs)
 			return -ENOMEM;
 
 		for_each_possible_cpu(cpu) {
-			struct pool_workqueue *pwq =
-				per_cpu_ptr(wq->cpu_pwqs, cpu);
+			// uty: test
+			//struct pool_workqueue *pwq =
+			//	per_cpu_ptr(wq->cpu_pwqs, cpu);
+			struct pool_workqueue *pwq = &wq->cpu_pwqs[cpu];
+
 			struct worker_pool *cpu_pools =
 				per_cpu(cpu_worker_pools, cpu);
 
@@ -4190,6 +4206,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 		return 0;
 	}
 
+	printk("			get_online_cpus()\n");
 	get_online_cpus();
 	if (wq->flags & __WQ_ORDERED) {
 		ret = apply_workqueue_attrs(wq, ordered_wq_attrs[highpri]);
@@ -4200,6 +4217,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	} else {
 		ret = apply_workqueue_attrs(wq, unbound_std_wq_attrs[highpri]);
 	}
+	printk("			put_online_cpus()\n");
 	put_online_cpus();
 
 	return ret;
@@ -4276,7 +4294,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	if (flags & WQ_UNBOUND)
 		tbl_size = nr_node_ids * sizeof(wq->numa_pwq_tbl[0]);
 
+	printk("		kzalloc()\n");
 	wq = kzalloc(sizeof(*wq) + tbl_size, GFP_KERNEL);
+	printk("!!! wq=0x%x\n", (int)wq);
 	if (!wq)
 		return NULL;
 
@@ -4303,15 +4323,19 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	INIT_LIST_HEAD(&wq->flusher_overflow);
 	INIT_LIST_HEAD(&wq->maydays);
 
+	printk("		wq_init_lockdep()\n");
 	wq_init_lockdep(wq);
 	INIT_LIST_HEAD(&wq->list);
 
+	printk("		alloc_and_link_pwqs()\n");
 	if (alloc_and_link_pwqs(wq) < 0)
 		goto err_unreg_lockdep;
 
+	printk("		init_rescuer()\n");
 	if (wq_online && init_rescuer(wq) < 0)
 		goto err_destroy;
 
+	printk("		workqueue_sysfs_register()\n");
 	if ((wq->flags & WQ_SYSFS) && workqueue_sysfs_register(wq))
 		goto err_destroy;
 
@@ -4320,27 +4344,34 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	 * Grab it, adjust max_active and add the new @wq to workqueues
 	 * list.
 	 */
+	printk("		mutex_lock(&wq_pool_mutex)\n");
 	mutex_lock(&wq_pool_mutex);
 
+	printk("		mutex_lock(&wq->mutex)\n");
 	mutex_lock(&wq->mutex);
 	for_each_pwq(pwq, wq)
 		pwq_adjust_max_active(pwq);
 	mutex_unlock(&wq->mutex);
 
+	printk("		list_add_tail_rcu()\n");
 	list_add_tail_rcu(&wq->list, &workqueues);
 
+	printk("		mutex_unlock()\n");
 	mutex_unlock(&wq_pool_mutex);
 
 	return wq;
 
 err_unreg_lockdep:
+	printk("		wq_unregister_lockdep()\n");
 	wq_unregister_lockdep(wq);
 	wq_free_lockdep(wq);
 err_free_wq:
+	printk("		free_workqueue_attrs()\n");
 	free_workqueue_attrs(wq->unbound_attrs);
 	kfree(wq);
 	return NULL;
 err_destroy:
+	printk("		destroy_workqueue()\n");
 	destroy_workqueue(wq);
 	return NULL;
 }
@@ -5943,9 +5974,12 @@ void __init workqueue_init_early(void)
 
 	BUILD_BUG_ON(__alignof__(struct pool_workqueue) < __alignof__(long long));
 
+	printk("	alloc_cpumask_var()\n");
 	BUG_ON(!alloc_cpumask_var(&wq_unbound_cpumask, GFP_KERNEL));
+	printk("	cpumask_copy()\n");
 	cpumask_copy(wq_unbound_cpumask, housekeeping_cpumask(hk_flags));
 
+	printk("	KMEM_CACHE()\n");
 	pwq_cache = KMEM_CACHE(pool_workqueue, SLAB_PANIC);
 
 	/* initialize CPU pools */
@@ -5961,6 +5995,7 @@ void __init workqueue_init_early(void)
 			pool->node = cpu_to_node(cpu);
 
 			/* alloc pool ID */
+			printk("	worker_pool_assign_id()\n");
 			mutex_lock(&wq_pool_mutex);
 			BUG_ON(worker_pool_assign_id(pool));
 			mutex_unlock(&wq_pool_mutex);
@@ -5971,6 +6006,7 @@ void __init workqueue_init_early(void)
 	for (i = 0; i < NR_STD_WORKER_POOLS; i++) {
 		struct workqueue_attrs *attrs;
 
+		printk("	alloc_workqueue_attrs()\n");
 		BUG_ON(!(attrs = alloc_workqueue_attrs()));
 		attrs->nice = std_nice[i];
 		unbound_std_wq_attrs[i] = attrs;
@@ -5986,15 +6022,22 @@ void __init workqueue_init_early(void)
 		ordered_wq_attrs[i] = attrs;
 	}
 
+	printk("	alloc_workqueue(events)\n");
 	system_wq = alloc_workqueue("events", 0, 0);
+	printk("	alloc_workqueue(events_highpri)\n");
 	system_highpri_wq = alloc_workqueue("events_highpri", WQ_HIGHPRI, 0);
+	printk("	alloc_workqueue(events_long)\n");
 	system_long_wq = alloc_workqueue("events_long", 0, 0);
+	printk("	alloc_workqueue(events_unbound)\n");
 	system_unbound_wq = alloc_workqueue("events_unbound", WQ_UNBOUND,
 					    WQ_UNBOUND_MAX_ACTIVE);
+	printk("	alloc_workqueue(events_freezable)\n");
 	system_freezable_wq = alloc_workqueue("events_freezable",
 					      WQ_FREEZABLE, 0);
+	printk("	alloc_workqueue(events_power_efficient)\n");
 	system_power_efficient_wq = alloc_workqueue("events_power_efficient",
 					      WQ_POWER_EFFICIENT, 0);
+	printk("	alloc_workqueue(events_freezable_power_efficient)\n");
 	system_freezable_power_efficient_wq = alloc_workqueue("events_freezable_power_efficient",
 					      WQ_FREEZABLE | WQ_POWER_EFFICIENT,
 					      0);

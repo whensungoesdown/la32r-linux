@@ -1774,19 +1774,31 @@ void update_process_times(int user_tick)
 {
 	struct task_struct *p = current;
 
+	//printk("				   		in update_process_times() user_tick=%d\n", user_tick);
+
 	PRANDOM_ADD_NOISE(jiffies, user_tick, p, 0);
 
 	/* Note: this timer irq context must be accounted for as well. */
+	//printk("				   		account_process_tick()\n");
 	account_process_tick(p, user_tick);
+	//printk("				   		run_local_timers()\n");
 	run_local_timers();
+	//printk("				   		rcu_sched_clock_irq()\n");
 	rcu_sched_clock_irq(user_tick);
 #ifdef CONFIG_IRQ_WORK
 	if (in_irq())
+	{
+		//printk("				   		irq_work_tick()\n");
 		irq_work_tick();
+	}
 #endif
+	//printk("				   		scheduler_tick()\n");
 	scheduler_tick();
 	if (IS_ENABLED(CONFIG_POSIX_TIMERS))
+	{
+		//printk("				   		run_posix_cpu_timers()\n");
 		run_posix_cpu_timers();
+	}
 }
 
 /*

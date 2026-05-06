@@ -396,7 +396,9 @@ static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 	if (!desc)
 		return NULL;
 	/* allocate based on nr_cpu_ids */
-	desc->kstat_irqs = alloc_percpu(unsigned int);
+	// uty: test
+	//desc->kstat_irqs = alloc_percpu(unsigned int);
+	desc->kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_KERNEL);
 	if (!desc->kstat_irqs)
 		goto err_desc;
 
@@ -415,7 +417,9 @@ static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 	return desc;
 
 err_kstat:
-	free_percpu(desc->kstat_irqs);
+	// uty: test
+	//free_percpu(desc->kstat_irqs);
+	kfree(desc->kstat_irqs);
 err_desc:
 	kfree(desc);
 	return NULL;
@@ -426,7 +430,9 @@ static void irq_kobj_release(struct kobject *kobj)
 	struct irq_desc *desc = container_of(kobj, struct irq_desc, kobj);
 
 	free_masks(desc);
-	free_percpu(desc->kstat_irqs);
+	// uty: test
+	//free_percpu(desc->kstat_irqs);
+	kfree(desc->kstat_irqs);
 	kfree(desc);
 }
 
@@ -570,7 +576,9 @@ int __init early_irq_init(void)
 	count = ARRAY_SIZE(irq_desc);
 
 	for (i = 0; i < count; i++) {
-		desc[i].kstat_irqs = alloc_percpu(unsigned int);
+		// uty: test
+		//desc[i].kstat_irqs = alloc_percpu(unsigned int);
+		desc[i].kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_KERNEL);
 		alloc_masks(&desc[i], node);
 		raw_spin_lock_init(&desc[i].lock);
 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);
@@ -635,6 +643,8 @@ void irq_init_desc(unsigned int irq)
 int handle_irq_desc(struct irq_desc *desc)
 {
 	struct irq_data *data;
+
+	//printk("		 handle_irq_desc() desc=0x%x\n", (int)desc);
 
 	if (!desc)
 		return -EINVAL;

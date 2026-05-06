@@ -883,6 +883,8 @@ void handle_percpu_irq(struct irq_desc *desc)
 {
 	struct irq_chip *chip = irq_desc_get_chip(desc);
 
+	//printk("				handle_percpu_irq() desc=0x%x\n", (int)desc);
+
 	/*
 	 * PER CPU interrupts are not serialized. Do not touch
 	 * desc->tot_count.

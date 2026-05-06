@@ -1008,8 +1008,8 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	vfs_caches_init_early();
 	printk("sort_main_extable()\n");
 	sort_main_extable();
-	printk("skip trap_init()\n");
-	//trap_init();
+	printk("trap_init()\n");
+	trap_init();
 	printk("mm_init()\n");
 	mm_init();
 
@@ -1028,15 +1028,18 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	printk("sched_init()\n");
 	sched_init();
 
+	printk("local_irq_disable()\n");
 	if (WARN(!irqs_disabled(),
 		 "Interrupts were enabled *very* early, fixing it\n"))
 		local_irq_disable();
+	printk("radix_tree_init()\n");
 	radix_tree_init();
 
 	/*
 	 * Set up housekeeping before setting up workqueues to allow the unbound
 	 * workqueue to take non-housekeeping into account.
 	 */
+	printk("housekeeping_init()\n");
 	housekeeping_init();
 
 	/*
@@ -1044,27 +1047,42 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * early.  Work item execution depends on kthreads and starts after
 	 * workqueue_init().
 	 */
+	printk("workqueue_init_early()\n");
 	workqueue_init_early();
 
+	printk("rcu_init()\n");
 	rcu_init();
 
 	/* Trace events are available after this */
+	printk("trace_init()\n");
 	trace_init();
 
+	printk("initcall_debug_enable()\n");
 	if (initcall_debug)
 		initcall_debug_enable();
 
+	printk("context_tracking_init()\n");
 	context_tracking_init();
 	/* init some links before init_ISA_irqs() */
+	printk("early_irq_init()\n");
 	early_irq_init();
+	printk("init_IRQ()\n");
 	init_IRQ();
+	printk("tick_init()\n");
 	tick_init();
+	printk("rcu_init_nohz()\n");
 	rcu_init_nohz();
+	printk("init_timers()\n");
 	init_timers();
+	printk("srcu_init()\n");
 	srcu_init();
+	printk("hrtimers_init()\n");
 	hrtimers_init();
+	printk("softirq_init()\n");
 	softirq_init();
+	printk("timekeeping_init()\n");
 	timekeeping_init();
+	printk("kfence_init()\n");
 	kfence_init();
 
 	/*
@@ -1080,15 +1098,21 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	add_device_randomness(command_line, strlen(command_line));
 	boot_init_stack_canary();
 
+	printk("time_init()\n");
 	time_init();
+	printk("perf_event_init()\n");
 	perf_event_init();
+	printk("profile_init()\n");
 	profile_init();
+	printk("call_function_init()\n");
 	call_function_init();
 	WARN(!irqs_disabled(), "Interrupts were enabled early\n");
 
 	early_boot_irqs_disabled = false;
+	printk("local_irq_enable()\n");
 	local_irq_enable();
 
+	printk("kmem_cache_init_late()\n");
 	kmem_cache_init_late();
 
 	/*
@@ -1096,6 +1120,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * we've done PCI setups etc, and console_init() must be aware of
 	 * this. But we do want output early, in case something goes wrong.
 	 */
+	printk("console_init()\n");
 	console_init();
 	if (panic_later)
 		panic("Too many boot %s vars at `%s'", panic_later,

@@ -105,8 +105,11 @@ static inline unsigned long __raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
 	unsigned long flags;
 
+	printk("local_irq_save()\n");
 	local_irq_save(flags);
+	printk("preempt_disable()\n");
 	preempt_disable();
+	printk("spin_acquire()\n");
 	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
 	/*
 	 * On lockdep we dont want the hand-coded irq-enable of

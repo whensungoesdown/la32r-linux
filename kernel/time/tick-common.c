@@ -85,19 +85,30 @@ int tick_is_oneshot_available(void)
 static void tick_periodic(int cpu)
 {
 	if (tick_do_timer_cpu == cpu) {
+		//printk("				   	raw_spin_lock()\n");
 		raw_spin_lock(&jiffies_lock);
+		//printk("				   	write_seqcount_begin()\n");
 		write_seqcount_begin(&jiffies_seq);
 
 		/* Keep track of the next tick event */
+		//printk("				   	ktime_add_ns()\n");
 		tick_next_period = ktime_add_ns(tick_next_period, TICK_NSEC);
 
+		//printk("				   	do_timer()\n");
 		do_timer(1);
+		//printk("				   	write_seqcount_end()\n");
 		write_seqcount_end(&jiffies_seq);
+		//printk("				   	raw_spin_unlock()\n");
 		raw_spin_unlock(&jiffies_lock);
+		//printk("				   	update_wall_time()\n");
 		update_wall_time();
 	}
 
+	//printk("				   	update_process_times()\n");
+	//printk("					__current_thread_info=0x%x\n", (int)__current_thread_info);
+	//printk("					get_irq_regs()=0x%x\n", (int)get_irq_regs());
 	update_process_times(user_mode(get_irq_regs()));
+	//printk("				   	profile_tick()\n");
 	profile_tick(CPU_PROFILING);
 }
 
@@ -109,7 +120,9 @@ void tick_handle_periodic(struct clock_event_device *dev)
 	int cpu = smp_processor_id();
 	ktime_t next = dev->next_event;
 
+	//printk("				   	tick_periodic()\n");
 	tick_periodic(cpu);
+	//printk("				   	tick_periodic() finish\n");
 
 #if defined(CONFIG_HIGH_RES_TIMERS) || defined(CONFIG_NO_HZ_COMMON)
 	/*
@@ -128,10 +141,15 @@ void tick_handle_periodic(struct clock_event_device *dev)
 		 * Setup the next period for devices, which do not have
 		 * periodic mode:
 		 */
+		//printk("				   	 ktime_add_ns()\n");
 		next = ktime_add_ns(next, TICK_NSEC);
 
+		printk("				   	 clockevents_program_event()\n");
 		if (!clockevents_program_event(dev, next, false))
+		{
+			//printk("				   	 clockevents_program_event() fail, return\n");
 			return;
+		}
 		/*
 		 * Have to be careful here. If we're in oneshot mode,
 		 * before we call tick_periodic() in a loop, we need
@@ -142,7 +160,11 @@ void tick_handle_periodic(struct clock_event_device *dev)
 		 * the loop to trigger again and again.
 		 */
 		if (timekeeping_valid_for_hres())
+		{
+			//printk("				   	 tick_periodic()\n");
 			tick_periodic(cpu);
+			//printk("				   	 tick_periodic finish()\n");
+		}
 	}
 }
 

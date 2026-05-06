@@ -34,6 +34,10 @@ SYM_CODE_START(kernel_entry)    		# kernel entry point
 	bne		t0, t1, 2b
 
 	la		tp, init_thread_union
+	PTR_LI		sp, (_THREAD_SIZE - 32 - PT_SIZE)
+	PTR_ADDU	sp, sp, tp
+	set_saved_sp	sp, t0, t1
+	PTR_ADDIU	sp, sp, -4 * SZREG      # init stack pointer
 #else
 
 	/* We might not get launched at the address the kernel is linked to,

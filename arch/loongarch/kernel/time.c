@@ -33,11 +33,25 @@ irqreturn_t constant_timer_interrupt(int irq, void *data)
 	int cpu = smp_processor_id();
 	struct clock_event_device *cd;
 
+	printk("				in constant_timer_interrupt()\n");
+
 	/* Clear Timer Interrupt */
+	//printk("				   write_csr_tintclear()\n");
+	
+	// uty: test
 	write_csr_tintclear(CSR_TINTCLR_TI);
+	//local_irq_disable();
+
 	cd = &per_cpu(constant_clockevent_device, cpu);
+	//printk("				   cd=0x%x, cd->event_handler=0x%x\n", (int)cd, (int)(cd->event_handler));
+	
+	//local_bh_disable();
+
 	cd->event_handler(cd);
 
+	//local_bh_enable();
+
+	//printk("				   cd->event_handler() fisnish\n");
 	return IRQ_HANDLED;
 }
 
@@ -45,12 +59,14 @@ static int constant_set_state_oneshot(struct clock_event_device *evt)
 {
 	unsigned long timer_config;
 
+	printk("!!!  constant_set_state_oneshot()\n");
+
 	spin_lock(&state_lock);
 
 	timer_config = csr_readq(LOONGARCH_CSR_TCFG);
 	timer_config |=  CSR_TCFG_EN;
 	timer_config &= ~CSR_TCFG_PERIOD;
-	csr_writeq(timer_config, LOONGARCH_CSR_TCFG);
+	csr_writel(timer_config, LOONGARCH_CSR_TCFG);
 
 	spin_unlock(&state_lock);
 
@@ -67,14 +83,21 @@ static int constant_set_state_periodic(struct clock_event_device *evt)
 	u64 period;
 	unsigned long timer_config;
 
+	printk("!!!  constant_set_state_periodic()\n");
+
 	spin_lock(&state_lock);
 
 	period = const_clock_freq;
 	do_div(period, HZ);
 
-	timer_config = period & CSR_TCFG_VAL;
+
+	//timer_config = period & CSR_TCFG_VAL;
+	timer_config = period & 0xFFFFFFFC;
 	timer_config |= (CSR_TCFG_PERIOD | CSR_TCFG_EN);
-	csr_writeq(timer_config, LOONGARCH_CSR_TCFG);
+
+	printk("!!! timer_config=0x%x()\n", (int)timer_config);
+
+	csr_writel(timer_config, LOONGARCH_CSR_TCFG);
 
 	spin_unlock(&state_lock);
 
@@ -90,9 +113,13 @@ static int constant_timer_next_event(unsigned long delta, struct clock_event_dev
 {
 	unsigned long timer_config;
 
-	delta &= CSR_TCFG_VAL;
+	printk("!!! constant_timer_next_event() delta=%d\n", (int)delta);
+	//delta = 1000000;
+
+	//delta &= CSR_TCFG_VAL;
+	delta &= 0xFFFFFFFC;
 	timer_config = delta | CSR_TCFG_EN;
-	csr_writeq(timer_config, LOONGARCH_CSR_TCFG);
+	csr_writel(timer_config, LOONGARCH_CSR_TCFG);
 
 	return 0;
 }
@@ -142,7 +169,9 @@ int constant_clockevent_init(void)
 
 	cd = &per_cpu(constant_clockevent_device, cpu);
 	cd->name = "Constant";
-	cd->features = CLOCK_EVT_FEAT_ONESHOT;
+	// uty: test
+	//cd->features = CLOCK_EVT_FEAT_ONESHOT;
+	cd->features = CLOCK_EVT_FEAT_PERIODIC;
 	cd->irq = irq;
 	cd->rating = 320;
 	cd->cpumask = cpumask_of(cpu);
@@ -155,15 +184,19 @@ int constant_clockevent_init(void)
 
 	clockevents_config_and_register(cd, const_clock_freq, min_delta, max_delta);
 
+	printk("const_clock_freq = %d Hz\n", (int)const_clock_freq);
+
 	if (timer_irq_installed)
 		return 0;
 
 	timer_irq_installed = 1;
 
-	if (request_irq(irq, constant_timer_interrupt, IRQF_PERCPU | IRQF_TIMER, "timer", NULL))
+	//if (request_irq(irq, constant_timer_interrupt, IRQF_PERCPU | IRQF_TIMER, "timer", NULL))
+	if (request_irq(irq, constant_timer_interrupt, IRQF_TIMER, "timer", NULL))
 		pr_err("Failed to request irq %d (timer)\n", irq);
 
-	set_csr_ecfg(0x800);
+	// uty: test
+	//set_csr_ecfg(0x800);
 	lpj_fine = get_loops_per_jiffy();
 	pr_info("Constant clock event device register\n");
 
@@ -215,6 +248,11 @@ void __init time_init(void)
 		const_clock_freq = cpu_clock_freq;
 	else
 		const_clock_freq = calc_const_freq();
+
+	// uty: test
+	printk("cpu_clock_freq %d\n", (int)cpu_clock_freq);
+	const_clock_freq = 75000000;
+
 
 	constant_clockevent_init();
 	constant_clocksource_init();

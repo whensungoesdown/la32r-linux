@@ -140,6 +140,7 @@ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags
 	unsigned int irq = desc->irq_data.irq;
 	struct irqaction *action;
 
+	//printk("				record_irq_time()\n");
 	record_irq_time(desc);
 
 	for_each_action_of_desc(desc, action) {
@@ -152,8 +153,11 @@ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags
 		    !(action->flags & (IRQF_NO_THREAD | IRQF_PERCPU | IRQF_ONESHOT)))
 			lockdep_hardirq_threaded();
 
+		//printk("				trace_irq_handler_entry()\n");
 		trace_irq_handler_entry(irq, action);
+		//printk("				action->handler() 0x%x\n", (int)(action->handler));
 		res = action->handler(irq, action->dev_id);
+		//printk("				trace_irq_handler_exit()\n");
 		trace_irq_handler_exit(irq, action, res);
 
 		if (WARN_ONCE(!irqs_disabled(),"irq %u handler %pS enabled interrupts\n",
@@ -193,6 +197,7 @@ irqreturn_t handle_irq_event_percpu(struct irq_desc *desc)
 	irqreturn_t retval;
 	unsigned int flags = 0;
 
+	//printk("					 handle_irq_event_percpu() desc=0x%x\n", (int)desc);
 	retval = __handle_irq_event_percpu(desc, &flags);
 
 	add_interrupt_randomness(desc->irq_data.irq, flags);

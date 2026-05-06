@@ -457,7 +457,7 @@ config IMX_INTMUX
 config LS1X_IRQ
 	bool "Loongson-1 Interrupt Controller"
 	depends on MACH_LOONGSON32
-	default y
+	default n
 	select IRQ_DOMAIN
 	select GENERIC_IRQ_CHIP
 	help

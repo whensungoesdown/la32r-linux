@@ -320,11 +320,11 @@ static void loongson_mem_init(void)
 void __init device_tree_init(void)
 {
 	// uty: test
-        //if (!initial_boot_params)
-        //        return;
+        if (!initial_boot_params)
+                return;
 
-        //if (early_init_dt_verify(initial_boot_params))
-        //        unflatten_and_copy_device_tree();
+        if (early_init_dt_verify(initial_boot_params))
+                unflatten_and_copy_device_tree();
 }
 
 

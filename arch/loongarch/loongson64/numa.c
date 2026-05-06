@@ -121,6 +121,8 @@ void __init setup_per_cpu_areas(void)
 	unsigned int cpu;
 	int rc = -EINVAL;
 
+	printk("!!! setup_per_cpu_areas() in loongson64/numa.c\n");
+	while (1){}
 	if (pcpu_chosen_fc == PCPU_FC_AUTO) {
 		if (nr_node_ids >= 8)
 			pcpu_chosen_fc = PCPU_FC_PAGE;

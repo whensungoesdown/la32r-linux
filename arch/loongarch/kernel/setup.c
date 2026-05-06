@@ -418,6 +418,8 @@ void __init setup_arch(char **cmdline_p)
 	init_initrd();
 	printk("	platform_init()\n");
 	platform_init();
+	// uty: test
+	//while(1){}
 	printk("	finalize_initrd()\n");
 	finalize_initrd();
 	printk("	cpu_report()\n");
@@ -438,6 +440,6 @@ void __init setup_arch(char **cmdline_p)
 	//cpu_cache_init();
 	printk("	paging_init()\n");
 	paging_init();
-	printk("	skip boot_cpu_trap_init()\n");
-	//boot_cpu_trap_init();
+	printk("	boot_cpu_trap_init()\n");
+	boot_cpu_trap_init();
 }

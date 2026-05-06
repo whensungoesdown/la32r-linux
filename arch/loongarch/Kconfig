@@ -132,6 +132,8 @@ config MACH_LOONGSON32
 #	select SYS_SUPPORTS_HIGHMEM
 	select SYS_HAS_CPU_LOONGSON32
 	select SYS_SUPPORTS_32BIT_KERNEL
+	# uty: test
+	#select SYS_SUPPORTS_SMP
 	#select ZONE_DMA32
 #	select PCI
 #	select HAVE_PCI
@@ -362,7 +364,7 @@ config HAVE_SETUP_PER_CPU_AREA
 
 config NEED_PER_CPU_EMBED_FIRST_CHUNK
 	def_bool y
-	depends on NUMA
+#	depends on NUMA
 
 config NEED_PER_CPU_PAGE_FIRST_CHUNK
 	def_bool y

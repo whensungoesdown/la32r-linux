@@ -149,3 +149,70 @@ syscall_exit_work:
 	bl	syscall_trace_leave
 	b	resume_userspace
 SYM_CODE_END(syscall_exit_partial)
+
+
+// uty: test
+/* Exception handler table, indexed by ECODE (0~63) */
+	.section .rodata
+	.align 3
+excp_handlers:
+	PTR	do_reserved		/* 0: External interrupt, handled separately */
+	PTR	do_reserved		/* 1: Reserved */
+	PTR	do_ade			/* 2: Address error exception */
+	PTR	do_ale			/* 3: Unaligned access exception */
+	PTR	do_bp			/* 4: Breakpoint exception (break) */
+	PTR	do_ri			/* 5: Illegal instruction exception */
+	PTR	do_reserved		/* 6: Reserved */
+	PTR	do_reserved		/* 7: Reserved */
+	PTR	do_fpu			/* 8: FPU disabled exception */
+	PTR	do_fpe			/* 9: FPU exception (fpe) */
+	PTR	do_lsx			/* 10: LSX extension disabled */
+	PTR	do_lasx			/* 11: LASX extension disabled */
+	PTR	do_lbt			/* 12: LBT extension disabled */
+	PTR	do_watch		/* 13: Hardware watchpoint exception */
+	/* Fill remaining 14~63 with do_reserved */
+	.rept	50
+	PTR	do_reserved
+	.endr
+
+/* General exception entry point (VS == 0) */
+SYM_FUNC_START(handle_general_exception)
+	/* Save all registers and build pt_regs structure */
+	SAVE_ALL
+
+	/* Read ESTAT register */
+	csrrd	t0, LOONGARCH_CSR_ESTAT
+
+	/* Extract ECODE (bits 16-21) */
+	srli.w	t1, t0, 16		/* t1 = (ESTAT >> 16) & 0x3F */
+	andi	t1, t1, 0x3f
+
+	/* Check if it's an external interrupt (ECODE == 0) */
+	bnez	t1, 1f			/* ECODE != 0 -> exception, not interrupt */
+
+	/* ----------------- Interrupt handling ----------------- */
+	/* Call common interrupt dispatcher, argument: pt_regs pointer (sp) */
+	move	a0, sp
+	la.abs	t0, plat_irq_dispatch
+	jirl	ra, t0, 0
+
+	/* Return from interrupt */
+	b	2f
+
+1:
+	/* ----------------- Exception handling ----------------- */
+	/* Ensure ECODE index is within valid range (0~63) */
+	slli.d	t2, t1, 2		/* t2 = ECODE * 4 */
+	la.abs	t3, excp_handlers
+	add.d	t3, t3, t2
+	LONG_L	t0, t3, 0		/* t0 = handler function address */
+
+	/* Call C handler, argument: pt_regs *regs = sp */
+	move	a0, sp
+	jirl	ra, t0, 0
+
+2:
+	/* Return from exception / interrupt, restore context */
+	la.abs	t0, ret_from_exception
+	jirl	zero, t0, 0
+SYM_FUNC_END(handle_general_exception)

@@ -45,7 +45,7 @@ static inline unsigned int calc_const_freq(void)
 #elif defined(CONFIG_BX_SOC)
 	return 33000000;
 #elif defined(CONFIG_SOC2_SOC)
-	return 33000000;
+	return 75000000; // 75MHz
 #endif
 }
 #endif

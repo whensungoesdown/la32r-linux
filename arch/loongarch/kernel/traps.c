@@ -604,18 +604,52 @@ static void configure_exception_vector(void)
 	csr_writel( (tlbrentry & 0x0fffffff), LOONGARCH_CSR_TLBRENTRY);
 }
 
+// uty: test
+//void __init boot_cpu_trap_init(void)
+//{
+//	unsigned long size = (64 + 14) * vec_size;
+//
+//	memblock_set_bottom_up(true);
+//	eentry = (unsigned long)memblock_alloc(size, 1 << fls(size));
+//	tlbrentry = (unsigned long)memblock_alloc(PAGE_SIZE, PAGE_SIZE);
+//	printk("eentry = 0x%lx,tlbrentry = 0x%lx", eentry, tlbrentry);
+//	memblock_set_bottom_up(false);
+//
+//	setup_vint_size(vec_size);
+//	configure_exception_vector();
+//
+//	if (!cpu_data[0].asid_cache)
+//		cpu_data[0].asid_cache = asid_first_version(0);
+//
+//	mmgrab(&init_mm);
+//	current->active_mm = &init_mm;
+//	BUG_ON(current->mm);
+//	enter_lazy_tlb(&init_mm, current);
+//
+//#ifdef CONFIG_MMU
+//	tlb_init();
+//	TLBMISS_HANDLER_SETUP();
+//#endif
+//}
+
+extern char handle_general_exception[];
+
 void __init boot_cpu_trap_init(void)
 {
-	unsigned long size = (64 + 14) * vec_size;
+	//unsigned long size = (64 + 14) * vec_size;
 
-	memblock_set_bottom_up(true);
-	eentry = (unsigned long)memblock_alloc(size, 1 << fls(size));
-	tlbrentry = (unsigned long)memblock_alloc(PAGE_SIZE, PAGE_SIZE);
-	printk("eentry = 0x%lx,tlbrentry = 0x%lx", eentry, tlbrentry);
-	memblock_set_bottom_up(false);
+	//memblock_set_bottom_up(true);
+	//eentry = (unsigned long)memblock_alloc(size, 1 << fls(size));
+	//tlbrentry = (unsigned long)memblock_alloc(PAGE_SIZE, PAGE_SIZE);
+	//printk("eentry = 0x%lx,tlbrentry = 0x%lx", eentry, tlbrentry);
+	//memblock_set_bottom_up(false);
 
-	setup_vint_size(vec_size);
-	configure_exception_vector();
+	//setup_vint_size(vec_size);
+	//configure_exception_vector();
+	
+	eentry = (unsigned long)handle_general_exception;
+	printk("eentry = 0x%lx\n", eentry);
+	csr_writel(eentry, LOONGARCH_CSR_EENTRY);
 
 	if (!cpu_data[0].asid_cache)
 		cpu_data[0].asid_cache = asid_first_version(0);
@@ -630,7 +664,6 @@ void __init boot_cpu_trap_init(void)
 	TLBMISS_HANDLER_SETUP();
 #endif
 }
-
 void nonboot_cpu_trap_init(void)
 {
 	unsigned int cpu = smp_processor_id();
@@ -680,43 +713,45 @@ void set_merr_handler(unsigned long offset, void *addr, unsigned long size)
 
 void __init trap_init(void)
 {
-	long i;
-	void *vec_start;
+//	long i;
+//	void *vec_start;
+//
+//	/* Initialise exception handlers */
+//	for (i = 0; i < 64; i++)
+//		set_handler(i * vec_size, handle_reserved, vec_size);
+//
+//	/* Set interrupt vector handler */
+//	for (i = EXCCODE_INT_START; i < EXCCODE_INT_END; i++) {
+//		vec_start = vi_table[i - EXCCODE_INT_START];
+//		set_handler(i * vec_size, vec_start, vec_size);
+//	}
+//
+//	set_handler(EXCCODE_GENERIC * vec_size , except_vec_vi_handler, vec_size);
+//
+//#ifdef CONFIG_MMU
+//	set_handler(EXCCODE_TLBL * vec_size, handle_tlb_load, vec_size);
+//	set_handler(EXCCODE_TLBS * vec_size, handle_tlb_store, vec_size);
+//	set_handler(EXCCODE_TLBI * vec_size, handle_tlb_load, vec_size);
+//	set_handler(EXCCODE_TLBM * vec_size, handle_tlb_modify, vec_size);
+//	set_handler(EXCCODE_TLBRI * vec_size, handle_tlb_rixi, vec_size);
+//	set_handler(EXCCODE_TLBXI * vec_size, handle_tlb_rixi, vec_size);
+//#endif
+//	set_handler(EXCCODE_ADE * vec_size, handle_ade, vec_size);
+//	set_handler(EXCCODE_ALE * vec_size, handle_ale, vec_size);
+//	set_handler(EXCCODE_SYS * vec_size, handle_syscall, vec_size);
+//	set_handler(EXCCODE_BP * vec_size, handle_bp, vec_size);
+//	set_handler(EXCCODE_INE * vec_size, handle_ri, vec_size);
+//	set_handler(EXCCODE_IPE * vec_size, handle_ri, vec_size);
+//	set_handler(EXCCODE_FPDIS * vec_size, handle_fpu, vec_size);
+//	set_handler(EXCCODE_LSXDIS * vec_size, handle_lsx, vec_size);
+//	set_handler(EXCCODE_LASXDIS * vec_size, handle_lasx, vec_size);
+//	set_handler(EXCCODE_FPE * vec_size, handle_fpe, vec_size);
+//	set_handler(EXCCODE_BTDIS * vec_size, handle_lbt, vec_size);
+//	set_handler(EXCCODE_WATCH * vec_size, handle_watch, vec_size);
 
-	/* Initialise exception handlers */
-	for (i = 0; i < 64; i++)
-		set_handler(i * vec_size, handle_reserved, vec_size);
+	// uty: test
+	//cache_error_setup();
 
-	/* Set interrupt vector handler */
-	for (i = EXCCODE_INT_START; i < EXCCODE_INT_END; i++) {
-		vec_start = vi_table[i - EXCCODE_INT_START];
-		set_handler(i * vec_size, vec_start, vec_size);
-	}
-
-	set_handler(EXCCODE_GENERIC * vec_size , except_vec_vi_handler, vec_size);
-
-#ifdef CONFIG_MMU
-	set_handler(EXCCODE_TLBL * vec_size, handle_tlb_load, vec_size);
-	set_handler(EXCCODE_TLBS * vec_size, handle_tlb_store, vec_size);
-	set_handler(EXCCODE_TLBI * vec_size, handle_tlb_load, vec_size);
-	set_handler(EXCCODE_TLBM * vec_size, handle_tlb_modify, vec_size);
-	set_handler(EXCCODE_TLBRI * vec_size, handle_tlb_rixi, vec_size);
-	set_handler(EXCCODE_TLBXI * vec_size, handle_tlb_rixi, vec_size);
-#endif
-	set_handler(EXCCODE_ADE * vec_size, handle_ade, vec_size);
-	set_handler(EXCCODE_ALE * vec_size, handle_ale, vec_size);
-	set_handler(EXCCODE_SYS * vec_size, handle_syscall, vec_size);
-	set_handler(EXCCODE_BP * vec_size, handle_bp, vec_size);
-	set_handler(EXCCODE_INE * vec_size, handle_ri, vec_size);
-	set_handler(EXCCODE_IPE * vec_size, handle_ri, vec_size);
-	set_handler(EXCCODE_FPDIS * vec_size, handle_fpu, vec_size);
-	set_handler(EXCCODE_LSXDIS * vec_size, handle_lsx, vec_size);
-	set_handler(EXCCODE_LASXDIS * vec_size, handle_lasx, vec_size);
-	set_handler(EXCCODE_FPE * vec_size, handle_fpe, vec_size);
-	set_handler(EXCCODE_BTDIS * vec_size, handle_lbt, vec_size);
-	set_handler(EXCCODE_WATCH * vec_size, handle_watch, vec_size);
-
-	cache_error_setup();
-
-	local_flush_icache_range(eentry, eentry + 0x400);
+	// "ibar 0" is not supported yet 
+	//local_flush_icache_range(eentry, eentry + 0x400);
 }

@@ -95,8 +95,13 @@ static inline void check_stack_overflow(void) {}
  */
 void __irq_entry do_IRQ(unsigned int irq)
 {
+	//printk("!!! timer inter, do_IRQ irq=%d\n", (int)irq);
+	//printk("irq_enter()\n");
 	irq_enter();
+	//printk("check_stack_overflow()\n");
 	check_stack_overflow();
+	//printk("generic_handle_irq()\n");
 	generic_handle_irq(irq);
+	//printk("irq_exit()\n");
 	irq_exit();
 }

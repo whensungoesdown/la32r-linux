@@ -18,29 +18,41 @@
 
 void mach_irq_dispatch(unsigned int pending)
 {
-	if (pending & 0x800)
+//	if (pending & 0x800)
+//		do_IRQ(LOONGSON_TIMER_IRQ);
+//#ifndef CONFIG_BX_SOC
+//	if (pending & 0x20)
+//		do_IRQ(4);
+//	if (pending & 0x4)
+//		do_IRQ(LOONGSON_GMAC_IRQ) ; //in fact , it's for ehternet
+//	if (pending & 0x8)
+//		do_IRQ(LOONGSON_UART_IRQ);
+//#else
+//	else if (pending & 0x4)
+//		do_IRQ(LOONGSON_CPU_IRQ_BASE + 2); 	/* IP2 */
+//	else if (pending & 0x8)
+//		do_IRQ(LOONGSON_CPU_IRQ_BASE + 3); 	/* IP2 */
+//#endif
+
+	if (pending & 0x8) // SOC2, IS[3] is timer interrupt
 		do_IRQ(LOONGSON_TIMER_IRQ);
-#ifndef CONFIG_BX_SOC
-	if (pending & 0x20)
-		do_IRQ(4);
-	if (pending & 0x4)
-		do_IRQ(LOONGSON_GMAC_IRQ) ; //in fact , it's for ehternet
-	if (pending & 0x8)
-		do_IRQ(LOONGSON_UART_IRQ);
-#else
-	else if (pending & 0x4)
-		do_IRQ(LOONGSON_CPU_IRQ_BASE + 2); 	/* IP2 */
-	else if (pending & 0x8)
-		do_IRQ(LOONGSON_CPU_IRQ_BASE + 3); 	/* IP2 */
-#endif
 }
 
-asmlinkage void plat_irq_dispatch(int irq)
+// uty: test
+//asmlinkage void plat_irq_dispatch(int irq)
+asmlinkage void plat_irq_dispatch(struct pt_regs *regs)
 {
 	unsigned int pending;
-	pending = read_csr_estat() & read_csr_ecfg();
+	struct pt_regs *old_regs = set_irq_regs(regs);
+
+	// uty: test
+	printk("!!! plat_irq_dispatch() regs=0x%x\n", (int)regs);
+	//pending = read_csr_estat() & read_csr_ecfg();
+	pending = read_csr_estat(); // ecfg not implemented yet
 	/* machine-specific plat_irq_dispatch */
 	mach_irq_dispatch(pending);
+
+	set_irq_regs(old_regs);
 }
 
 void __init setup_IRQ(void)

@@ -325,6 +325,11 @@ static bool pcpu_check_block_hint(struct pcpu_block_md *block, int bits,
 	int bit_off = ALIGN(block->contig_hint_start, align) -
 		block->contig_hint_start;
 
+	//printk("!!! block=0x%x\n", (int)block);
+	//printk("!!! bits=0x%x\n", (int)bits);
+	//printk("!!! bit_off=0x%x\n", (int)bit_off);
+	//printk("!!! block->contig_hint=0x%x\n", (int)block->contig_hint);
+
 	return bit_off + bits <= block->contig_hint;
 }
 
@@ -1115,12 +1120,17 @@ static int pcpu_find_block_fit(struct pcpu_chunk *chunk, int alloc_bits,
 	 * allocation cannot fit in the global hint, there is memory pressure
 	 * and creating a new chunk would happen soon.
 	 */
+	//printk("					pcpu_check_block_hint()\n");
+	//printk("!!! chunk: free_bytes=%zu\n", chunk->free_bytes);
+	//printk("!!! chunk_md: contig_hint=%d, contig_hint_start=%d\n", chunk_md->contig_hint, chunk_md->contig_hint_start);
 	if (!pcpu_check_block_hint(chunk_md, alloc_bits, align))
 		return -1;
 
+	//printk("					pcpu_next_hint()\n");
 	bit_off = pcpu_next_hint(chunk_md, alloc_bits);
 	bits = 0;
 	pcpu_for_each_fit_region(chunk, alloc_bits, align, bit_off, bits) {
+		//printk("					pcpu_is_populated()\n");
 		if (!pop_only || pcpu_is_populated(chunk, bit_off, bits,
 						   &next_off))
 			break;
@@ -1129,6 +1139,7 @@ static int pcpu_find_block_fit(struct pcpu_chunk *chunk, int alloc_bits,
 		bits = 0;
 	}
 
+	//printk("					pcpu_chunk_map_bits()\n");
 	if (bit_off == pcpu_chunk_map_bits(chunk))
 		return -1;
 
@@ -1738,6 +1749,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 	void __percpu *ptr;
 	size_t bits, bit_align;
 
+	printk("in pcpu_alloc()\n");
 
 	gfp = current_gfp_context(gfp);
 	/* whitelisted flags that can be passed to the backing allocators */
@@ -1766,6 +1778,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 		return NULL;
 	}
 
+	//printk("				pcpu_memcg_pre_alloc_hook()\n");
 	if (unlikely(!pcpu_memcg_pre_alloc_hook(size, gfp, &objcg)))
 		return NULL;
 
@@ -1783,18 +1796,22 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 		}
 	}
 
+	//printk("				spin_lock_irqsave()\n");
 	spin_lock_irqsave(&pcpu_lock, flags);
+	//printk("				spin_lock_irqsave() finish\n");
 
 	/* serve reserved allocations from the reserved chunk if available */
 	if (reserved && pcpu_reserved_chunk) {
 		chunk = pcpu_reserved_chunk;
 
+		printk("				pcpu_find_block_fit() reserved\n");
 		off = pcpu_find_block_fit(chunk, bits, bit_align, is_atomic);
 		if (off < 0) {
 			err = "alloc from reserved chunk failed";
 			goto fail_unlock;
 		}
 
+		printk("				pcpu_alloc_area() reserved\n");
 		off = pcpu_alloc_area(chunk, bits, bit_align, off);
 		if (off >= 0)
 			goto area_found;
@@ -1808,14 +1825,17 @@ restart:
 	for (slot = pcpu_size_to_slot(size); slot <= pcpu_free_slot; slot++) {
 		list_for_each_entry_safe(chunk, next, &pcpu_chunk_lists[slot],
 					 list) {
+			//printk("				pcpu_find_block_fit()\n");
 			off = pcpu_find_block_fit(chunk, bits, bit_align,
 						  is_atomic);
+			//printk("				pcpu_find_block_fit() finish\n");
 			if (off < 0) {
 				if (slot < PCPU_SLOT_FAIL_THRESHOLD)
 					pcpu_chunk_move(chunk, 0);
 				continue;
 			}
 
+			//printk("				pcpu_alloc_area()\n");
 			off = pcpu_alloc_area(chunk, bits, bit_align, off);
 			if (off >= 0) {
 				pcpu_reintegrate_chunk(chunk);
@@ -1837,6 +1857,7 @@ restart:
 	}
 
 	if (list_empty(&pcpu_chunk_lists[pcpu_free_slot])) {
+		//printk("				pcpu_create_chunk()\n");
 		chunk = pcpu_create_chunk(pcpu_gfp);
 		if (!chunk) {
 			err = "failed to allocate new chunk";
@@ -1844,6 +1865,7 @@ restart:
 		}
 
 		spin_lock_irqsave(&pcpu_lock, flags);
+		//printk("				pcpu_chunk_relocate()\n");
 		pcpu_chunk_relocate(chunk, -1);
 	} else {
 		spin_lock_irqsave(&pcpu_lock, flags);
@@ -1852,7 +1874,7 @@ restart:
 	goto restart;
 
 area_found:
-	//// uty: test
+	// uty: test
 	//if (chunk->immutable) {
 	//	pr_emerg("pcpu_alloc: IMMUTABLE chunk selected! reserved=%d, is_atomic=%d, size=%zu, align=%zu\n",
 	//			reserved, is_atomic, size, align);
@@ -1862,6 +1884,7 @@ area_found:
 	//	while(1){}
 	//}
 
+	//printk("				pcpu_stats_area_alloc()\n");
 	pcpu_stats_area_alloc(chunk, size);
 	spin_unlock_irqrestore(&pcpu_lock, flags);
 
@@ -1904,6 +1927,7 @@ area_found:
 	trace_percpu_alloc_percpu(reserved, is_atomic, size, align,
 			chunk->base_addr, off, ptr);
 
+	//printk("				pcpu_memcg_post_alloc_hook()\n");
 	pcpu_memcg_post_alloc_hook(objcg, chunk, off, size);
 
 	return ptr;
@@ -3305,6 +3329,7 @@ static void __init pcpu_dfl_fc_free(void *ptr, size_t size)
 	memblock_free_early(__pa(ptr), size);
 }
 
+// uty: test
 void __init setup_per_cpu_areas(void)
 {
 	unsigned long delta;
@@ -3325,9 +3350,63 @@ void __init setup_per_cpu_areas(void)
 	for_each_possible_cpu(cpu)
 		__per_cpu_offset[cpu] = delta + pcpu_unit_offsets[cpu];
 }
+//void __init setup_per_cpu_areas(void)
+//{
+//    unsigned long delta;
+//    unsigned int cpu;
+//    int rc;
+//    struct pcpu_alloc_info *ai;
+//
+//    // 可选：手动构建一个简单的 alloc_info 来查看参数
+//    pr_info("percpu: PERCPU_MODULE_RESERVE=%lu, PERCPU_DYNAMIC_RESERVE=%lu, PAGE_SIZE=%lu\n",
+//            PERCPU_MODULE_RESERVE, PERCPU_DYNAMIC_RESERVE, PAGE_SIZE);
+//
+//    rc = pcpu_embed_first_chunk(PERCPU_MODULE_RESERVE,
+//                                PERCPU_DYNAMIC_RESERVE, PAGE_SIZE, NULL,
+//                                pcpu_dfl_fc_alloc, pcpu_dfl_fc_free);
+//    if (rc < 0)
+//        panic("Failed to initialize percpu areas.");
+//
+//    // 在成功初始化后，打印出基础地址和单元偏移量
+//    pr_info("percpu: pcpu_base_addr=%px, __per_cpu_start=%px\n",
+//            pcpu_base_addr, __per_cpu_start);
+//    delta = (unsigned long)pcpu_base_addr - (unsigned long)__per_cpu_start;
+//    pr_info("percpu: delta=%#lx\n", delta);
+//    for_each_possible_cpu(cpu) {
+//        __per_cpu_offset[cpu] = delta + pcpu_unit_offsets[cpu];
+//        pr_info("percpu: cpu%d offset=%#lx\n", cpu, __per_cpu_offset[cpu]);
+//    }
+//
+//    while(1){}
+//}
 #endif	/* CONFIG_HAVE_SETUP_PER_CPU_AREA */
 
 #else	/* CONFIG_SMP */
+
+//static void dump_pcpu_state(void)
+//{
+//    struct pcpu_chunk *chunk;
+//    int chunk_index = 0;
+//    int block_index = 0;
+//    int slot = 0;
+//
+//    pr_info("------ dump pcpu state start ------\n");
+//
+//    for (slot = 0; slot < pcpu_nr_slots; slot++) {
+//        list_for_each_entry(chunk, &pcpu_chunk_lists[slot], list) {
+//            pr_info("Chunk %d: base=%px, free_bytes=%d, start_offset=%d, end_offset=%d, immutable=%d\n",
+//                    chunk_index, chunk->base_addr, chunk->free_bytes, chunk->start_offset, chunk->end_offset, chunk->immutable);
+//
+//            for (block_index = 0; block_index < pcpu_chunk_nr_blocks(chunk); block_index++) {
+//                struct pcpu_block_md *block = &chunk->md_blocks[block_index];
+//                pr_info("  Block %d: contig_hint=%d, contig_hint_start=%d, left_free=%d, right_free=%d, first_free=%d\n",
+//                        block_index, block->contig_hint, block->contig_hint_start, block->left_free, block->right_free, block->first_free);
+//            }
+//            chunk_index++;
+//        }
+//    }
+//    pr_info("------ dump pcpu state end ------\n");
+//}
 
 /*
  * UP percpu area setup.
@@ -3341,6 +3420,10 @@ void __init setup_per_cpu_areas(void)
 	const size_t unit_size =
 		roundup_pow_of_two(max_t(size_t, PCPU_MIN_UNIT_SIZE,
 					 PERCPU_DYNAMIC_RESERVE));
+
+	// uty: test
+        //const size_t unit_size = 4 * 1024 * 1024;   // 4MB
+
 	struct pcpu_alloc_info *ai;
 	void *fc;
 
@@ -3359,6 +3442,10 @@ void __init setup_per_cpu_areas(void)
 	ai->groups[0].cpu_map[0] = 0;
 
 	pcpu_setup_first_chunk(ai, fc);
+	// uty: test
+	//pcpu_dump_alloc_info(KERN_INFO, ai);
+	//dump_pcpu_state();
+	//while(1) {}
 	pcpu_free_alloc_info(ai);
 }
 

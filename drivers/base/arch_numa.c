@@ -174,6 +174,9 @@ void __init setup_per_cpu_areas(void)
 	unsigned int cpu;
 	int rc;
 
+	printk("!!! setup_per_cpu_areas() in drivers/base/arch_numa.c\n");
+	while (1){}
+
 	/*
 	 * Always reserve area for module percpu variables.  That's
 	 * what the legacy allocator did.
