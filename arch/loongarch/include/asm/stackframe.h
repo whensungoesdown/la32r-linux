@@ -241,6 +241,7 @@
 	.macro	CLI
 	li.w	t0, 0x7
 	csrxchg	zero, t0, LOONGARCH_CSR_CRMD
+	// uty: test
 	csrrd	x0, PERCPU_BASE_KS
 	.endm
 
@@ -249,6 +250,7 @@
 	li.w	t0, 0x7
 	li.w	t1, (1 << 2)
 	csrxchg	t1, t0, LOONGARCH_CSR_CRMD
+	// uty: test
 	csrrd	x0, PERCPU_BASE_KS
 	.endm
 

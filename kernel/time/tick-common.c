@@ -141,7 +141,7 @@ void tick_handle_periodic(struct clock_event_device *dev)
 		 * Setup the next period for devices, which do not have
 		 * periodic mode:
 		 */
-		//printk("				   	 ktime_add_ns()\n");
+		printk("				   	 ktime_add_ns()\n");
 		next = ktime_add_ns(next, TICK_NSEC);
 
 		printk("				   	 clockevents_program_event()\n");

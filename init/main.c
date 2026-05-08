@@ -1112,7 +1112,11 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	printk("local_irq_enable()\n");
 	local_irq_enable();
 
+
 	printk("kmem_cache_init_late()\n");
+
+	//while(1){ printk("test\n");}
+
 	kmem_cache_init_late();
 
 	/*

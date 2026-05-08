@@ -1374,6 +1374,9 @@ static inline void write_csr_pagesize(unsigned int size)
 #define read_csr_asid()			__csrrd_w(LOONGARCH_CSR_ASID)
 #define write_csr_asid(val)		__csrwr_w(val, LOONGARCH_CSR_ASID)
 
+#define read_csr_epc()			__csrrd_w(LOONGARCH_CSR_EPC)
+#define read_csr_tcfg()			__csrrd_w(LOONGARCH_CSR_TCFG)
+
 #define read_csr_ecfg()			__csrrd_w(LOONGARCH_CSR_ECFG)
 #define write_csr_ecfg(val)		__csrwr_w(val, LOONGARCH_CSR_ECFG)
 #define read_csr_estat()		__csrrd_w(LOONGARCH_CSR_ESTAT)

@@ -33,23 +33,18 @@ irqreturn_t constant_timer_interrupt(int irq, void *data)
 	int cpu = smp_processor_id();
 	struct clock_event_device *cd;
 
-	printk("				in constant_timer_interrupt()\n");
+	//printk("				in constant_timer_interrupt()\n");
 
 	/* Clear Timer Interrupt */
 	//printk("				   write_csr_tintclear()\n");
 	
 	// uty: test
 	write_csr_tintclear(CSR_TINTCLR_TI);
-	//local_irq_disable();
 
 	cd = &per_cpu(constant_clockevent_device, cpu);
 	//printk("				   cd=0x%x, cd->event_handler=0x%x\n", (int)cd, (int)(cd->event_handler));
-	
-	//local_bh_disable();
 
 	cd->event_handler(cd);
-
-	//local_bh_enable();
 
 	//printk("				   cd->event_handler() fisnish\n");
 	return IRQ_HANDLED;
@@ -94,6 +89,9 @@ static int constant_set_state_periodic(struct clock_event_device *evt)
 	//timer_config = period & CSR_TCFG_VAL;
 	timer_config = period & 0xFFFFFFFC;
 	timer_config |= (CSR_TCFG_PERIOD | CSR_TCFG_EN);
+
+	// uty: test
+	timer_config = 0x2493e3;
 
 	printk("!!! timer_config=0x%x()\n", (int)timer_config);
 

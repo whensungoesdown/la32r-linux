@@ -39,20 +39,37 @@ void mach_irq_dispatch(unsigned int pending)
 }
 
 // uty: test
-//asmlinkage void plat_irq_dispatch(int irq)
-asmlinkage void plat_irq_dispatch(struct pt_regs *regs)
+static unsigned int irq_counter = 0;
+
+asmlinkage void plat_irq_dispatch(int irq)
+//asmlinkage void plat_irq_dispatch(struct pt_regs *regs)
 {
 	unsigned int pending;
-	struct pt_regs *old_regs = set_irq_regs(regs);
+	//struct pt_regs *old_regs = set_irq_regs(regs);
+	unsigned int epc = 0;
+	unsigned int tcfg = 0;
+	unsigned int estat = 0;
+
 
 	// uty: test
-	printk("!!! plat_irq_dispatch() regs=0x%x\n", (int)regs);
+	if (++irq_counter >= 600) 
+	//if (irq_counter++ % 600 == 0) 
+	{
+		irq_counter = 0;
+		epc = read_csr_epc();
+		tcfg = read_csr_tcfg();
+		estat = read_csr_estat();
+		printk("!!! plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x\n", epc, tcfg, estat);
+	}
 	//pending = read_csr_estat() & read_csr_ecfg();
 	pending = read_csr_estat(); // ecfg not implemented yet
+	
 	/* machine-specific plat_irq_dispatch */
 	mach_irq_dispatch(pending);
 
-	set_irq_regs(old_regs);
+	//set_irq_regs(old_regs);
+
+	//printk("!!! plat_irq_dispatch() finish\n");
 }
 
 void __init setup_IRQ(void)

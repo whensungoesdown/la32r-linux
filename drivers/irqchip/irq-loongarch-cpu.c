@@ -15,16 +15,18 @@
 
 static struct irq_domain *irq_domain;
 
+// uty: test
+
 static inline void enable_loongarch_irq(struct irq_data *d)
 {
-	set_csr_ecfg(ECFGF(d->hwirq));
+	//set_csr_ecfg(ECFGF(d->hwirq));
 }
 
 #define eoi_loongarch_irq enable_loongarch_irq
 
 static inline void disable_loongarch_irq(struct irq_data *d)
 {
-	clear_csr_ecfg(ECFGF(d->hwirq));
+	//clear_csr_ecfg(ECFGF(d->hwirq));
 }
 
 #define ack_loongarch_irq disable_loongarch_irq
@@ -63,8 +65,8 @@ static const struct irq_domain_ops loongarch_cpu_intc_irq_domain_ops = {
 int __init loongarch_cpu_irq_init(struct device_node *of_node, struct device_node *parent)
 {
 	/* Mask interrupts. */
-	clear_csr_ecfg(ECFG0_IM);
-	clear_csr_estat(ESTATF_IP);
+	//clear_csr_ecfg(ECFG0_IM);
+	//clear_csr_estat(ESTATF_IP);
 
 	irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM,
 		     LOONGSON_CPU_IRQ_BASE, &loongarch_cpu_intc_irq_domain_ops, NULL);

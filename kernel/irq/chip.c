@@ -889,6 +889,7 @@ void handle_percpu_irq(struct irq_desc *desc)
 	 * PER CPU interrupts are not serialized. Do not touch
 	 * desc->tot_count.
 	 */
+	// uty: test
 	__kstat_incr_irqs_this_cpu(desc);
 
 	if (chip->irq_ack)
