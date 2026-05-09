@@ -614,6 +614,10 @@ out:
 static bool is_tmpfs;
 static int rootfs_init_fs_context(struct fs_context *fc)
 {
+	// uty: test
+	printk("!!! in rootfs_init_fs_context()\n");
+	//while(1){}
+
 	if (IS_ENABLED(CONFIG_TMPFS) && is_tmpfs)
 		return shmem_init_fs_context(fc);
 

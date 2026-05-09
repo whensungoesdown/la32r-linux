@@ -585,7 +585,9 @@ static void free_ioctx(struct work_struct *work)
 	pr_debug("freeing %p\n", ctx);
 
 	aio_free_ring(ctx);
-	free_percpu(ctx->cpu);
+	// uty: test
+	//free_percpu(ctx->cpu);
+	kfree(ctx->cpu);
 	percpu_ref_exit(&ctx->reqs);
 	percpu_ref_exit(&ctx->users);
 	kmem_cache_free(kioctx_cachep, ctx);
@@ -752,7 +754,9 @@ static struct kioctx *ioctx_alloc(unsigned nr_events)
 	if (percpu_ref_init(&ctx->reqs, free_ioctx_reqs, 0, GFP_KERNEL))
 		goto err;
 
-	ctx->cpu = alloc_percpu(struct kioctx_cpu);
+	// uty: test
+	//ctx->cpu = alloc_percpu(struct kioctx_cpu);
+	ctx->cpu = kzalloc(sizeof(struct kioctx_cpu), GFP_NOWAIT);
 	if (!ctx->cpu)
 		goto err;
 
@@ -799,7 +803,9 @@ err_ctx:
 	aio_free_ring(ctx);
 err:
 	mutex_unlock(&ctx->ring_lock);
-	free_percpu(ctx->cpu);
+	// uty: test
+	//free_percpu(ctx->cpu);
+	kfree(ctx->cpu);
 	percpu_ref_exit(&ctx->reqs);
 	percpu_ref_exit(&ctx->users);
 	kmem_cache_free(kioctx_cachep, ctx);

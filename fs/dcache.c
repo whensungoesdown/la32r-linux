@@ -3259,14 +3259,22 @@ void __init vfs_caches_init_early(void)
 
 void __init vfs_caches_init(void)
 {
+	printk("	kmem_cache_create_usercopy()\n");
 	names_cachep = kmem_cache_create_usercopy("names_cache", PATH_MAX, 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC, 0, PATH_MAX, NULL);
 
+	printk("	dcache_init()\n");
 	dcache_init();
+	printk("	inode_init()\n");
 	inode_init();
+	printk("	files_init()\n");
 	files_init();
+	printk("	files_maxfiles_init()\n");
 	files_maxfiles_init();
+	printk("	mnt_init()\n");
 	mnt_init();
+	printk("	bdev_cache_init()\n");
 	bdev_cache_init();
+	printk("	chrdev_init()\n");
 	chrdev_init();
 }

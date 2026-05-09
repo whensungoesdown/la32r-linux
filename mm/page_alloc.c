@@ -5363,7 +5363,7 @@ struct page *__alloc_pages(gfp_t gfp, unsigned int order, int preferred_nid,
 	gfp_t alloc_gfp; /* The gfp_t that was actually used for allocation */
 	struct alloc_context ac = { };
 
-	printk("!!! current_thread_info=0x%x\n", (int)current_thread_info());
+	//printk("!!! current_thread_info=0x%x\n", (int)current_thread_info());
 	/*
 	 * There are several places where we assume that the order value is sane
 	 * so bail out early if the request is out of bound.
@@ -6946,9 +6946,12 @@ void __meminit setup_zone_pageset(struct zone *zone)
 
 	/* Size may be 0 on !SMP && !NUMA */
 	if (sizeof(struct per_cpu_zonestat) > 0)
-		zone->per_cpu_zonestats = alloc_percpu(struct per_cpu_zonestat);
+		// uty: test
+		//zone->per_cpu_zonestats = alloc_percpu(struct per_cpu_zonestat);
+		zone->per_cpu_zonestats = kzalloc(sizeof(struct per_cpu_zonestat), GFP_NOWAIT);
 
-	zone->per_cpu_pageset = alloc_percpu(struct per_cpu_pages);
+	//zone->per_cpu_pageset = alloc_percpu(struct per_cpu_pages);
+	zone->per_cpu_pageset = kzalloc(sizeof(struct per_cpu_pages), GFP_NOWAIT);
 	for_each_possible_cpu(cpu) {
 		struct per_cpu_pages *pcp;
 		struct per_cpu_zonestat *pzstats;
@@ -6990,7 +6993,9 @@ void __init setup_per_cpu_pageset(void)
 
 	for_each_online_pgdat(pgdat)
 		pgdat->per_cpu_nodestats =
-			alloc_percpu(struct per_cpu_nodestat);
+			// uty: test
+			//alloc_percpu(struct per_cpu_nodestat);
+			kzalloc(sizeof(struct per_cpu_nodestat), GFP_NOWAIT);
 }
 
 static __meminit void zone_pcp_init(struct zone *zone)

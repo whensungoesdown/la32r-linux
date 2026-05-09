@@ -3613,7 +3613,9 @@ static void shmem_put_super(struct super_block *sb)
 {
 	struct shmem_sb_info *sbinfo = SHMEM_SB(sb);
 
-	free_percpu(sbinfo->ino_batch);
+	// uty: test
+	//free_percpu(sbinfo->ino_batch);
+	kfree(sbinfo->ino_batch);
 	percpu_counter_destroy(&sbinfo->used_blocks);
 	mpol_put(sbinfo->mpol);
 	kfree(sbinfo);
@@ -3659,7 +3661,9 @@ static int shmem_fill_super(struct super_block *sb, struct fs_context *fc)
 	sbinfo->max_blocks = ctx->blocks;
 	sbinfo->free_inodes = sbinfo->max_inodes = ctx->inodes;
 	if (sb->s_flags & SB_KERNMOUNT) {
-		sbinfo->ino_batch = alloc_percpu(ino_t);
+		// uty: test
+		//sbinfo->ino_batch = alloc_percpu(ino_t);
+		sbinfo->ino_batch = kzalloc(sizeof(ino_t), GFP_NOWAIT);
 		if (!sbinfo->ino_batch)
 			goto failed;
 	}
@@ -3900,14 +3904,17 @@ int __init shmem_init(void)
 {
 	int error;
 
+	printk("			shmem_init_inodecache()\n");
 	shmem_init_inodecache();
 
+	printk("			register_filesystem()\n");
 	error = register_filesystem(&shmem_fs_type);
 	if (error) {
 		pr_err("Could not register tmpfs\n");
 		goto out2;
 	}
 
+	printk("			kern_mount()\n");
 	shm_mnt = kern_mount(&shmem_fs_type);
 	if (IS_ERR(shm_mnt)) {
 		error = PTR_ERR(shm_mnt);
@@ -3924,8 +3931,10 @@ int __init shmem_init(void)
 	return 0;
 
 out1:
+	printk("			unregister_filesystem()\n");
 	unregister_filesystem(&shmem_fs_type);
 out2:
+	printk("			shmem_destroy_inodecache()\n");
 	shmem_destroy_inodecache();
 	shm_mnt = ERR_PTR(error);
 	return error;
@@ -4045,8 +4054,10 @@ static struct file_system_type shmem_fs_type = {
 
 int __init shmem_init(void)
 {
+	printk("			register_filesystem()\n");
 	BUG_ON(register_filesystem(&shmem_fs_type) != 0);
 
+	printk("			kern_mount()\n");
 	shm_mnt = kern_mount(&shmem_fs_type);
 	BUG_ON(IS_ERR(shm_mnt));
 

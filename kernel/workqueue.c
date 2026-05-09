@@ -3291,7 +3291,7 @@ int schedule_on_each_cpu(work_func_t func)
 	
 	// uty: test
 	//works = alloc_percpu(struct work_struct);
-	works = kzalloc(num_possible_cpus() * sizeof(struct work_struct), GFP_KERNEL);
+	works = kzalloc(num_possible_cpus() * sizeof(struct work_struct), GFP_NOWAIT);
 	if (!works)
 		return -ENOMEM;
 
@@ -4182,7 +4182,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 		printk("			kzalloc()\n");
 		// uty: test
 		//wq->cpu_pwqs = alloc_percpu(struct pool_workqueue);
-		wq->cpu_pwqs = kzalloc(num_possible_cpus() * sizeof(struct pool_workqueue), GFP_KERNEL);
+		wq->cpu_pwqs = kzalloc(num_possible_cpus() * sizeof(struct pool_workqueue), GFP_NOWAIT);
 
 		printk("!!! wq->cpu_pwqs=0x%x\n", (int)(wq->cpu_pwqs));
 		if (!wq->cpu_pwqs)
@@ -4276,6 +4276,8 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	struct workqueue_struct *wq;
 	struct pool_workqueue *pwq;
 
+	printk("		in alloc_workqueue()\n");
+
 	/*
 	 * Unbound && max_active == 1 used to imply ordered, which is no
 	 * longer the case on NUMA machines due to per-node pools.  While
@@ -4294,9 +4296,9 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	if (flags & WQ_UNBOUND)
 		tbl_size = nr_node_ids * sizeof(wq->numa_pwq_tbl[0]);
 
-	printk("		kzalloc()\n");
+	//printk("		kzalloc()\n");
 	wq = kzalloc(sizeof(*wq) + tbl_size, GFP_KERNEL);
-	printk("!!! wq=0x%x\n", (int)wq);
+	//printk("!!! wq=0x%x\n", (int)wq);
 	if (!wq)
 		return NULL;
 
@@ -4323,19 +4325,19 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	INIT_LIST_HEAD(&wq->flusher_overflow);
 	INIT_LIST_HEAD(&wq->maydays);
 
-	printk("		wq_init_lockdep()\n");
+	//printk("		wq_init_lockdep()\n");
 	wq_init_lockdep(wq);
 	INIT_LIST_HEAD(&wq->list);
 
-	printk("		alloc_and_link_pwqs()\n");
+	//printk("		alloc_and_link_pwqs()\n");
 	if (alloc_and_link_pwqs(wq) < 0)
 		goto err_unreg_lockdep;
 
-	printk("		init_rescuer()\n");
+	//printk("		init_rescuer()\n");
 	if (wq_online && init_rescuer(wq) < 0)
 		goto err_destroy;
 
-	printk("		workqueue_sysfs_register()\n");
+	//printk("		workqueue_sysfs_register()\n");
 	if ((wq->flags & WQ_SYSFS) && workqueue_sysfs_register(wq))
 		goto err_destroy;
 
@@ -4344,29 +4346,29 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	 * Grab it, adjust max_active and add the new @wq to workqueues
 	 * list.
 	 */
-	printk("		mutex_lock(&wq_pool_mutex)\n");
+	//printk("		mutex_lock(&wq_pool_mutex)\n");
 	mutex_lock(&wq_pool_mutex);
 
-	printk("		mutex_lock(&wq->mutex)\n");
+	//printk("		mutex_lock(&wq->mutex)\n");
 	mutex_lock(&wq->mutex);
 	for_each_pwq(pwq, wq)
 		pwq_adjust_max_active(pwq);
 	mutex_unlock(&wq->mutex);
 
-	printk("		list_add_tail_rcu()\n");
+	//printk("		list_add_tail_rcu()\n");
 	list_add_tail_rcu(&wq->list, &workqueues);
 
-	printk("		mutex_unlock()\n");
+	//printk("		mutex_unlock()\n");
 	mutex_unlock(&wq_pool_mutex);
 
 	return wq;
 
 err_unreg_lockdep:
-	printk("		wq_unregister_lockdep()\n");
+	//printk("		wq_unregister_lockdep()\n");
 	wq_unregister_lockdep(wq);
 	wq_free_lockdep(wq);
 err_free_wq:
-	printk("		free_workqueue_attrs()\n");
+	//printk("		free_workqueue_attrs()\n");
 	free_workqueue_attrs(wq->unbound_attrs);
 	kfree(wq);
 	return NULL;

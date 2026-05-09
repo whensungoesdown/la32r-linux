@@ -5,6 +5,8 @@
 #ifdef CONFIG_VT
 #include <linux/screen_info.h>
 #endif
+// loongsonlist_screeninfo.si needs it 
+#include <linux/screen_info.h>
 
 #define ADDRESS_TYPE_SYSRAM	1
 #define ADDRESS_TYPE_RESERVED	2

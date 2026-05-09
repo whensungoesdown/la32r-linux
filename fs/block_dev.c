@@ -809,7 +809,9 @@ static void bdev_free_inode(struct inode *inode)
 {
 	struct block_device *bdev = I_BDEV(inode);
 
-	free_percpu(bdev->bd_stats);
+	// uty: test
+	//free_percpu(bdev->bd_stats);
+	kfree(bdev->bd_stats);
 	kfree(bdev->bd_meta_info);
 
 	kmem_cache_free(bdev_cachep, BDEV_I(inode));
@@ -903,7 +905,9 @@ struct block_device *bdev_alloc(struct gendisk *disk, u8 partno)
 #ifdef CONFIG_SYSFS
 	INIT_LIST_HEAD(&bdev->bd_holder_disks);
 #endif
-	bdev->bd_stats = alloc_percpu(struct disk_stats);
+	// uty: test
+	//bdev->bd_stats = alloc_percpu(struct disk_stats);
+	bdev->bd_stats = kzalloc(sizeof(struct disk_stats), GFP_NOWAIT);
 	if (!bdev->bd_stats) {
 		iput(inode);
 		return NULL;

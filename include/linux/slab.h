@@ -459,7 +459,7 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
-	printk("!!! test 0\n");
+	//printk("!!! test 0\n");
 	return kmem_cache_alloc(s, flags);
 }
 #endif

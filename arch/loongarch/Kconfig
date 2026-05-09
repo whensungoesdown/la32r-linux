@@ -137,6 +137,7 @@ config MACH_LOONGSON32
 	#select ZONE_DMA32
 #	select PCI
 #	select HAVE_PCI
+	select ARCH_WANT_FRAME_POINTERS
 	help
 	  This enables the support of Loongson 32-bit family of machines. These
 	  machines are based on new Loongson-3 processors.

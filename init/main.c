@@ -670,18 +670,21 @@ noinline void __ref rest_init(void)
 	struct task_struct *tsk;
 	int pid;
 
+	printk("	rcu_scheduler_starting()\n");
 	rcu_scheduler_starting();
 	/*
 	 * We need to spawn init first so that it obtains pid 1, however
 	 * the init task will end up wanting to create kthreads, which, if
 	 * we schedule it before we create kthreadd, will OOPS.
 	 */
+	printk("	kernel_thread()\n");
 	pid = kernel_thread(kernel_init, NULL, CLONE_FS);
 	/*
 	 * Pin init on the boot CPU. Task migration is not properly working
 	 * until sched_init_smp() has been run. It will set the allowed
 	 * CPUs for init to the non isolated CPUs.
 	 */
+	printk("	rcu_read_lock()\n");
 	rcu_read_lock();
 	tsk = find_task_by_pid_ns(pid, &init_pid_ns);
 	tsk->flags |= PF_NO_SETAFFINITY;
@@ -1130,6 +1133,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 		panic("Too many boot %s vars at `%s'", panic_later,
 		      panic_param);
 
+	printk("lockdep_init()\n");
 	lockdep_init();
 
 	/*
@@ -1137,6 +1141,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * to self-test [hard/soft]-irqs on/off lock inversion bugs
 	 * too:
 	 */
+	printk("locking_selftest()\n");
 	locking_selftest();
 
 	/*
@@ -1145,6 +1150,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	 * mark the bounce buffers as decrypted so that their usage will
 	 * not cause "plain-text" data to be decrypted when accessed.
 	 */
+	printk("mem_encrypt_init()\n");
 	mem_encrypt_init();
 
 #ifdef CONFIG_BLK_DEV_INITRD
@@ -1156,48 +1162,83 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 		initrd_start = 0;
 	}
 #endif
+	printk("setup_per_cpu_pageset()\n");
 	setup_per_cpu_pageset();
+	printk("numa_policy_init()\n");
 	numa_policy_init();
+	printk("acpi_early_init()\n");
 	acpi_early_init();
 	if (late_time_init)
+	{
+		printk("late_time_init()\n");
 		late_time_init();
+	}
+	printk("sched_clock_init()\n");
 	sched_clock_init();
-	calibrate_delay();
+	printk("skip calibrate_delay()\n");
+	//calibrate_delay();
+	printk("pid_idr_init()\n");
 	pid_idr_init();
+	printk("anon_vma_init()\n");
 	anon_vma_init();
 #ifdef CONFIG_X86
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
 		efi_enter_virtual_mode();
 #endif
+	printk("thread_stack_cache_init()\n");
 	thread_stack_cache_init();
+	printk("cred_init()\n");
 	cred_init();
+	printk("fork_init()\n");
 	fork_init();
+	printk("proc_caches_init()\n");
 	proc_caches_init();
+	printk("uts_ns_init()\n");
 	uts_ns_init();
+	printk("key_init()\n");
 	key_init();
+	printk("security_init()\n");
 	security_init();
+	printk("dbg_late_init()\n");
 	dbg_late_init();
+	printk("vfs_caches_init()\n");
 	vfs_caches_init();
+	printk("pagecache_init()\n");
 	pagecache_init();
+	printk("signals_init()\n");
 	signals_init();
+	printk("seq_file_init()\n");
 	seq_file_init();
+	printk("proc_root_init()\n");
 	proc_root_init();
+	printk("nsfs_init()\n");
 	nsfs_init();
+	printk("cpuset_init()\n");
 	cpuset_init();
+	printk("cgroup_init()\n");
 	cgroup_init();
+	printk("taskstats_init_early()\n");
 	taskstats_init_early();
+	printk("delayacct_init()\n");
 	delayacct_init();
 
+	printk("poking_init()\n");
 	poking_init();
+	printk("check_bugs()\n");
 	check_bugs();
 
+	printk("acpi_subsystem_init()\n");
 	acpi_subsystem_init();
+	printk("arch_post_acpi_subsys_init()\n");
 	arch_post_acpi_subsys_init();
+	printk("kcsan_init()\n");
 	kcsan_init();
 
 	/* Do the rest non-__init'ed, we're now alive */
+	printk("arch_call_rest_init()\n");
 	arch_call_rest_init();
 
+	printk("prevent_tail_call_optimization()\n");
 	prevent_tail_call_optimization();
 }
 
@@ -1559,6 +1600,7 @@ static int __ref kernel_init(void *unused)
 	/*
 	 * Wait until kthreadd is all set-up.
 	 */
+	printk("in kernel_init()\n");
 	wait_for_completion(&kthreadd_done);
 
 	kernel_init_freeable();

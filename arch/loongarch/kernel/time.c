@@ -91,7 +91,7 @@ static int constant_set_state_periodic(struct clock_event_device *evt)
 	timer_config |= (CSR_TCFG_PERIOD | CSR_TCFG_EN);
 
 	// uty: test
-	timer_config = 0x2493e3;
+	//timer_config = 0x2493e3;
 
 	printk("!!! timer_config=0x%x()\n", (int)timer_config);
 

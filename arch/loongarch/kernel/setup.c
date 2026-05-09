@@ -43,9 +43,10 @@ struct cpuinfo_loongarch cpu_data[NR_CPUS] __read_mostly;
 
 EXPORT_SYMBOL(cpu_data);
 
-#ifdef CONFIG_VT
+// uty: test
+//#ifdef CONFIG_VT
 struct screen_info screen_info;
-#endif
+//#endif
 
 /*
  * Setup information

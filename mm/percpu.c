@@ -1749,7 +1749,10 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 	void __percpu *ptr;
 	size_t bits, bit_align;
 
+	// uty: test
 	printk("in pcpu_alloc()\n");
+	//return kzalloc(size, GFP_KERNEL);
+	return kzalloc(size, GFP_NOWAIT);
 
 	gfp = current_gfp_context(gfp);
 	/* whitelisted flags that can be passed to the backing allocators */
@@ -2311,6 +2314,9 @@ void free_percpu(void __percpu *ptr)
 
 	if (!ptr)
 		return;
+	// uty: test
+	kfree(ptr);
+	return;
 
 	kmemleak_free_percpu(ptr);
 

@@ -398,7 +398,7 @@ static struct irq_desc *alloc_desc(int irq, int node, unsigned int flags,
 	/* allocate based on nr_cpu_ids */
 	// uty: test
 	//desc->kstat_irqs = alloc_percpu(unsigned int);
-	desc->kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_KERNEL);
+	desc->kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_NOWAIT);
 	if (!desc->kstat_irqs)
 		goto err_desc;
 
@@ -578,7 +578,7 @@ int __init early_irq_init(void)
 	for (i = 0; i < count; i++) {
 		// uty: test
 		//desc[i].kstat_irqs = alloc_percpu(unsigned int);
-		desc[i].kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_KERNEL);
+		desc[i].kstat_irqs = kzalloc(num_possible_cpus() * sizeof(unsigned int), GFP_NOWAIT);
 		alloc_masks(&desc[i], node);
 		raw_spin_lock_init(&desc[i].lock);
 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);

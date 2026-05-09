@@ -21,6 +21,8 @@
 #include <linux/screen_info.h>
 #include <linux/platform_device.h>
 #endif
+// uty: test
+#include <linux/screen_info.h>
 
 #include <loongson.h>
 #include <linux/libfdt.h>
@@ -380,17 +382,17 @@ void __init platform_init(void)
 
 #include <linux/platform_device.h>
 
-static int __init register_gop_device(void)
-{
-	void *pd;
-
-	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-		return 0;
-	pd = platform_device_register_data(NULL, "efi-framebuffer", 0,
-			&screen_info, sizeof(screen_info));
-	return PTR_ERR_OR_ZERO(pd);
-}
-subsys_initcall(register_gop_device);
+//static int __init register_gop_device(void)
+//{
+//	void *pd;
+//
+//	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+//		return 0;
+//	pd = platform_device_register_data(NULL, "efi-framebuffer", 0,
+//			&screen_info, sizeof(screen_info));
+//	return PTR_ERR_OR_ZERO(pd);
+//}
+//subsys_initcall(register_gop_device);
 
 #ifdef BX_SOC
 #include <linux/serial_8250.h>

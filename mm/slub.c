@@ -3607,8 +3607,10 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 	 * Must align to double word boundary for the double cmpxchg
 	 * instructions to work; see __pcpu_double_call_return_bool().
 	 */
-	s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
-			2 * sizeof(void *));
+//	s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
+//			2 * sizeof(void *));
+	s->cpu_slab = kzalloc(sizeof(struct kmem_cache_cpu), GFP_KERNEL);
+
 
 	if (!s->cpu_slab)
 		return 0;
@@ -3683,7 +3685,8 @@ void __kmem_cache_release(struct kmem_cache *s)
 	if (s->cpu_slab_from_memblock)
 		s->cpu_slab = NULL;
 	else
-		free_percpu(s->cpu_slab);
+		//free_percpu(s->cpu_slab);
+		kfree(s->cpu_slabs);
 	free_kmem_cache_nodes(s);
 }
 

@@ -264,6 +264,8 @@ int ramfs_init_fs_context(struct fs_context *fc)
 {
 	struct ramfs_fs_info *fsi;
 
+	//printk("!!! in ramfs_init_fs_context()\n");
+
 	fsi = kzalloc(sizeof(*fsi), GFP_KERNEL);
 	if (!fsi)
 		return -ENOMEM;
