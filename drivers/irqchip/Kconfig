@@ -531,8 +531,8 @@ config EXYNOS_IRQ_COMBINER
 config IRQ_LOONGARCH_CPU
 	bool
 	select GENERIC_IRQ_CHIP
-	select IRQ_DOMAIN
-	select GENERIC_IRQ_EFFECTIVE_AFF_MASK
+#	select IRQ_DOMAIN
+#	select GENERIC_IRQ_EFFECTIVE_AFF_MASK
 	help
 	  Support for the LoongArch CPU Interrupt Controller. For details of
 	  irq chip hierarchy on LoongArch platforms please read the document

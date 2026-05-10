@@ -13,9 +13,9 @@
 #include <asm/setup.h>
 #include <asm/loongarchregs.h>
 
-static struct irq_domain *irq_domain;
-
 // uty: test
+//static struct irq_domain *irq_domain;
+
 
 static inline void enable_loongarch_irq(struct irq_data *d)
 {
@@ -41,7 +41,7 @@ static struct irq_chip loongarch_cpu_irq_controller = {
 
 asmlinkage void default_handle_irq(int irq)
 {
-	do_IRQ(irq_linear_revmap(irq_domain, irq));
+	//do_IRQ(irq_linear_revmap(irq_domain, irq));
 }
 
 static int loongarch_cpu_intc_map(struct irq_domain *d, unsigned int irq,
@@ -57,10 +57,10 @@ static int loongarch_cpu_intc_map(struct irq_domain *d, unsigned int irq,
 	return 0;
 }
 
-static const struct irq_domain_ops loongarch_cpu_intc_irq_domain_ops = {
-	.map = loongarch_cpu_intc_map,
-	.xlate = irq_domain_xlate_onecell,
-};
+//static const struct irq_domain_ops loongarch_cpu_intc_irq_domain_ops = {
+//	.map = loongarch_cpu_intc_map,
+//	.xlate = irq_domain_xlate_onecell,
+//};
 
 int __init loongarch_cpu_irq_init(struct device_node *of_node, struct device_node *parent)
 {
@@ -68,12 +68,13 @@ int __init loongarch_cpu_irq_init(struct device_node *of_node, struct device_nod
 	//clear_csr_ecfg(ECFG0_IM);
 	//clear_csr_estat(ESTATF_IP);
 
-	irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM,
-		     LOONGSON_CPU_IRQ_BASE, &loongarch_cpu_intc_irq_domain_ops, NULL);
-
-	if (!irq_domain)
-		panic("Failed to add irqdomain for LoongArch CPU");
-
+	// uty: test
+//	irq_domain = irq_domain_add_simple(of_node, EXCCODE_INT_NUM,
+//		     LOONGSON_CPU_IRQ_BASE, &loongarch_cpu_intc_irq_domain_ops, NULL);
+//
+//	if (!irq_domain)
+//		panic("Failed to add irqdomain for LoongArch CPU");
+//
 	return 0;
 }
 

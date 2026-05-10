@@ -372,85 +372,86 @@ EXPORT_SYMBOL_GPL(irq_get_domain_generic_chip);
 static struct lock_class_key irq_nested_lock_class;
 static struct lock_class_key irq_nested_request_class;
 
+// uty: test
 /*
  * irq_map_generic_chip - Map a generic chip for an irq domain
  */
-int irq_map_generic_chip(struct irq_domain *d, unsigned int virq,
-			 irq_hw_number_t hw_irq)
-{
-	struct irq_data *data = irq_domain_get_irq_data(d, virq);
-	struct irq_domain_chip_generic *dgc = d->gc;
-	struct irq_chip_generic *gc;
-	struct irq_chip_type *ct;
-	struct irq_chip *chip;
-	unsigned long flags;
-	int idx;
+//int irq_map_generic_chip(struct irq_domain *d, unsigned int virq,
+//			 irq_hw_number_t hw_irq)
+//{
+//	struct irq_data *data = irq_domain_get_irq_data(d, virq);
+//	struct irq_domain_chip_generic *dgc = d->gc;
+//	struct irq_chip_generic *gc;
+//	struct irq_chip_type *ct;
+//	struct irq_chip *chip;
+//	unsigned long flags;
+//	int idx;
+//
+//	gc = __irq_get_domain_generic_chip(d, hw_irq);
+//	if (IS_ERR(gc))
+//		return PTR_ERR(gc);
+//
+//	idx = hw_irq % dgc->irqs_per_chip;
+//
+//	if (test_bit(idx, &gc->unused))
+//		return -ENOTSUPP;
+//
+//	if (test_bit(idx, &gc->installed))
+//		return -EBUSY;
+//
+//	ct = gc->chip_types;
+//	chip = &ct->chip;
+//
+//	/* We only init the cache for the first mapping of a generic chip */
+//	if (!gc->installed) {
+//		raw_spin_lock_irqsave(&gc->lock, flags);
+//		irq_gc_init_mask_cache(gc, dgc->gc_flags);
+//		raw_spin_unlock_irqrestore(&gc->lock, flags);
+//	}
+//
+//	/* Mark the interrupt as installed */
+//	set_bit(idx, &gc->installed);
+//
+//	if (dgc->gc_flags & IRQ_GC_INIT_NESTED_LOCK)
+//		irq_set_lockdep_class(virq, &irq_nested_lock_class,
+//				      &irq_nested_request_class);
+//
+//	if (chip->irq_calc_mask)
+//		chip->irq_calc_mask(data);
+//	else
+//		data->mask = 1 << idx;
+//
+//	irq_domain_set_info(d, virq, hw_irq, chip, gc, ct->handler, NULL, NULL);
+//	irq_modify_status(virq, dgc->irq_flags_to_clear, dgc->irq_flags_to_set);
+//	return 0;
+//}
 
-	gc = __irq_get_domain_generic_chip(d, hw_irq);
-	if (IS_ERR(gc))
-		return PTR_ERR(gc);
+//static void irq_unmap_generic_chip(struct irq_domain *d, unsigned int virq)
+//{
+//	struct irq_data *data = irq_domain_get_irq_data(d, virq);
+//	struct irq_domain_chip_generic *dgc = d->gc;
+//	unsigned int hw_irq = data->hwirq;
+//	struct irq_chip_generic *gc;
+//	int irq_idx;
+//
+//	gc = irq_get_domain_generic_chip(d, hw_irq);
+//	if (!gc)
+//		return;
+//
+//	irq_idx = hw_irq % dgc->irqs_per_chip;
+//
+//	clear_bit(irq_idx, &gc->installed);
+//	irq_domain_set_info(d, virq, hw_irq, &no_irq_chip, NULL, NULL, NULL,
+//			    NULL);
+//
+//}
 
-	idx = hw_irq % dgc->irqs_per_chip;
-
-	if (test_bit(idx, &gc->unused))
-		return -ENOTSUPP;
-
-	if (test_bit(idx, &gc->installed))
-		return -EBUSY;
-
-	ct = gc->chip_types;
-	chip = &ct->chip;
-
-	/* We only init the cache for the first mapping of a generic chip */
-	if (!gc->installed) {
-		raw_spin_lock_irqsave(&gc->lock, flags);
-		irq_gc_init_mask_cache(gc, dgc->gc_flags);
-		raw_spin_unlock_irqrestore(&gc->lock, flags);
-	}
-
-	/* Mark the interrupt as installed */
-	set_bit(idx, &gc->installed);
-
-	if (dgc->gc_flags & IRQ_GC_INIT_NESTED_LOCK)
-		irq_set_lockdep_class(virq, &irq_nested_lock_class,
-				      &irq_nested_request_class);
-
-	if (chip->irq_calc_mask)
-		chip->irq_calc_mask(data);
-	else
-		data->mask = 1 << idx;
-
-	irq_domain_set_info(d, virq, hw_irq, chip, gc, ct->handler, NULL, NULL);
-	irq_modify_status(virq, dgc->irq_flags_to_clear, dgc->irq_flags_to_set);
-	return 0;
-}
-
-static void irq_unmap_generic_chip(struct irq_domain *d, unsigned int virq)
-{
-	struct irq_data *data = irq_domain_get_irq_data(d, virq);
-	struct irq_domain_chip_generic *dgc = d->gc;
-	unsigned int hw_irq = data->hwirq;
-	struct irq_chip_generic *gc;
-	int irq_idx;
-
-	gc = irq_get_domain_generic_chip(d, hw_irq);
-	if (!gc)
-		return;
-
-	irq_idx = hw_irq % dgc->irqs_per_chip;
-
-	clear_bit(irq_idx, &gc->installed);
-	irq_domain_set_info(d, virq, hw_irq, &no_irq_chip, NULL, NULL, NULL,
-			    NULL);
-
-}
-
-struct irq_domain_ops irq_generic_chip_ops = {
-	.map	= irq_map_generic_chip,
-	.unmap  = irq_unmap_generic_chip,
-	.xlate	= irq_domain_xlate_onetwocell,
-};
-EXPORT_SYMBOL_GPL(irq_generic_chip_ops);
+//struct irq_domain_ops irq_generic_chip_ops = {
+//	.map	= irq_map_generic_chip,
+//	.unmap  = irq_unmap_generic_chip,
+//	.xlate	= irq_domain_xlate_onetwocell,
+//};
+//EXPORT_SYMBOL_GPL(irq_generic_chip_ops);
 
 /**
  * irq_setup_generic_chip - Setup a range of interrupts with a generic chip
@@ -557,23 +558,25 @@ void irq_remove_generic_chip(struct irq_chip_generic *gc, u32 msk,
 }
 EXPORT_SYMBOL_GPL(irq_remove_generic_chip);
 
-static struct irq_data *irq_gc_get_irq_data(struct irq_chip_generic *gc)
-{
-	unsigned int virq;
+// uty: test
 
-	if (!gc->domain)
-		return irq_get_irq_data(gc->irq_base);
-
-	/*
-	 * We don't know which of the irqs has been actually
-	 * installed. Use the first one.
-	 */
-	if (!gc->installed)
-		return NULL;
-
-	virq = irq_find_mapping(gc->domain, gc->irq_base + __ffs(gc->installed));
-	return virq ? irq_get_irq_data(virq) : NULL;
-}
+//static struct irq_data *irq_gc_get_irq_data(struct irq_chip_generic *gc)
+//{
+//	unsigned int virq;
+//
+//	if (!gc->domain)
+//		return irq_get_irq_data(gc->irq_base);
+//
+//	/*
+//	 * We don't know which of the irqs has been actually
+//	 * installed. Use the first one.
+//	 */
+//	if (!gc->installed)
+//		return NULL;
+//
+//	virq = irq_find_mapping(gc->domain, gc->irq_base + __ffs(gc->installed));
+//	return virq ? irq_get_irq_data(virq) : NULL;
+//}
 
 #ifdef CONFIG_PM
 static int irq_gc_suspend(void)
@@ -619,31 +622,32 @@ static void irq_gc_resume(void)
 #define irq_gc_resume NULL
 #endif
 
-static void irq_gc_shutdown(void)
-{
-	struct irq_chip_generic *gc;
-
-	list_for_each_entry(gc, &gc_list, list) {
-		struct irq_chip_type *ct = gc->chip_types;
-
-		if (ct->chip.irq_pm_shutdown) {
-			struct irq_data *data = irq_gc_get_irq_data(gc);
-
-			if (data)
-				ct->chip.irq_pm_shutdown(data);
-		}
-	}
-}
-
-static struct syscore_ops irq_gc_syscore_ops = {
-	.suspend = irq_gc_suspend,
-	.resume = irq_gc_resume,
-	.shutdown = irq_gc_shutdown,
-};
-
-static int __init irq_gc_init_ops(void)
-{
-	register_syscore_ops(&irq_gc_syscore_ops);
-	return 0;
-}
-device_initcall(irq_gc_init_ops);
+// uty: test
+//static void irq_gc_shutdown(void)
+//{
+//	struct irq_chip_generic *gc;
+//
+//	list_for_each_entry(gc, &gc_list, list) {
+//		struct irq_chip_type *ct = gc->chip_types;
+//
+//		if (ct->chip.irq_pm_shutdown) {
+//			struct irq_data *data = irq_gc_get_irq_data(gc);
+//
+//			if (data)
+//				ct->chip.irq_pm_shutdown(data);
+//		}
+//	}
+//}
+//
+//static struct syscore_ops irq_gc_syscore_ops = {
+//	.suspend = irq_gc_suspend,
+//	.resume = irq_gc_resume,
+//	.shutdown = irq_gc_shutdown,
+//};
+//
+//static int __init irq_gc_init_ops(void)
+//{
+//	register_syscore_ops(&irq_gc_syscore_ops);
+//	return 0;
+//}
+//device_initcall(irq_gc_init_ops);

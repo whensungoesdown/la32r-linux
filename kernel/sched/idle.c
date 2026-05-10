@@ -397,8 +397,11 @@ EXPORT_SYMBOL_GPL(play_idle_precise);
 
 void cpu_startup_entry(enum cpuhp_state state)
 {
+	printk("		arch_cpu_idle_prepare()\n");
 	arch_cpu_idle_prepare();
+	printk("		cpuhp_online_idle()\n");
 	cpuhp_online_idle(state);
+	printk("		goes into while(1) do_idle()\n");
 	while (1)
 		do_idle();
 }

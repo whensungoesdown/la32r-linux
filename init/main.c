@@ -686,14 +686,20 @@ noinline void __ref rest_init(void)
 	 */
 	printk("	rcu_read_lock()\n");
 	rcu_read_lock();
+	printk("	find_task_by_pid_ns()\n");
 	tsk = find_task_by_pid_ns(pid, &init_pid_ns);
 	tsk->flags |= PF_NO_SETAFFINITY;
+	printk("	set_cpus_allowed_ptr()\n");
 	set_cpus_allowed_ptr(tsk, cpumask_of(smp_processor_id()));
+	printk("	rcu_read_unlock()\n");
 	rcu_read_unlock();
 
+	printk("	numa_default_policy()\n");
 	numa_default_policy();
+	printk("	kernel_thread()\n");
 	pid = kernel_thread(kthreadd, NULL, CLONE_FS | CLONE_FILES);
 	rcu_read_lock();
+	printk("	find_task_by_pid_ns()\n");
 	kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
 	rcu_read_unlock();
 
@@ -706,14 +712,17 @@ noinline void __ref rest_init(void)
 	 */
 	system_state = SYSTEM_SCHEDULING;
 
+	printk("	complete()\n");
 	complete(&kthreadd_done);
 
 	/*
 	 * The boot idle thread must execute schedule()
 	 * at least once to get things moving:
 	 */
+	printk("	schedule_preempt_disabled()\n");
 	schedule_preempt_disabled();
 	/* Call into cpu_idle with preempt disabled */
+	printk("	cpu_startup_entry()\n");
 	cpu_startup_entry(CPUHP_ONLINE);
 }
 

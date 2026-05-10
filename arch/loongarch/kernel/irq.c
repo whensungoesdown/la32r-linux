@@ -87,6 +87,7 @@ static inline void check_stack_overflow(void)
 static inline void check_stack_overflow(void) {}
 #endif
 
+irqreturn_t constant_timer_interrupt(int irq, void *data);
 
 /*
  * do_IRQ handles all normal device IRQ's (the special
@@ -101,7 +102,8 @@ void __irq_entry do_IRQ(unsigned int irq)
 	//printk("check_stack_overflow()\n");
 	check_stack_overflow();
 	//printk("generic_handle_irq()\n");
-	generic_handle_irq(irq);
+//	generic_handle_irq(irq);
+	constant_timer_interrupt(irq, NULL);
 	//printk("irq_exit()\n");
 	irq_exit();
 }

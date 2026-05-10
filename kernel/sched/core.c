@@ -6074,8 +6074,11 @@ asmlinkage __visible void __sched schedule_user(void)
  */
 void __sched schedule_preempt_disabled(void)
 {
+	printk("		sched_preempt_enable_no_resched()\n");
 	sched_preempt_enable_no_resched();
+	printk("		schedule()\n");
 	schedule();
+	printk("		preempt_disable()\n");
 	preempt_disable();
 }
 

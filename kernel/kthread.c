@@ -658,6 +658,7 @@ int kthreadd(void *unused)
 {
 	struct task_struct *tsk = current;
 
+	printk("in kthreadd()\n");
 	/* Setup a clean context for our children to inherit. */
 	set_task_comm(tsk, "kthreadd");
 	ignore_signals(tsk);
@@ -682,6 +683,7 @@ int kthreadd(void *unused)
 			list_del_init(&create->list);
 			spin_unlock(&kthread_create_lock);
 
+			printk("	create_kthread()\n");
 			create_kthread(create);
 
 			spin_lock(&kthread_create_lock);
