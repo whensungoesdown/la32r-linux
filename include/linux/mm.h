@@ -2430,7 +2430,7 @@ static inline unsigned long get_num_physpages(void)
 
 	for_each_online_node(nid)
 	{	
-		printk("!!!nid=%d\n", nid);
+		//printk("!!!nid=%d\n", nid);
 		phys_pages += node_present_pages(nid);
 	}
 

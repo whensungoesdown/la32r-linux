@@ -2027,8 +2027,9 @@ static void __init memmap_init_reserved_pages(void)
 		if (memblock_is_nomap(region)) {
 			start = region->base;
 			end = start + region->size;
-			//reserve_bootmem_region(start, end);
-			printk("				 reserve_bootmem_region() start 0x%x, end 0x%x\n", (int)start, (int)end);
+			// uty: test
+			reserve_bootmem_region(start, end);
+			//printk("				 reserve_bootmem_region() start 0x%x, end 0x%x\n", (int)start, (int)end);
 		}
 	}
 }
@@ -2039,13 +2040,13 @@ static unsigned long __init free_low_memory_core_early(void)
 	phys_addr_t start, end;
 	u64 i;
 
-	printk("				memblock_clear_hotplug()\n");
+	//printk("				memblock_clear_hotplug()\n");
 	memblock_clear_hotplug(0, -1);
 
-	printk("				memmap_init_reserved_pages()\n");
+	//printk("				memmap_init_reserved_pages()\n");
 	memmap_init_reserved_pages();
 
-	printk("				for_each_free_mem_range()\n");
+	//printk("				for_each_free_mem_range()\n");
 	/*
 	 * We need to use NUMA_NO_NODE instead of NODE_DATA(0)->node_id
 	 *  because in some case like Node0 doesn't have RAM installed
@@ -2092,14 +2093,14 @@ void __init memblock_free_all(void)
 {
 	unsigned long pages;
 
-	printk("			free_unused_memmap()\n");
+	//printk("			free_unused_memmap()\n");
 	free_unused_memmap();
-	printk("			reset_all_zones_managed_pages()\n");
+	//printk("			reset_all_zones_managed_pages()\n");
 	reset_all_zones_managed_pages();
 
-	printk("			free_low_memory_core_early()\n");
+	//printk("			free_low_memory_core_early()\n");
 	pages = free_low_memory_core_early();
-	printk("			totalram_pages_add()\n");
+	//printk("			totalram_pages_add()\n");
 	totalram_pages_add(pages);
 }
 

@@ -1013,25 +1013,25 @@ struct vfsmount *vfs_kern_mount(struct file_system_type *type,
 	if (!type)
 		return ERR_PTR(-EINVAL);
 
-	printk("					fs_context_for_mount()\n");
+	//printk("					fs_context_for_mount()\n");
 	fc = fs_context_for_mount(type, flags);
 	if (IS_ERR(fc))
 		return ERR_CAST(fc);
 
 	if (name)
 	{
-		printk("					vfs_parse_fs_string()\n");
+		//printk("					vfs_parse_fs_string()\n");
 		ret = vfs_parse_fs_string(fc, "source",
 					  name, strlen(name));
 	}
 	if (!ret)
 	{
-		printk("					parse_monolithic_mount_data()\n");
+		//printk("					parse_monolithic_mount_data()\n");
 		ret = parse_monolithic_mount_data(fc, data);
 	}
 	if (!ret)
 	{
-		printk("					fc_mount()\n");
+		//printk("					fc_mount()\n");
 		mnt = fc_mount(fc);
 	}
 	else
@@ -4234,17 +4234,17 @@ void __init mnt_init(void)
 {
 	int err;
 
-	printk("		kmem_cache_create()\n");
+	//printk("		kmem_cache_create()\n");
 	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
 			0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
 
-	printk("		alloc_large_system_hash()\n");
+	//printk("		alloc_large_system_hash()\n");
 	mount_hashtable = alloc_large_system_hash("Mount-cache",
 				sizeof(struct hlist_head),
 				mhash_entries, 19,
 				HASH_ZERO,
 				&m_hash_shift, &m_hash_mask, 0, 0);
-	printk("		alloc_large_system_hash()\n");
+	//printk("		alloc_large_system_hash()\n");
 	mountpoint_hashtable = alloc_large_system_hash("Mountpoint-cache",
 				sizeof(struct hlist_head),
 				mphash_entries, 19,
@@ -4254,23 +4254,23 @@ void __init mnt_init(void)
 	if (!mount_hashtable || !mountpoint_hashtable)
 		panic("Failed to allocate mount hash table\n");
 
-	printk("		kernfs_init()\n");
+	//printk("		kernfs_init()\n");
 	kernfs_init();
 
-	printk("		sysfs_init()\n");
+	//printk("		sysfs_init()\n");
 	err = sysfs_init();
 	if (err)
 		printk(KERN_WARNING "%s: sysfs_init error: %d\n",
 			__func__, err);
-	printk("		kobject_create_and_add()\n");
+	//printk("		kobject_create_and_add()\n");
 	fs_kobj = kobject_create_and_add("fs", NULL);
 	if (!fs_kobj)
 		printk(KERN_WARNING "%s: kobj create error\n", __func__);
-	printk("		shmem_init()\n");
+	//printk("		shmem_init()\n");
 	shmem_init();
-	printk("		init_rootfs()\n");
+	//printk("		init_rootfs()\n");
 	init_rootfs();
-	printk("		init_mount_tree()\n");
+	//printk("		init_mount_tree()\n");
 	init_mount_tree();
 }
 
@@ -4285,7 +4285,7 @@ void put_mnt_ns(struct mnt_namespace *ns)
 struct vfsmount *kern_mount(struct file_system_type *type)
 {
 	struct vfsmount *mnt;
-	printk("				vfs_kern_mount()\n");
+	//printk("				vfs_kern_mount()\n");
 	mnt = vfs_kern_mount(type, SB_KERNMOUNT, type->name, NULL);
 	if (!IS_ERR(mnt)) {
 		/*

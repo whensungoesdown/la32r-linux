@@ -254,7 +254,7 @@ static struct fs_context *alloc_fs_context(struct file_system_type *fs_type,
 	struct fs_context *fc;
 	int ret = -ENOMEM;
 
-	printk("					in alloc_fs_context()\n");
+	//printk("					in alloc_fs_context()\n");
 
 	fc = kzalloc(sizeof(struct fs_context), GFP_KERNEL);
 	if (!fc)
@@ -286,7 +286,7 @@ static struct fs_context *alloc_fs_context(struct file_system_type *fs_type,
 
 	/* TODO: Make all filesystems support this unconditionally */
 	init_fs_context = fc->fs_type->init_fs_context;
-	printk("					init_fs_context() init_fs_context=0x%x, legacy_init_fs_context=0x%x\n", (int)init_fs_context, (int)legacy_init_fs_context);
+	//printk("					init_fs_context() init_fs_context=0x%x, legacy_init_fs_context=0x%x\n", (int)init_fs_context, (int)legacy_init_fs_context);
 	if (!init_fs_context)
 		init_fs_context = legacy_init_fs_context;
 
@@ -297,9 +297,9 @@ static struct fs_context *alloc_fs_context(struct file_system_type *fs_type,
 	return fc;
 
 err_fc:
-	printk("					put_fs_context()\n");
+	//printk("					put_fs_context()\n");
 	put_fs_context(fc);
-	printk("					put_fs_context() finish\n");
+	//printk("					put_fs_context() finish\n");
 	return ERR_PTR(ret);
 }
 

@@ -683,7 +683,7 @@ int kthreadd(void *unused)
 			list_del_init(&create->list);
 			spin_unlock(&kthread_create_lock);
 
-			printk("	create_kthread()\n");
+			printk("kthreadd()-> create_kthread() create=0x%x\n", (int)create);
 			create_kthread(create);
 
 			spin_lock(&kthread_create_lock);

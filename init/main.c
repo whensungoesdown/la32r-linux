@@ -677,7 +677,7 @@ noinline void __ref rest_init(void)
 	 * the init task will end up wanting to create kthreads, which, if
 	 * we schedule it before we create kthreadd, will OOPS.
 	 */
-	printk("	kernel_thread()\n");
+	printk("	kernel_thread() kernel_init\n");
 	pid = kernel_thread(kernel_init, NULL, CLONE_FS);
 	/*
 	 * Pin init on the boot CPU. Task migration is not properly working
@@ -696,7 +696,7 @@ noinline void __ref rest_init(void)
 
 	printk("	numa_default_policy()\n");
 	numa_default_policy();
-	printk("	kernel_thread()\n");
+	printk("	kernel_thread() kthreadd\n");
 	pid = kernel_thread(kthreadd, NULL, CLONE_FS | CLONE_FILES);
 	rcu_read_lock();
 	printk("	find_task_by_pid_ns()\n");
@@ -1525,21 +1525,21 @@ static void __init do_initcalls(void)
  */
 static void __init do_basic_setup(void)
 {
-	printk("			cpuset_init_smp()\n");
+	printk("kernel_init()->			cpuset_init_smp()\n");
 	cpuset_init_smp();
-	printk("			driver_init()\n");
+	printk("kernel_init()->			driver_init()\n");
 	driver_init();
-	printk("			init_irq_proc()\n");
+	printk("kernel_init()->			init_irq_proc()\n");
 	init_irq_proc();
-	printk("			do_ctors()\n");
+	printk("kernel_init()->			do_ctors()\n");
 	do_ctors();
-	printk("			usermodehelper_enable()\n");
+	printk("kernel_init()->			usermodehelper_enable()\n");
 	usermodehelper_enable();
-	printk("			do_initcalls() saved_command_line=0x%x\n", (int)saved_command_line);
-	printk("			do_initcalls() saved_command_line=%s\n", saved_command_line);
+	printk("kernel_init()->			do_initcalls() saved_command_line=0x%x\n", (int)saved_command_line);
+	//printk("			do_initcalls() saved_command_line=%s\n", saved_command_line);
 	//printk("			skip do_initcalls()\n");
 	do_initcalls();
-	printk("			do_initcalls() finish\n");
+	printk("kernel_init()->			do_initcalls() finish\n");
 }
 
 static void __init do_pre_smp_initcalls(void)
@@ -1631,15 +1631,15 @@ static int __ref kernel_init(void *unused)
 	/*
 	 * Wait until kthreadd is all set-up.
 	 */
-	printk("	wait_for_completion()\n");
+	printk("kernel_init()->	wait_for_completion()\n");
 	wait_for_completion(&kthreadd_done);
 
-	printk("	kernel_init_freeable()\n");
+	printk("kernel_init()->	kernel_init_freeable()\n");
 	kernel_init_freeable();
 	/* need to finish all async __init code before freeing the memory */
-	printk("	async_synchronize_full()\n");
+	printk("kernel_init()->	async_synchronize_full()\n");
 	async_synchronize_full();
-	printk("	kprobe_free_init_mem()\n");
+	printk("kernel_init()->	kprobe_free_init_mem()\n");
 	kprobe_free_init_mem();
 	ftrace_free_init_mem();
 	kgdb_free_init_mem();
@@ -1724,50 +1724,50 @@ static noinline void __init kernel_init_freeable(void)
 	/*
 	 * init can allocate pages on any node
 	 */
-	printk("		set_mems_allowed()\n");
+	printk("kernel_init()->		set_mems_allowed()\n");
 	set_mems_allowed(node_states[N_MEMORY]);
 
-	printk("		get_pid() cad_pid=0x%x\n", (int)cad_pid);
+	printk("kernel_init()->		get_pid() cad_pid=0x%x\n", (int)cad_pid);
 	cad_pid = get_pid(task_pid(current));
 
-	printk("		smp_prepare_cpus()\n");
+	printk("kernel_init()->		smp_prepare_cpus()\n");
 	smp_prepare_cpus(setup_max_cpus);
 
-	printk("		workqueue_init)\n");
+	printk("kernel_init()->		workqueue_init()\n");
 	workqueue_init();
 
-	printk("		init_mm_internals()\n");
+	printk("kernel_init()->		init_mm_internals()\n");
 	init_mm_internals();
 
-	printk("		rcu_init_tasks_generic()\n");
+	printk("kernel_init()->		rcu_init_tasks_generic()\n");
 	rcu_init_tasks_generic();
-	printk("		do_pre_smp_initcalls()\n");
+	printk("kernel_init()->		do_pre_smp_initcalls()\n");
 	do_pre_smp_initcalls();
-	printk("		lockup_detector_init()\n");
+	printk("kernel_init()->		lockup_detector_init()\n");
 	lockup_detector_init();
 
-	printk("		smp_init()\n");
+	printk("kernel_init()->		smp_init()\n");
 	smp_init();
-	printk("		sched_init_smp()\n");
+	printk("kernel_init()->		sched_init_smp()\n");
 	sched_init_smp();
 
-	printk("		padata_init()\n");
+	printk("kernel_init()->		padata_init()\n");
 	padata_init();
-	printk("		page_alloc_init_late()\n");
+	printk("kernel_init()->		page_alloc_init_late()\n");
 	page_alloc_init_late();
 	/* Initialize page ext after all struct pages are initialized. */
-	printk("		page_ext_init()\n");
+	printk("kernel_init()->		page_ext_init()\n");
 	page_ext_init();
 
-	printk("		do_basic_setup()\n");
+	printk("kernel_init()->		do_basic_setup()\n");
 	do_basic_setup();
 
-	printk("		kunit_run_all_tests()\n");
+	printk("kernel_init()->		kunit_run_all_tests()\n");
 	kunit_run_all_tests();
 
-	printk("		wait_for_initramfs()\n");
+	printk("kernel_init()->		wait_for_initramfs()\n");
 	wait_for_initramfs();
-	printk("		console_on_rootfs()\n");
+	printk("kernel_init()->		console_on_rootfs()\n");
 	console_on_rootfs();
 
 	/*

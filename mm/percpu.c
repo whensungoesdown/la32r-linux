@@ -1750,7 +1750,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved,
 	size_t bits, bit_align;
 
 	// uty: test
-	printk("in pcpu_alloc()\n");
+	//printk("in pcpu_alloc()\n");
 	//return kzalloc(size, GFP_KERNEL);
 	return kzalloc(size, GFP_NOWAIT);
 

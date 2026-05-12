@@ -58,13 +58,13 @@ void setup_zero_pages(void)
 		panic("Oh boy, that early out of memory?");
 
 
-	printk("			 __get_free_pages() empty_zero_page=0x%x\n", (int)empty_zero_page);
+	//printk("			 __get_free_pages() empty_zero_page=0x%x\n", (int)empty_zero_page);
 	page = virt_to_page((void *)empty_zero_page);
-	printk("			 split_page() page=0x%x, order=%d\n", (int)page, (int)order);
+	//printk("			 split_page() page=0x%x, order=%d\n", (int)page, (int)order);
 	split_page(page, order);
 	for (i = 0; i < (1 << order); i++, page++)
 	{
-		printk("			 mark_page_reserved()\n");
+		//printk("			 mark_page_reserved()\n");
 		mark_page_reserved(page);
 	}
 
@@ -122,11 +122,11 @@ void __init mem_init(void)
 {
 	max_mapnr = max_low_pfn;
 	high_memory = (void *) __va(max_low_pfn << PAGE_SHIFT);
-	printk("!!!! high_memory=0x%x\n", (int)high_memory);
+	//printk("!!!! high_memory=0x%x\n", (int)high_memory);
 
-	printk("		memblock_free_all()\n");
+	//printk("		memblock_free_all()\n");
 	memblock_free_all();
-	printk("		setup_zero_pages()\n");
+	//printk("		setup_zero_pages()\n");
 	setup_zero_pages();	/* Setup zeroed pages.  */
 }
 #endif /* !CONFIG_NUMA */

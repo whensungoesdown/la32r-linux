@@ -6717,7 +6717,7 @@ static void __init memmap_init_zone_range(struct zone *zone,
 	if (start_pfn >= end_pfn)
 		return;
 
-	printk("					memmap_init_range() size=0x%x, nid=%d, zone_id=%d, start_pfn=0x%x, zone_end_pfn=0x%x\n", (int)(end_pfn - start_pfn), (int)nid, (int)zone_id, (int)start_pfn, (int)zone_end_pfn);
+	//printk("					memmap_init_range() size=0x%x, nid=%d, zone_id=%d, start_pfn=0x%x, zone_end_pfn=0x%x\n", (int)(end_pfn - start_pfn), (int)nid, (int)zone_id, (int)start_pfn, (int)zone_end_pfn);
 	memmap_init_range(end_pfn - start_pfn, nid, zone_id, start_pfn,
 			  zone_end_pfn, MEMINIT_EARLY, NULL, MIGRATE_MOVABLE);
 
@@ -6743,7 +6743,7 @@ static void __init memmap_init(void)
 			if (!populated_zone(zone))
 				continue;
 
-			printk("				memmap_init_zone_range() zone=0x%x, start_pfn=0x%x, end_pfn=0x%x\n", (int)zone, (int)start_pfn, (int)end_pfn);
+			//printk("				memmap_init_zone_range() zone=0x%x, start_pfn=0x%x, end_pfn=0x%x\n", (int)zone, (int)start_pfn, (int)end_pfn);
 			memmap_init_zone_range(zone, start_pfn, end_pfn,
 					       &hole_pfn);
 			zone_id = j;
@@ -6763,7 +6763,7 @@ static void __init memmap_init(void)
 	end_pfn = round_up(end_pfn, PAGES_PER_SECTION);
 	if (hole_pfn < end_pfn)
 #endif
-			printk("				init_unavailable_range() hole_pfn=0x%x, end_pfn=0x%x, zone_id=0x%x, nid=%d\n", (int)hole_pfn, (int)end_pfn, (int)zone_id, (int)nid);
+			//printk("				init_unavailable_range() hole_pfn=0x%x, end_pfn=0x%x, zone_id=0x%x, nid=%d\n", (int)hole_pfn, (int)end_pfn, (int)zone_id, (int)nid);
 		init_unavailable_range(hole_pfn, end_pfn, zone_id, nid);
 }
 
@@ -7462,7 +7462,7 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 	enum zone_type j;
 	int nid = pgdat->node_id;
 
-	printk("					pgdat_init_internals()\n");
+	//printk("					pgdat_init_internals()\n");
 	pgdat_init_internals(pgdat);
 	pgdat->per_cpu_nodestats = &boot_nodestats;
 
@@ -7478,7 +7478,7 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 		 * is used by this zone for memmap. This affects the watermark
 		 * and per-cpu initialisations
 		 */
-		printk("					calc_memmap_size()\n");
+		//printk("					calc_memmap_size()\n");
 		memmap_pages = calc_memmap_size(size, freesize);
 		if (!is_highmem_idx(j)) {
 			if (freesize >= memmap_pages) {
@@ -7509,17 +7509,17 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 		 * when the bootmem allocator frees pages into the buddy system.
 		 * And all highmem pages will be managed by the buddy system.
 		 */
-		printk("					zone_init_internals() zone=0x%x, j=%d, nid=0x%x, freesize=0x%x\n", (int)zone, j, nid, (int)freesize);
+		//printk("					zone_init_internals() zone=0x%x, j=%d, nid=0x%x, freesize=0x%x\n", (int)zone, j, nid, (int)freesize);
 		zone_init_internals(zone, j, nid, freesize);
 
 		if (!size)
 			continue;
 
-		printk("					set_pageblock_order()\n");
+		//printk("					set_pageblock_order()\n");
 		set_pageblock_order();
-		printk("					setup_usemap()\n");
+		//printk("					setup_usemap()\n");
 		setup_usemap(zone);
-		printk("					init_currently_empty_zone() zone=0x%x, zone_start_pfn=0x%x, size=0x%x\n", (int)zone, (int)zone->zone_start_pfn, (int)size);
+		//printk("					init_currently_empty_zone() zone=0x%x, zone_start_pfn=0x%x, size=0x%x\n", (int)zone, (int)zone->zone_start_pfn, (int)size);
 		init_currently_empty_zone(zone, zone->zone_start_pfn, size);
 	}
 }
@@ -7601,16 +7601,16 @@ static void __init free_area_init_node(int nid)
 	pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid,
 		(u64)start_pfn << PAGE_SHIFT,
 		end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
-	printk("				calculate_node_totalpages()\n");
+	//printk("				calculate_node_totalpages()\n");
 	calculate_node_totalpages(pgdat, start_pfn, end_pfn);
 
-	printk("				alloc_node_mem_map()\n");
+	//printk("				alloc_node_mem_map()\n");
 	alloc_node_mem_map(pgdat);
-	printk("!!! mem_map=0x%x\n", (int)mem_map);
-	printk("				pgdat_set_deferred_range()\n");
+	//printk("!!! mem_map=0x%x\n", (int)mem_map);
+	//printk("				pgdat_set_deferred_range()\n");
 	pgdat_set_deferred_range(pgdat);
 
-	printk("				free_area_init_core()\n");
+	//printk("				free_area_init_core()\n");
 	free_area_init_core(pgdat);
 }
 
@@ -8044,17 +8044,17 @@ void __init free_area_init(unsigned long *max_zone_pfn)
 	setup_nr_node_ids();
 	for_each_online_node(nid) {
 		pg_data_t *pgdat = NODE_DATA(nid);
-		printk("			free_area_init_node()\n");
+		//printk("			free_area_init_node()\n");
 		free_area_init_node(nid);
 
 		/* Any memory on that node */
 		if (pgdat->node_present_pages)
 			node_set_state(nid, N_MEMORY);
-		printk("			check_for_memory()\n");
+		//printk("			check_for_memory()\n");
 		check_for_memory(pgdat, nid);
 	}
 
-	printk("			memmap_init()\n");
+	//printk("			memmap_init()\n");
 	memmap_init();
 	//printk("			memmap_init() finish\n");
 }

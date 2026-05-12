@@ -4179,12 +4179,12 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	int cpu, ret;
 
 	if (!(wq->flags & WQ_UNBOUND)) {
-		printk("			kzalloc()\n");
+		//printk("			kzalloc()\n");
 		// uty: test
 		//wq->cpu_pwqs = alloc_percpu(struct pool_workqueue);
 		wq->cpu_pwqs = kzalloc(num_possible_cpus() * sizeof(struct pool_workqueue), GFP_NOWAIT);
 
-		printk("!!! wq->cpu_pwqs=0x%x\n", (int)(wq->cpu_pwqs));
+		//printk("!!! wq->cpu_pwqs=0x%x\n", (int)(wq->cpu_pwqs));
 		if (!wq->cpu_pwqs)
 			return -ENOMEM;
 
@@ -4206,7 +4206,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 		return 0;
 	}
 
-	printk("			get_online_cpus()\n");
+	//printk("			get_online_cpus()\n");
 	get_online_cpus();
 	if (wq->flags & __WQ_ORDERED) {
 		ret = apply_workqueue_attrs(wq, ordered_wq_attrs[highpri]);
@@ -4217,7 +4217,7 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	} else {
 		ret = apply_workqueue_attrs(wq, unbound_std_wq_attrs[highpri]);
 	}
-	printk("			put_online_cpus()\n");
+	//printk("			put_online_cpus()\n");
 	put_online_cpus();
 
 	return ret;
@@ -4276,7 +4276,7 @@ struct workqueue_struct *alloc_workqueue(const char *fmt,
 	struct workqueue_struct *wq;
 	struct pool_workqueue *pwq;
 
-	printk("		in alloc_workqueue()\n");
+	//printk("		in alloc_workqueue()\n");
 
 	/*
 	 * Unbound && max_active == 1 used to imply ordered, which is no

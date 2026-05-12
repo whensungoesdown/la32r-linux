@@ -221,7 +221,7 @@ static __init int bdi_class_init(void)
 	bdi_class = class_create(THIS_MODULE, "bdi");
 	if (IS_ERR(bdi_class))
 	{
-		printk("!!! bdi_class_init: failed to create bdi class, err=%ld\n", PTR_ERR(bdi_class));
+		//printk("!!! bdi_class_init: failed to create bdi class, err=%ld\n", PTR_ERR(bdi_class));
 
 		return PTR_ERR(bdi_class);
 	}

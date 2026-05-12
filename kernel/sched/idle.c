@@ -401,7 +401,7 @@ void cpu_startup_entry(enum cpuhp_state state)
 	arch_cpu_idle_prepare();
 	printk("		cpuhp_online_idle()\n");
 	cpuhp_online_idle(state);
-	printk("		goes into while(1) do_idle()\n");
+	printk("		!!!!!!!!! goes into while(1) do_idle()\n");
 	while (1)
 		do_idle();
 }
