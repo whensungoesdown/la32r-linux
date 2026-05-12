@@ -156,6 +156,7 @@ int __class_register(struct class *cls, struct lock_class_key *key)
 	int error;
 
 	pr_debug("device class '%s': registering\n", cls->name);
+	printk("!!! device class '%s': registering\n", cls->name);
 
 	cp = kzalloc(sizeof(*cp), GFP_KERNEL);
 	if (!cp)

@@ -1404,6 +1404,8 @@ int __init_or_module do_one_initcall(initcall_t fn)
 	char msgbuf[64];
 	int ret;
 
+	printk("!!! do_one_initcall() fn=0x%x\n", (int)fn);
+
 	if (initcall_blacklisted(fn))
 		return -EPERM;
 
@@ -1473,6 +1475,8 @@ static void __init do_initcall_level(int level, char *command_line)
 {
 	initcall_entry_t *fn;
 
+	printk("!!! Executing initcall level %d\n", level);
+
 	parse_args(initcall_level_names[level],
 		   command_line, __start___param,
 		   __stop___param - __start___param,
@@ -1489,6 +1493,15 @@ static void __init do_initcalls(void)
 	int level;
 	size_t len = strlen(saved_command_line) + 1;
 	char *command_line;
+
+	// uty: test
+	// saved_command_line is empty, only has 8-byte space
+	// 02553008 <saved_command_line>:
+	//         ...
+	// 
+	// 02553010 <initcall_calltime>:
+
+	strcpy(saved_command_line, "test");
 
 	command_line = kzalloc(len, GFP_KERNEL);
 	if (!command_line)
@@ -1512,12 +1525,21 @@ static void __init do_initcalls(void)
  */
 static void __init do_basic_setup(void)
 {
+	printk("			cpuset_init_smp()\n");
 	cpuset_init_smp();
+	printk("			driver_init()\n");
 	driver_init();
+	printk("			init_irq_proc()\n");
 	init_irq_proc();
+	printk("			do_ctors()\n");
 	do_ctors();
+	printk("			usermodehelper_enable()\n");
 	usermodehelper_enable();
+	printk("			do_initcalls() saved_command_line=0x%x\n", (int)saved_command_line);
+	printk("			do_initcalls() saved_command_line=%s\n", saved_command_line);
+	//printk("			skip do_initcalls()\n");
 	do_initcalls();
+	printk("			do_initcalls() finish\n");
 }
 
 static void __init do_pre_smp_initcalls(void)
@@ -1609,12 +1631,15 @@ static int __ref kernel_init(void *unused)
 	/*
 	 * Wait until kthreadd is all set-up.
 	 */
-	printk("in kernel_init()\n");
+	printk("	wait_for_completion()\n");
 	wait_for_completion(&kthreadd_done);
 
+	printk("	kernel_init_freeable()\n");
 	kernel_init_freeable();
 	/* need to finish all async __init code before freeing the memory */
+	printk("	async_synchronize_full()\n");
 	async_synchronize_full();
+	printk("	kprobe_free_init_mem()\n");
 	kprobe_free_init_mem();
 	ftrace_free_init_mem();
 	kgdb_free_init_mem();
@@ -1680,6 +1705,7 @@ void __init console_on_rootfs(void)
 {
 	struct file *file = filp_open("/dev/console", O_RDWR, 0);
 
+	printk("			in console_on_rootfs() /dev/console opened\n");
 	if (IS_ERR(file)) {
 		pr_err("Warning: unable to open an initial console.\n");
 		return;
@@ -1698,33 +1724,50 @@ static noinline void __init kernel_init_freeable(void)
 	/*
 	 * init can allocate pages on any node
 	 */
+	printk("		set_mems_allowed()\n");
 	set_mems_allowed(node_states[N_MEMORY]);
 
+	printk("		get_pid() cad_pid=0x%x\n", (int)cad_pid);
 	cad_pid = get_pid(task_pid(current));
 
+	printk("		smp_prepare_cpus()\n");
 	smp_prepare_cpus(setup_max_cpus);
 
+	printk("		workqueue_init)\n");
 	workqueue_init();
 
+	printk("		init_mm_internals()\n");
 	init_mm_internals();
 
+	printk("		rcu_init_tasks_generic()\n");
 	rcu_init_tasks_generic();
+	printk("		do_pre_smp_initcalls()\n");
 	do_pre_smp_initcalls();
+	printk("		lockup_detector_init()\n");
 	lockup_detector_init();
 
+	printk("		smp_init()\n");
 	smp_init();
+	printk("		sched_init_smp()\n");
 	sched_init_smp();
 
+	printk("		padata_init()\n");
 	padata_init();
+	printk("		page_alloc_init_late()\n");
 	page_alloc_init_late();
 	/* Initialize page ext after all struct pages are initialized. */
+	printk("		page_ext_init()\n");
 	page_ext_init();
 
+	printk("		do_basic_setup()\n");
 	do_basic_setup();
 
+	printk("		kunit_run_all_tests()\n");
 	kunit_run_all_tests();
 
+	printk("		wait_for_initramfs()\n");
 	wait_for_initramfs();
+	printk("		console_on_rootfs()\n");
 	console_on_rootfs();
 
 	/*

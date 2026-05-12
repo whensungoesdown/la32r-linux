@@ -990,12 +990,12 @@ EXPORT_SYMBOL(vfs_create_mount);
 
 struct vfsmount *fc_mount(struct fs_context *fc)
 {
-	printk("						vfs_get_tree()\n");
+	//printk("						vfs_get_tree()\n");
 	int err = vfs_get_tree(fc);
 	if (!err) {
-		printk("						up_write()\n");
+		//printk("						up_write()\n");
 		up_write(&fc->root->d_sb->s_umount);
-		printk("						vfs_create_mount()\n");
+		//printk("						vfs_create_mount()\n");
 		return vfs_create_mount(fc);
 	}
 	return ERR_PTR(err);

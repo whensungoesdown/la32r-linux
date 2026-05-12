@@ -4249,6 +4249,10 @@ void give_up_console(const struct consw *csw)
 	console_unlock();
 }
 
+//
+// uty: test
+// vtconsole_class_init will not be added if CONFIG_VT is not set
+//
 static int __init vtconsole_class_init(void)
 {
 	int i;
@@ -4265,6 +4269,9 @@ static int __init vtconsole_class_init(void)
 		struct con_driver *con = &registered_con_driver[i];
 
 		if (con->con && !con->dev) {
+			
+			// uty: test
+		        printk("DEBUG: con->con=0x%x\n", (int)(con->con));
 			con->dev =
 				device_create_with_groups(vtconsole_class, NULL,
 							  MKDEV(0, con->node),
@@ -4281,6 +4288,8 @@ static int __init vtconsole_class_init(void)
 		}
 	}
 
+	// uty: test
+	//while(1) {}
 	return 0;
 }
 postcore_initcall(vtconsole_class_init);

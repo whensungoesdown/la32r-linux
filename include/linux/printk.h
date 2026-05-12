@@ -477,6 +477,10 @@ extern int kptr_restrict;
 	no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
 #endif
 
+// uty: test
+// replace no_printk with printk(pr_fmt(fmt), ##__VA_ARGS__)
+// no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+
 /*
  * Print a one-time message (analogous to WARN_ONCE() et al):
  */

@@ -653,9 +653,13 @@ struct kobject *kobject_get(struct kobject *kobj)
 {
 	if (kobj) {
 		if (!kobj->state_initialized)
+		{
+			// uty: test
+		        printk("DEBUG: kobject_get on uninitialized kobj %s\n", kobj->name);
 			WARN(1, KERN_WARNING
 				"kobject: '%s' (%p): is not initialized, yet kobject_get() is being called.\n",
 			     kobject_name(kobj), kobj);
+		}
 		kref_get(&kobj->kref);
 	}
 	return kobj;
@@ -747,9 +751,14 @@ void kobject_put(struct kobject *kobj)
 {
 	if (kobj) {
 		if (!kobj->state_initialized)
+		{
+			// uty: test
+		        printk("DEBUG: kobject_get on uninitialized kobj %s\n", kobj->name);
+
 			WARN(1, KERN_WARNING
 				"kobject: '%s' (%p): is not initialized, yet kobject_put() is being called.\n",
 			     kobject_name(kobj), kobj);
+		}
 		kref_put(&kobj->kref, kobject_release);
 	}
 }
@@ -809,8 +818,13 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 
 	kobj = kobject_create();
 	if (!kobj)
+	{
+		// uty: test
+		printk("!!! kobject_create() fail\n");
 		return NULL;
+	}
 
+	printk("!!! kobject_add() name=%s\n", name);
 	retval = kobject_add(kobj, parent, "%s", name);
 	if (retval) {
 		pr_warn("%s: kobject_add error: %d\n", __func__, retval);

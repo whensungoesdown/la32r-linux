@@ -15,18 +15,18 @@
                 reg = <0x2800000 0x1800000>; // 24MB
         };
 
-        cpuintc: interrupt-controller {
-                compatible = "loongson,cpu-interrupt-controller";
-                interrupt-controller;
-                #interrupt-cells = <1>;
-        };
-
-        timer {
-                compatible = "loongson,constant-timer";
-                interrupt-parent = <&cpuintc>;
-                interrupts = <27 IRQ_TYPE_LEVEL_HIGH>;
-                /* No MMIO reg property, as this timer is controlled via CPU CSRs */
-        };
+//        cpuintc: interrupt-controller {
+//                compatible = "loongson,cpu-interrupt-controller";
+//                interrupt-controller;
+//                #interrupt-cells = <1>;
+//        };
+//
+//        timer {
+//                compatible = "loongson,constant-timer";
+//                interrupt-parent = <&cpuintc>;
+//                interrupts = <27 IRQ_TYPE_LEVEL_HIGH>;
+//                /* No MMIO reg property, as this timer is controlled via CPU CSRs */
+//        };
 
 	cpu {
 		device_type = "cpu";

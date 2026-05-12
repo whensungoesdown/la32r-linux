@@ -57,6 +57,8 @@ static struct tty_driver *ttynull_device(struct console *c, int *index)
 static struct console ttynull_console = {
 	.name = "ttynull",
 	.device = ttynull_device,
+	// uty: test
+	.flags = CON_ENABLED,
 };
 
 static int __init ttynull_init(void)
