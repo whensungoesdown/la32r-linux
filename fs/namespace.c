@@ -578,15 +578,17 @@ static void delayed_free_vfsmnt(struct rcu_head *head)
 int __legitimize_mnt(struct vfsmount *bastard, unsigned seq)
 {
 	struct mount *mnt;
-	if (read_seqretry(&mount_lock, seq))
-		return 1;
+	// uty: test
+	//if (read_seqretry(&mount_lock, seq))
+	//	return 1;
 	if (bastard == NULL)
 		return 0;
 	mnt = real_mount(bastard);
 	mnt_add_count(mnt, 1);
 	smp_mb();			// see mntput_no_expire()
-	if (likely(!read_seqretry(&mount_lock, seq)))
-		return 0;
+	// uty: test
+	//if (likely(!read_seqretry(&mount_lock, seq)))
+	//	return 0;
 	if (bastard->mnt_flags & MNT_SYNC_UMOUNT) {
 		mnt_add_count(mnt, -1);
 		return 1;
@@ -654,11 +656,12 @@ struct vfsmount *lookup_mnt(const struct path *path)
 	unsigned seq;
 
 	rcu_read_lock();
-	do {
-		seq = read_seqbegin(&mount_lock);
+	// uty: test
+	//do {
+	//	seq = read_seqbegin(&mount_lock);
 		child_mnt = __lookup_mnt(path->mnt, path->dentry);
 		m = child_mnt ? &child_mnt->mnt : NULL;
-	} while (!legitimize_mnt(m, seq));
+	//} while (!legitimize_mnt(m, seq));
 	rcu_read_unlock();
 	return m;
 }
@@ -838,6 +841,7 @@ static struct mountpoint *unhash_mnt(struct mount *mnt)
 	mnt->mnt_parent = mnt;
 	mnt->mnt_mountpoint = mnt->mnt.mnt_root;
 	list_del_init(&mnt->mnt_child);
+	// uty: test
 	hlist_del_init_rcu(&mnt->mnt_hash);
 	hlist_del_init(&mnt->mnt_mp_list);
 	mp = mnt->mnt_mp;
@@ -1275,10 +1279,11 @@ bool path_is_mountpoint(const struct path *path)
 		return false;
 
 	rcu_read_lock();
-	do {
-		seq = read_seqbegin(&mount_lock);
+	// uty: test
+	//do {
+	//	seq = read_seqbegin(&mount_lock);
 		res = __path_is_mountpoint(path);
-	} while (read_seqretry(&mount_lock, seq));
+	//} while (read_seqretry(&mount_lock, seq));
 	rcu_read_unlock();
 
 	return res;

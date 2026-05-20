@@ -93,6 +93,10 @@ static void deferred_probe_work_func(struct work_struct *work)
 	 * get/put_device() to ensure the device structure cannot disappear
 	 * from under our feet.
 	 */
+
+	// uty: test
+	//return 0;
+
 	mutex_lock(&deferred_probe_mutex);
 	while (!list_empty(&deferred_probe_active_list)) {
 		private = list_first_entry(&deferred_probe_active_list,

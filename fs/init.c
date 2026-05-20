@@ -128,10 +128,13 @@ int __init init_stat(const char *filename, struct kstat *stat, int flags)
 	int lookup_flags = (flags & AT_SYMLINK_NOFOLLOW) ? 0 : LOOKUP_FOLLOW;
 	struct path path;
 	int error;
-
+	
+	printk("			kern_path() filename=%s\n", filename);
 	error = kern_path(filename, lookup_flags, &path);
 	if (error)
 		return error;
+
+	printk("			vfs_getattr()\n");
 	error = vfs_getattr(&path, stat, STATX_BASIC_STATS,
 			    flags | AT_NO_AUTOMOUNT);
 	path_put(&path);

@@ -270,14 +270,18 @@ static void __d_free(struct rcu_head *head)
 {
 	struct dentry *dentry = container_of(head, struct dentry, d_u.d_rcu);
 
-	kmem_cache_free(dentry_cache, dentry); 
+	// uty: test
+	//kmem_cache_free(dentry_cache, dentry); 
+	kfree(dentry); 
 }
 
 static void __d_free_external(struct rcu_head *head)
 {
 	struct dentry *dentry = container_of(head, struct dentry, d_u.d_rcu);
 	kfree(external_name(dentry));
-	kmem_cache_free(dentry_cache, dentry);
+	// uty: test
+	//kmem_cache_free(dentry_cache, dentry);
+	kfree(dentry);
 }
 
 static inline int dname_external(const struct dentry *dentry)
@@ -557,32 +561,44 @@ static void __dentry_kill(struct dentry *dentry)
 	if (!IS_ROOT(dentry))
 		parent = dentry->d_parent;
 
+	//printk("								    in __dentry_kill() dentry=0x%x\n", (int)dentry);
 	/*
 	 * The dentry is now unrecoverably dead to the world.
 	 */
+	//printk("								    lockref_mark_dead()\n");
 	lockref_mark_dead(&dentry->d_lockref);
 
 	/*
 	 * inform the fs via d_prune that this dentry is about to be
 	 * unhashed and destroyed.
 	 */
+	//printk("								    d_prune()\n");
 	if (dentry->d_flags & DCACHE_OP_PRUNE)
 		dentry->d_op->d_prune(dentry);
 
+	//printk("								    d_lru_del()\n");
 	if (dentry->d_flags & DCACHE_LRU_LIST) {
 		if (!(dentry->d_flags & DCACHE_SHRINK_LIST))
 			d_lru_del(dentry);
 	}
 	/* if it was on the hash then remove it */
+	//printk("								    __d_drop()\n");
 	__d_drop(dentry);
+	//printk("								    dentry_unlist()\n");
 	dentry_unlist(dentry, parent);
 	if (parent)
 		spin_unlock(&parent->d_lock);
 	if (dentry->d_inode)
+	{
+		//printk("								    dentry_unlink_inode()\n");
 		dentry_unlink_inode(dentry);
+	}
 	else
 		spin_unlock(&dentry->d_lock);
+	//printk("								    this_cpu_dec(nr_dentry)\n");
 	this_cpu_dec(nr_dentry);
+	
+	//printk("								    d_release()\n");
 	if (dentry->d_op && dentry->d_op->d_release)
 		dentry->d_op->d_release(dentry);
 
@@ -592,9 +608,13 @@ static void __dentry_kill(struct dentry *dentry)
 		can_free = false;
 	}
 	spin_unlock(&dentry->d_lock);
+	//printk("								    dentry_free()\n");
 	if (likely(can_free))
 		dentry_free(dentry);
+	// uty: test
+	printk("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ cond_resched()\n");
 	cond_resched();
+	//printk("								    cond_resched() finish\n");
 }
 
 static struct dentry *__lock_parent(struct dentry *dentry)
@@ -868,10 +888,14 @@ static inline bool fast_dput(struct dentry *dentry)
  */
 void dput(struct dentry *dentry)
 {
+	//printk("								in dput() dentry=0x%x\n", (int)dentry);
+
 	while (dentry) {
+		//printk("								might_sleep()\n");
 		might_sleep();
 
 		rcu_read_lock();
+		//printk("								fast_dput()\n");
 		if (likely(fast_dput(dentry))) {
 			rcu_read_unlock();
 			return;
@@ -880,12 +904,15 @@ void dput(struct dentry *dentry)
 		/* Slow case: now with the dentry lock held */
 		rcu_read_unlock();
 
+		//printk("								retain_dentry()\n");
 		if (likely(retain_dentry(dentry))) {
 			spin_unlock(&dentry->d_lock);
 			return;
 		}
 
+		//printk("								dentry_kill()\n");
 		dentry = dentry_kill(dentry);
+		//printk("								dentry_kill() finish\n");
 	}
 }
 EXPORT_SYMBOL(dput);
@@ -1741,7 +1768,9 @@ static struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 	char *dname;
 	int err;
 
-	dentry = kmem_cache_alloc(dentry_cache, GFP_KERNEL);
+	// uty: test
+	//dentry = kmem_cache_alloc(dentry_cache, GFP_KERNEL);
+	dentry = kzalloc(sizeof(*dentry), GFP_KERNEL);
 	if (!dentry)
 		return NULL;
 
@@ -2316,6 +2345,7 @@ seqretry:
 		 * Note that raw_seqcount_begin still *does* smp_rmb(), so
 		 * we are still guaranteed NUL-termination of ->d_name.name.
 		 */
+		//printk("							raw_seqcount_begin()\n");
 		seq = raw_seqcount_begin(&dentry->d_seq);
 		if (dentry->d_parent != parent)
 			continue;
@@ -2330,16 +2360,19 @@ seqretry:
 			tlen = dentry->d_name.len;
 			tname = dentry->d_name.name;
 			/* we want a consistent (name,len) pair */
+			//printk("							read_seqcount_retry()\n");
 			if (read_seqcount_retry(&dentry->d_seq, seq)) {
 				cpu_relax();
 				goto seqretry;
 			}
+			//printk("							d_compare()\n");
 			if (parent->d_op->d_compare(dentry,
 						    tlen, tname, name) != 0)
 				continue;
 		} else {
 			if (dentry->d_name.hash_len != hashlen)
 				continue;
+			//printk("							dentry_cmp()\n");
 			if (dentry_cmp(dentry, str, hashlen_len(hashlen)) != 0)
 				continue;
 		}
@@ -2398,6 +2431,8 @@ struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
 	struct dentry *found = NULL;
 	struct dentry *dentry;
 
+	printk(KERN_DEBUG "__d_lookup: parent=%px name='%.*s' hash=%u b=0x%x\n",
+               parent, name->len, name->name, hash, (int)b);
 	/*
 	 * Note: There is significant duplication with __d_lookup_rcu which is
 	 * required to prevent single threaded performance regressions
@@ -2418,9 +2453,16 @@ struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
 	 *
 	 * See Documentation/filesystems/path-lookup.txt for more details.
 	 */
+	//printk("							rcu_read_lock()\n");
 	rcu_read_lock();
+	//printk("							rcu_read_lock() finish\n");
 	
-	hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
+	// uty: test
+	//hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
+	hlist_bl_for_each_entry(dentry, node, b, d_hash) {
+
+	        //printk("  candidate dentry=%px, dentry->d_name=0x%x\n", dentry, (int)(&dentry->d_name));
+	        //printk("  candidate dentry=%px, name=%s, hash=%u\n", dentry, dentry->d_name.name, dentry->d_name.hash);
 
 		if (dentry->d_name.hash != hash)
 			continue;
@@ -2428,9 +2470,11 @@ struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
 		spin_lock(&dentry->d_lock);
 		if (dentry->d_parent != parent)
 			goto next;
+		//printk("							d_unhashed()\n");
 		if (d_unhashed(dentry))
 			goto next;
 
+		//printk("							d_same_name()\n");
 		if (!d_same_name(dentry, parent, name))
 			goto next;
 

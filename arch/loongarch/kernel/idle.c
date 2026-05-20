@@ -12,6 +12,9 @@
 
 void arch_cpu_idle(void)
 {
+	printk("arch_cpu_idle: entering idle\n");
 	local_irq_enable();
 	__arch_cpu_idle();
+	printk("arch_cpu_idle: woken up\n");
+
 }

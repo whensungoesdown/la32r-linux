@@ -986,6 +986,10 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	printk("boot_cpu_hotplug_init()\n");
 	boot_cpu_hotplug_init();
 
+	// uty: test
+	//printk("test memory access violation\n");
+	//*(int*)0xa0000000 = 0;
+
 	printk("build_all_zonelists()\n");
 	build_all_zonelists(NULL);
 	printk("skip page_alloc_init()\n");
@@ -1184,8 +1188,8 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	}
 	printk("sched_clock_init()\n");
 	sched_clock_init();
-	printk("skip calibrate_delay()\n");
-	//calibrate_delay();
+	printk("+++++++++++ calibrate_delay() ++++++++++\n");
+	calibrate_delay();
 	printk("pid_idr_init()\n");
 	pid_idr_init();
 	printk("anon_vma_init()\n");

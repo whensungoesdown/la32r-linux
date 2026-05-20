@@ -5824,9 +5824,22 @@ static void __sched notrace __schedule(bool preempt)
 	struct rq *rq;
 	int cpu;
 
+	//printk("		in __schedule()\n");
+	//printk("__schedule(): pid=%d comm=%s preempt_count=%d need_resched=%d\n",
+	//		current->pid, current->comm, preempt_count(), need_resched());
+
 	cpu = smp_processor_id();
+	//printk("		smp_processor_id() cpu=%d\n", cpu);
+
 	rq = cpu_rq(cpu);
+	//printk("		cpu_rq() rq=0x%x\n", (int)rq);
 	prev = rq->curr;
+
+
+	//if (prev->pid == 2) {
+	//	printk("kthreadd schedule called from %pS\n", __builtin_return_address(0));
+	//	dump_stack();
+	//}
 
 	schedule_debug(prev, preempt);
 
@@ -5856,6 +5869,7 @@ static void __sched notrace __schedule(bool preempt)
 
 	/* Promote REQ to ACT */
 	rq->clock_update_flags <<= 1;
+	//printk("		update_rq_clock()\n");
 	update_rq_clock(rq);
 
 	switch_count = &prev->nivcsw;
@@ -5902,6 +5916,11 @@ static void __sched notrace __schedule(bool preempt)
 	}
 
 	next = pick_next_task(rq, prev, &rf);
+	//printk("__schedule(): switching to pid=%d comm=%s\n", next->pid, next->comm);
+	//printk("__schedule: prev=%d (%s) -> next=%d (%s), nr_running=%d\n",
+	//		prev->pid, prev->comm, next->pid, next->comm, rq->nr_running);
+	printk("test\n");
+
 	clear_tsk_need_resched(prev);
 	clear_preempt_need_resched();
 #ifdef CONFIG_SCHED_DEBUG
@@ -6099,10 +6118,15 @@ static void __sched notrace preempt_schedule_common(void)
 		 * traced. The other to still record the preemption latency,
 		 * which can also be traced by the function tracer.
 		 */
+		//printk("	preempt_disable_notrace()\n");
 		preempt_disable_notrace();
+		//printk("	preempt_latency_start()\n");
 		preempt_latency_start(1);
+		//printk("	__schedule()\n");
 		__schedule(true);
+		//printk("	preempt_latency_stop()\n");
 		preempt_latency_stop(1);
+		//printk("	preempt_enable_no_resched_notrace()\n");
 		preempt_enable_no_resched_notrace();
 
 		/*
@@ -7781,13 +7805,18 @@ SYSCALL_DEFINE0(sched_yield)
 #if !defined(CONFIG_PREEMPTION) || defined(CONFIG_PREEMPT_DYNAMIC)
 int __sched __cond_resched(void)
 {
+	//printk("								    in __cond_resched()\n");
+	//printk("								    should_resched()\n");
 	if (should_resched(0)) {
+		//printk("								    preempt_schedule_common()\n");
 		preempt_schedule_common();
+		//printk("								    preempt_schedule_common finish()\n");
 		return 1;
 	}
 #ifndef CONFIG_PREEMPT_RCU
 	rcu_all_qs();
 #endif
+	//printk("								    __cond_resched() finish\n");
 	return 0;
 }
 EXPORT_SYMBOL(__cond_resched);

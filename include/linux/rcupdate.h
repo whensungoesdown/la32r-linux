@@ -682,6 +682,9 @@ do {									      \
  */
 static __always_inline void rcu_read_lock(void)
 {
+	// uty: test
+	//printk("rcu_read_lock() skip, return\n");
+
 	__rcu_read_lock();
 	__acquire(RCU);
 	rcu_lock_acquire(&rcu_lock_map);
@@ -713,6 +716,9 @@ static __always_inline void rcu_read_lock(void)
  */
 static inline void rcu_read_unlock(void)
 {
+	// uty: test
+	//printk("rcu_read_unlock() skip, return\n");
+
 	RCU_LOCKDEP_WARN(!rcu_is_watching(),
 			 "rcu_read_unlock() used illegally while idle");
 	__release(RCU);

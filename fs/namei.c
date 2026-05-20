@@ -215,6 +215,8 @@ getname_kernel(const char * filename)
 	struct filename *result;
 	int len = strlen(filename) + 1;
 
+	//printk("			getname_kernel()\n");
+
 	result = __getname();
 	if (unlikely(!result))
 		return ERR_PTR(-ENOMEM);
@@ -813,8 +815,9 @@ static bool try_to_unlazy_next(struct nameidata *nd, struct dentry *dentry, unsi
 	 */
 	if (unlikely(!lockref_get_not_dead(&dentry->d_lockref)))
 		goto out;
-	if (unlikely(read_seqcount_retry(&dentry->d_seq, seq)))
-		goto out_dput;
+	// uty: test
+//	if (unlikely(read_seqcount_retry(&dentry->d_seq, seq)))
+//		goto out_dput;
 	/*
 	 * Sequence counts matched. Now make sure that the root is
 	 * still valid and get it if required.
@@ -1237,7 +1240,8 @@ static bool choose_mountpoint_rcu(struct mount *m, const struct path *root,
 		if (mountpoint != m->mnt.mnt_root) {
 			path->mnt = &m->mnt;
 			path->dentry = mountpoint;
-			*seqp = read_seqcount_begin(&mountpoint->d_seq);
+			// uty: test
+			//*seqp = read_seqcount_begin(&mountpoint->d_seq);
 			return true;
 		}
 	}
@@ -1362,15 +1366,24 @@ static int __traverse_mounts(struct path *path, unsigned flags, bool *jumped,
 static inline int traverse_mounts(struct path *path, bool *jumped,
 				  int *count, unsigned lookup_flags)
 {
-	unsigned flags = smp_load_acquire(&path->dentry->d_flags);
+	// uty: test
+	//unsigned flags = smp_load_acquire(&path->dentry->d_flags);
+	unsigned flags;
+
+	//printk("							    in traverse_mounts() path->dentry=0x%x\n", (int)&path->dentry);
+	//printk("							    smp_load_acquire()\n");
+	flags = smp_load_acquire(&path->dentry->d_flags);
+	//printk("							    smp_load_acquire() finish\n");
 
 	/* fastpath */
 	if (likely(!(flags & DCACHE_MANAGED_DENTRY))) {
 		*jumped = false;
+		//printk("							    d_flags_negative()\n");
 		if (unlikely(d_flags_negative(flags)))
 			return -ENOENT;
 		return 0;
 	}
+	//printk("							    __traverse_mounts()\n");
 	return __traverse_mounts(path, flags, jumped, count, lookup_flags);
 }
 
@@ -1441,7 +1454,8 @@ static bool __follow_mount_rcu(struct nameidata *nd, struct path *path,
 				path->mnt = &mounted->mnt;
 				dentry = path->dentry = mounted->mnt.mnt_root;
 				nd->state |= ND_JUMPED;
-				*seqp = read_seqcount_begin(&dentry->d_seq);
+				// uty: test
+				//*seqp = read_seqcount_begin(&dentry->d_seq);
 				*inode = dentry->d_inode;
 				/*
 				 * We don't need to re-check ->d_seq after this
@@ -1452,8 +1466,9 @@ static bool __follow_mount_rcu(struct nameidata *nd, struct path *path,
 				flags = dentry->d_flags;
 				continue;
 			}
-			if (read_seqretry(&mount_lock, nd->m_seq))
-				return false;
+			// uty: test
+			//if (read_seqretry(&mount_lock, nd->m_seq))
+			//	return false;
 		}
 		return !(flags & DCACHE_NEED_AUTOMOUNT);
 	}
@@ -1472,14 +1487,17 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
 		unsigned int seq = *seqp;
 		if (unlikely(!*inode))
 			return -ENOENT;
+		//printk("							__follow_mount_rcu()\n");
 		if (likely(__follow_mount_rcu(nd, path, inode, seqp)))
 			return 0;
+		//printk("							try_to_unlazy_next()\n");
 		if (!try_to_unlazy_next(nd, dentry, seq))
 			return -ECHILD;
 		// *path might've been clobbered by __follow_mount_rcu()
 		path->mnt = nd->path.mnt;
 		path->dentry = dentry;
 	}
+	//printk("							traverse_mounts()\n");
 	ret = traverse_mounts(path, &jumped, &nd->total_link_count, nd->flags);
 	if (jumped) {
 		if (unlikely(nd->flags & LOOKUP_NO_XDEV))
@@ -1488,10 +1506,15 @@ static inline int handle_mounts(struct nameidata *nd, struct dentry *dentry,
 			nd->state |= ND_JUMPED;
 	}
 	if (unlikely(ret)) {
+		//printk("							dput()\n");
 		dput(path->dentry);
 		if (path->mnt != nd->path.mnt)
+		{
+			//printk("							mnt_put()\n");
 			mntput(path->mnt);
+		}
 	} else {
+		//printk("							d_backing_inode()\n");
 		*inode = d_backing_inode(path->dentry);
 		*seqp = 0; /* out of RCU mode, so the value doesn't matter */
 	}
@@ -1559,6 +1582,7 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 	struct dentry *dentry, *parent = nd->path.dentry;
 	int status = 1;
 
+	//printk("						in lookup_fast()\n");
 	/*
 	 * Rename seqlock is not required here because in the off chance
 	 * of a false negative due to a concurrent rename, the caller is
@@ -1566,7 +1590,11 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 	 */
 	if (nd->flags & LOOKUP_RCU) {
 		unsigned seq;
-		dentry = __d_lookup_rcu(parent, &nd->last, &seq);
+		//printk("						__d_lookup()\n");
+		// uty: test
+		//dentry = __d_lookup_rcu(parent, &nd->last, &seq);
+		dentry = __d_lookup(parent, &nd->last);
+		//printk("						__d_lookup() finish\n");
 		if (unlikely(!dentry)) {
 			if (!try_to_unlazy(nd))
 				return ERR_PTR(-ECHILD);
@@ -1577,7 +1605,9 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		 * This sequence count validates that the inode matches
 		 * the dentry name information from lookup.
 		 */
+		//printk("						d_backing_inode()\n");
 		*inode = d_backing_inode(dentry);
+		//printk("						read_seqcount_retry()\n");
 		if (unlikely(read_seqcount_retry(&dentry->d_seq, seq)))
 			return ERR_PTR(-ECHILD);
 
@@ -1588,27 +1618,35 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		 * The memory barrier in read_seqcount_begin of child is
 		 *  enough, we can use __read_seqcount_retry here.
 		 */
+		//printk("						__read_seqcount_retry()\n");
 		if (unlikely(__read_seqcount_retry(&parent->d_seq, nd->seq)))
 			return ERR_PTR(-ECHILD);
 
 		*seqp = seq;
+		//printk("						d_revalidate()\n");
 		status = d_revalidate(dentry, nd->flags);
 		if (likely(status > 0))
 			return dentry;
 		if (!try_to_unlazy_next(nd, dentry, seq))
 			return ERR_PTR(-ECHILD);
 		if (status == -ECHILD)
+		{
 			/* we'd been told to redo it in non-rcu mode */
+			//printk("						d_revalidate()\n");
 			status = d_revalidate(dentry, nd->flags);
+		}
 	} else {
+		//printk("						__d_lookup()\n");
 		dentry = __d_lookup(parent, &nd->last);
 		if (unlikely(!dentry))
 			return NULL;
+		//printk("						d_revalidate()\n");
 		status = d_revalidate(dentry, nd->flags);
 	}
 	if (unlikely(status <= 0)) {
 		if (!status)
 			d_invalidate(dentry);
+		//printk("						dput()\n");
 		dput(dentry);
 		return ERR_PTR(status);
 	}
@@ -1786,7 +1824,19 @@ static const char *step_into(struct nameidata *nd, int flags,
 		     struct dentry *dentry, struct inode *inode, unsigned seq)
 {
 	struct path path;
-	int err = handle_mounts(nd, dentry, &path, &inode, &seq);
+	//int err = handle_mounts(nd, dentry, &path, &inode, &seq);
+	int err;
+
+	//char *pathname = nd->name->name ?: "(NULL)";
+
+	//printk("						handle_mounts()\n");
+	//printk(KERN_INFO "step_into: path='%s', flags=0x%x, dentry=%px, inode=%px, seq=%u\n",
+	//		pathname, flags, dentry, inode, seq);
+
+	//dump_stack();
+
+	err = handle_mounts(nd, dentry, &path, &inode, &seq);
+	//printk("						handle_mounts() finish\n");
 
 	if (err < 0)
 		return ERR_PTR(err);
@@ -1942,6 +1992,12 @@ static const char *walk_component(struct nameidata *nd, int flags)
 	struct dentry *dentry;
 	struct inode *inode;
 	unsigned seq;
+
+	// uty: test
+	printk("					in walk_component(), nd->flags &= ~LOOKUP_RCU\n");
+	nd->flags &= ~LOOKUP_RCU;
+
+
 	/*
 	 * "." and ".." are special - ".." especially so because it has
 	 * to be able to know about the current root directory and
@@ -1950,18 +2006,23 @@ static const char *walk_component(struct nameidata *nd, int flags)
 	if (unlikely(nd->last_type != LAST_NORM)) {
 		if (!(flags & WALK_MORE) && nd->depth)
 			put_link(nd);
+		//printk("					handle_dots()\n");
 		return handle_dots(nd, nd->last_type);
 	}
+	//printk("					lookup_fast()\n");
 	dentry = lookup_fast(nd, &inode, &seq);
+	//printk("					lookup_fast() finish\n");
 	if (IS_ERR(dentry))
 		return ERR_CAST(dentry);
 	if (unlikely(!dentry)) {
+		//printk("					lookup_slow()\n");
 		dentry = lookup_slow(&nd->last, nd->path.dentry, nd->flags);
 		if (IS_ERR(dentry))
 			return ERR_CAST(dentry);
 	}
 	if (!(flags & WALK_MORE) && nd->depth)
 		put_link(nd);
+	//printk("					step_into()\n");
 	return step_into(nd, flags, dentry, inode, seq);
 }
 
@@ -2224,14 +2285,18 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 		u64 hash_len;
 		int type;
 
+		//printk("					mnt_user_ns()\n");
 		mnt_userns = mnt_user_ns(nd->path.mnt);
+		//printk("					may_lookup()\n");
 		err = may_lookup(mnt_userns, nd);
 		if (err)
 			return err;
 
+		//printk("					hash_name()\n");
 		hash_len = hash_name(nd->path.dentry, name);
 
 		type = LAST_NORM;
+		//printk("					hashlen_len()\n");
 		if (name[0] == '.') switch (hashlen_len(hash_len)) {
 			case 2:
 				if (name[1] == '.') {
@@ -2247,6 +2312,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 			nd->state &= ~ND_JUMPED;
 			if (unlikely(parent->d_flags & DCACHE_OP_HASH)) {
 				struct qstr this = { { .hash_len = hash_len }, .name = name };
+				//printk("					d_hash()\n");
 				err = parent->d_op->d_hash(parent, &this);
 				if (err < 0)
 					return err;
@@ -2259,6 +2325,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 		nd->last.name = name;
 		nd->last_type = type;
 
+		//printk("					hashlen_len()\n");
 		name += hashlen_len(hash_len);
 		if (!*name)
 			goto OK;
@@ -2273,16 +2340,20 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 OK:
 			/* pathname or trailing symlink, done */
 			if (!depth) {
+				//printk("					i_uid_into_mnt()\n");
 				nd->dir_uid = i_uid_into_mnt(mnt_userns, nd->inode);
+				//printk("					i_uid_into_mnt() finish\n");
 				nd->dir_mode = nd->inode->i_mode;
 				nd->flags &= ~LOOKUP_PARENT;
 				return 0;
 			}
 			/* last component of nested symlink */
 			name = nd->stack[--depth].name;
+			//printk("					walk_component()\n");
 			link = walk_component(nd, 0);
 		} else {
 			/* not the last component */
+			//printk("					walk_component()\n");
 			link = walk_component(nd, WALK_MORE);
 		}
 		if (unlikely(link)) {
@@ -2293,6 +2364,7 @@ OK:
 			name = link;
 			continue;
 		}
+		//printk("					d_can_lookup()\n");
 		if (unlikely(!d_can_lookup(nd->path.dentry))) {
 			if (nd->flags & LOOKUP_RCU) {
 				if (!try_to_unlazy(nd))
@@ -2408,6 +2480,7 @@ static const char *path_init(struct nameidata *nd, unsigned flags)
 
 static inline const char *lookup_last(struct nameidata *nd)
 {
+	//printk("				in lookup_last()\n");
 	if (nd->last_type == LAST_NORM && nd->last.name[nd->last.len])
 		nd->flags |= LOOKUP_FOLLOW | LOOKUP_DIRECTORY;
 
@@ -2429,29 +2502,40 @@ static int path_lookupat(struct nameidata *nd, unsigned flags, struct path *path
 	int err;
 
 	if (unlikely(flags & LOOKUP_DOWN) && !IS_ERR(s)) {
+		//printk("				handle_lookup_down()\n");
 		err = handle_lookup_down(nd);
 		if (unlikely(err < 0))
 			s = ERR_PTR(err);
 	}
 
+	//printk("				link_path_walk() lookup_last()\n");
 	while (!(err = link_path_walk(s, nd)) &&
 	       (s = lookup_last(nd)) != NULL)
 		;
+	//printk("				link_path_walk() lookup_last() finish\n");
 	if (!err && unlikely(nd->flags & LOOKUP_MOUNTPOINT)) {
+		//printk("				handle_lookup_down()\n");
 		err = handle_lookup_down(nd);
 		nd->state &= ~ND_JUMPED; // no d_weak_revalidate(), please...
 	}
 	if (!err)
+	{
+		//printk("				complete_walk()\n");
 		err = complete_walk(nd);
+	}
 
 	if (!err && nd->flags & LOOKUP_DIRECTORY)
+	{
+		//printk("				d_can_lookup()\n");
 		if (!d_can_lookup(nd->path.dentry))
 			err = -ENOTDIR;
+	}
 	if (!err) {
 		*path = nd->path;
 		nd->path.mnt = NULL;
 		nd->path.dentry = NULL;
 	}
+	//printk("				terminate_walk()\n");
 	terminate_walk(nd);
 	return err;
 }
@@ -2461,9 +2545,14 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
 {
 	int retval;
 	struct nameidata nd;
+
+	//printk("			in filename_lookup()\n");
+
 	if (IS_ERR(name))
 		return PTR_ERR(name);
+	//printk("			set_nameidata()\n");
 	set_nameidata(&nd, dfd, name, root);
+	//printk("			path_lookupat()\n");
 	retval = path_lookupat(&nd, flags | LOOKUP_RCU, path);
 	if (unlikely(retval == -ECHILD))
 		retval = path_lookupat(&nd, flags, path);
@@ -2471,10 +2560,16 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
 		retval = path_lookupat(&nd, flags | LOOKUP_REVAL, path);
 
 	if (likely(!retval))
+	{
+		//printk("			audit_inode()\n");
 		audit_inode(name, path->dentry,
 			    flags & LOOKUP_MOUNTPOINT ? AUDIT_INODE_NOEVAL : 0);
+	}
+	//printk("			restore_name()\n");
 	restore_nameidata();
+	//printk("			putname()\n");
 	putname(name);
+	//printk("			putname() finish\n");
 	return retval;
 }
 

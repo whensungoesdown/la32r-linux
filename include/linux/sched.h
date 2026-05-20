@@ -1996,6 +1996,7 @@ static inline int rwlock_needbreak(rwlock_t *lock)
 
 static __always_inline bool need_resched(void)
 {
+	//printk("		in need_resched()\n");
 	return unlikely(tif_need_resched());
 }
 

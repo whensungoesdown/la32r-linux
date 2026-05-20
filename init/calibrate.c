@@ -13,7 +13,8 @@
 #include <linux/percpu.h>
 
 // uty: test
-unsigned long lpj_fine = 300000;
+//unsigned long lpj_fine = 300000;
+unsigned long lpj_fine = 0;
 unsigned long preset_lpj;
 static int __init lpj_setup(char *str)
 {
@@ -265,8 +266,8 @@ unsigned long __attribute__((weak)) calibrate_delay_is_known(void)
 {
 	// uty: test
 	printk("in calibrate_delay_is_known()\n");
-	return 300000;
-	//return 0;
+	//return 300000;
+	return 0;
 }
 
 /*
@@ -299,7 +300,7 @@ void calibrate_delay(void)
 			pr_info("Calibrating delay loop (skipped) "
 				"preset value.. ");
 	} else if ((!printed) && lpj_fine) {
-		printk("!!! where 2\n");
+		printk("!!! where 2 lpj_fine=%d\n", lpj_fine);
 		lpj = lpj_fine;
 		pr_info("Calibrating delay loop (skipped), "
 			"value calculated using timer frequency.. ");

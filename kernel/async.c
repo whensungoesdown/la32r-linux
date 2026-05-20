@@ -44,6 +44,9 @@ asynchronous and synchronous parts of the kernel.
 
 */
 
+// uty: test
+#define DEBUG
+
 #include <linux/async.h>
 #include <linux/atomic.h>
 #include <linux/ktime.h>
@@ -123,6 +126,8 @@ static void async_run_entry_fn(struct work_struct *work)
 	pr_debug("calling  %lli_%pS @ %i\n", (long long)entry->cookie,
 		 entry->func, task_pid_nr(current));
 	calltime = ktime_get();
+
+	printk("!!! ktime_get() calltime=0x%x\n", (int)calltime);
 
 	entry->func(entry->data, entry->cookie);
 

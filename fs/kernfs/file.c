@@ -848,6 +848,11 @@ static void kernfs_notify_workfn(struct work_struct *work)
 	struct kernfs_node *kn;
 	struct kernfs_super_info *info;
 repeat:
+
+	// uty: test
+	//printk("kernfs_notify_workfn() skip, return\n");
+	//return;
+
 	/* pop one off the notify_list */
 	spin_lock_irq(&kernfs_notify_lock);
 	kn = kernfs_notify_list;

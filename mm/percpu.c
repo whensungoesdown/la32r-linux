@@ -3414,6 +3414,7 @@ void __init setup_per_cpu_areas(void)
 //    pr_info("------ dump pcpu state end ------\n");
 //}
 
+
 /*
  * UP percpu area setup.
  *
@@ -3423,36 +3424,47 @@ void __init setup_per_cpu_areas(void)
  */
 void __init setup_per_cpu_areas(void)
 {
-	const size_t unit_size =
-		roundup_pow_of_two(max_t(size_t, PCPU_MIN_UNIT_SIZE,
-					 PERCPU_DYNAMIC_RESERVE));
 
 	// uty: test
-        //const size_t unit_size = 4 * 1024 * 1024;   // 4MB
+	//unsigned int cpu;
 
-	struct pcpu_alloc_info *ai;
-	void *fc;
+	//for_each_possible_cpu(cpu)
+	//	__per_cpu_offset[cpu] = 0;
 
-	ai = pcpu_alloc_alloc_info(1, 1);
-	fc = memblock_alloc_from(unit_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS));
-	if (!ai || !fc)
-		panic("Failed to allocate memory for percpu areas.");
-	/* kmemleak tracks the percpu allocations separately */
-	kmemleak_free(fc);
+	//pcpu_base_addr = (unsigned long)__per_cpu_start;
 
-	ai->dyn_size = unit_size;
-	ai->unit_size = unit_size;
-	ai->atom_size = unit_size;
-	ai->alloc_size = unit_size;
-	ai->groups[0].nr_units = 1;
-	ai->groups[0].cpu_map[0] = 0;
+	return;
 
-	pcpu_setup_first_chunk(ai, fc);
-	// uty: test
-	//pcpu_dump_alloc_info(KERN_INFO, ai);
-	//dump_pcpu_state();
-	//while(1) {}
-	pcpu_free_alloc_info(ai);
+//	const size_t unit_size =
+//		roundup_pow_of_two(max_t(size_t, PCPU_MIN_UNIT_SIZE,
+//					 PERCPU_DYNAMIC_RESERVE));
+//
+//        //const size_t unit_size = 4 * 1024 * 1024;   // 4MB
+//
+//	struct pcpu_alloc_info *ai;
+//	void *fc;
+//
+//
+//	ai = pcpu_alloc_alloc_info(1, 1);
+//	fc = memblock_alloc_from(unit_size, PAGE_SIZE, __pa(MAX_DMA_ADDRESS));
+//	if (!ai || !fc)
+//		panic("Failed to allocate memory for percpu areas.");
+//	/* kmemleak tracks the percpu allocations separately */
+//	kmemleak_free(fc);
+//
+//	ai->dyn_size = unit_size;
+//	ai->unit_size = unit_size;
+//	ai->atom_size = unit_size;
+//	ai->alloc_size = unit_size;
+//	ai->groups[0].nr_units = 1;
+//	ai->groups[0].cpu_map[0] = 0;
+//
+//	pcpu_setup_first_chunk(ai, fc);
+//	// uty: test
+//	//pcpu_dump_alloc_info(KERN_INFO, ai);
+//	//dump_pcpu_state();
+//	//while(1) {}
+//	pcpu_free_alloc_info(ai);
 }
 
 #endif	/* CONFIG_SMP */

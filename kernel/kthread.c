@@ -344,6 +344,9 @@ static void create_kthread(struct kthread_create_info *create)
 		/* If user was SIGKILLed, I release the structure. */
 		struct completion *done = xchg(&create->done, NULL);
 
+		printk("create_kthread: kernel_thread failed, error %d\n", pid);
+
+
 		if (!done) {
 			kfree(create);
 			return;
@@ -366,6 +369,15 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 
 	if (!create)
 		return ERR_PTR(-ENOMEM);
+
+	//printk("in __kthread_create_on_node() create=0x%x\n", (int)create);
+	//printk("                              threadfn=0x%x\n", (int)threadfn);
+	//printk("                              &done=0x%x\n", (int)&done);
+	printk(KERN_DEBUG "kthread: creating thread '%s' on node %d, func=%pS, data=%p\n",
+			namefmt, node, threadfn, data);
+
+
+
 	create->threadfn = threadfn;
 	create->data = data;
 	create->node = node;
@@ -375,13 +387,16 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 	list_add_tail(&create->list, &kthread_create_list);
 	spin_unlock(&kthread_create_lock);
 
+	//printk("                              wake_up_process()\n");
 	wake_up_process(kthreadd_task);
+	//printk("                              wake_up_process() finish\n");
 	/*
 	 * Wait for completion in killable state, for I might be chosen by
 	 * the OOM killer while kthreadd is trying to allocate memory for
 	 * new kernel thread.
 	 */
 	if (unlikely(wait_for_completion_killable(&done))) {
+		//printk("                              wait_for_completion_killable() here\n");
 		/*
 		 * If I was SIGKILLed before kthreadd (or new kernel thread)
 		 * calls complete(), leave the cleanup of this structure to
@@ -395,6 +410,9 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 		 */
 		wait_for_completion(&done);
 	}
+
+	printk("                              position 0\n");
+
 	task = create->result;
 	if (!IS_ERR(task)) {
 		static const struct sched_param param = { .sched_priority = 0 };
@@ -406,6 +424,9 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 		 */
 		vsnprintf(name, sizeof(name), namefmt, args);
 		set_task_comm(task, name);
+
+		printk("                              name=%s\n", name);
+
 		/*
 		 * root may have changed our (kthreadd's) priority or CPU mask.
 		 * The kernel thread should not inherit these properties.
@@ -414,6 +435,9 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 		set_cpus_allowed_ptr(task,
 				     housekeeping_cpumask(HK_FLAG_KTHREAD));
 	}
+
+	printk("                              task=0x%x\n", (int)task);
+
 	kfree(create);
 	return task;
 }
@@ -448,6 +472,8 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
 {
 	struct task_struct *task;
 	va_list args;
+
+	printk("in kthread_create_on_node()\n");
 
 	va_start(args, namefmt);
 	task = __kthread_create_on_node(threadfn, data, node, namefmt, args);
@@ -669,6 +695,13 @@ int kthreadd(void *unused)
 	cgroup_init_kthreadd();
 
 	for (;;) {
+		/* 添加调试：打印当前运行队列中的请求数量 */
+		int req_count = 0;
+		struct kthread_create_info *pos;
+		list_for_each_entry(pos, &kthread_create_list, list)
+			req_count++;
+		printk("kthreadd: entering loop, kthread_create_list has %d entries\n", req_count);
+
 		set_current_state(TASK_INTERRUPTIBLE);
 		if (list_empty(&kthread_create_list))
 			schedule();
@@ -681,12 +714,31 @@ int kthreadd(void *unused)
 			create = list_entry(kthread_create_list.next,
 					    struct kthread_create_info, list);
 			list_del_init(&create->list);
+
+
+			//printk("kthreadd()-> create_kthread() create=0x%x\n", (int)create);
+			//printk("kthreadd: creating thread, node %d, func=%pS\n", create->node, create->threadfn);
+
 			spin_unlock(&kthread_create_lock);
-
-			printk("kthreadd()-> create_kthread() create=0x%x\n", (int)create);
 			create_kthread(create);
-
 			spin_lock(&kthread_create_lock);
+
+			//if (IS_ERR(create->result))
+			//{
+			//	printk("fail %ld\n", PTR_ERR(create->result));
+			//}
+			//else
+			//{
+			//	printk("success\n");
+			//}
+			/* 添加错误检查 */
+			if (IS_ERR(create->result)) {
+				printk("kthreadd: failed to create thread, error %ld\n", PTR_ERR(create->result));
+			} else {
+				printk("kthreadd: successfully created thread, (pid=%d)\n", task_pid_vnr(create->result));
+				//printk("kthreadd: successfully created thread, (create->result=0x%x)\n", (int)(create->result));
+			}
+
 		}
 		spin_unlock(&kthread_create_lock);
 	}

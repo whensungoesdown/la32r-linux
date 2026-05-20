@@ -1138,6 +1138,9 @@ void __init swap_setup(void)
 		page_cluster = 2;
 	else
 		page_cluster = 3;
+
+	printk("!!! swap_setup() megs=0x%x, page_cluster=%d\n", (int)megs, (int)page_cluster);
+
 	/*
 	 * Right now other parts of the system means that we
 	 * _really_ don't want to cluster much more

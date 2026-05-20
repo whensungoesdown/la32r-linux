@@ -4112,7 +4112,16 @@ static int kswapd(void *p)
 	unsigned int highest_zoneidx = MAX_NR_ZONES - 1;
 	pg_data_t *pgdat = (pg_data_t *)p;
 	struct task_struct *tsk = current;
-	const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
+	// uty: test
+	//const struct cpumask *cpumask = cpumask_of_node(pgdat->node_id);
+	const struct cpumask *cpumask;
+
+	// uty: test
+	//printk("in kswapd() pgdat->node_id=%d\n", (int)(pgdat->node_id));
+	//printk("kswapd() skip, return\n");
+	//return 0;
+
+	cpumask = cpumask_of_node(pgdat->node_id);
 
 	if (!cpumask_empty(cpumask))
 		set_cpus_allowed_ptr(tsk, cpumask);
@@ -4284,9 +4293,15 @@ int kswapd_run(int nid)
 	pg_data_t *pgdat = NODE_DATA(nid);
 	int ret = 0;
 
-	if (pgdat->kswapd)
-		return 0;
+	printk("	kswapd_run() pgdat=0x%x\n", (int)pgdat);
 
+	if (pgdat->kswapd)
+	{
+		printk("???\n");
+		return 0;
+	}
+
+	printk("	kthread_run()\n");
 	pgdat->kswapd = kthread_run(kswapd, pgdat, "kswapd%d", nid);
 	if (IS_ERR(pgdat->kswapd)) {
 		/* failure at boot is fatal */
@@ -4316,9 +4331,16 @@ static int __init kswapd_init(void)
 {
 	int nid;
 
+	// uty: test
+	//printk("in kswapd_init() skip, return\n");
+	//return 0;
+
 	swap_setup();
 	for_each_node_state(nid, N_MEMORY)
+	{
+		printk("kswapd_init() nid=%d\n", nid);
  		kswapd_run(nid);
+	}
 	return 0;
 }
 

@@ -654,7 +654,7 @@ const struct fs_context_operations legacy_fs_context_ops = {
  */
 static int legacy_init_fs_context(struct fs_context *fc)
 {
-	printk("					in legacy_init_fs_context()\n");
+	//printk("					in legacy_init_fs_context()\n");
 	fc->fs_private = kzalloc(sizeof(struct legacy_fs_context), GFP_KERNEL);
 	if (!fc->fs_private)
 		return -ENOMEM;

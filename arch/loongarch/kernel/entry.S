@@ -153,26 +153,49 @@ SYM_CODE_END(syscall_exit_partial)
 
 // uty: test
 /* Exception handler table, indexed by ECODE (0~63) */
+//	.section .rodata
+//	.align 3
+//excp_handlers:
+//	PTR	do_reserved		/* 0: External interrupt, handled separately */
+//	PTR	do_reserved		/* 1: Reserved */
+//	PTR	do_ade			/* 2: Address error exception */
+//	PTR	do_ale			/* 3: Unaligned access exception */
+//	PTR	do_bp			/* 4: Breakpoint exception (break) */
+//	PTR	do_ri			/* 5: Illegal instruction exception */
+//	PTR	do_reserved		/* 6: Reserved */
+//	PTR	do_reserved		/* 7: Reserved */
+//	PTR	do_fpu			/* 8: FPU disabled exception */
+//	PTR	do_fpe			/* 9: FPU exception (fpe) */
+//	PTR	do_lsx			/* 10: LSX extension disabled */
+//	PTR	do_lasx			/* 11: LASX extension disabled */
+//	PTR	do_lbt			/* 12: LBT extension disabled */
+//	PTR	do_watch		/* 13: Hardware watchpoint exception */
+//	/* Fill remaining 14~63 with do_reserved */
+//	.rept	50
+//	PTR	do_reserved
+//	.endr
+
+/* Exception handler table, indexed by ECODE (0~63) */
 	.section .rodata
 	.align 3
 excp_handlers:
-	PTR	do_reserved		/* 0: External interrupt, handled separately */
-	PTR	do_reserved		/* 1: Reserved */
-	PTR	do_ade			/* 2: Address error exception */
-	PTR	do_ale			/* 3: Unaligned access exception */
-	PTR	do_bp			/* 4: Breakpoint exception (break) */
-	PTR	do_ri			/* 5: Illegal instruction exception */
-	PTR	do_reserved		/* 6: Reserved */
-	PTR	do_reserved		/* 7: Reserved */
-	PTR	do_fpu			/* 8: FPU disabled exception */
-	PTR	do_fpe			/* 9: FPU exception (fpe) */
-	PTR	do_lsx			/* 10: LSX extension disabled */
-	PTR	do_lasx			/* 11: LASX extension disabled */
-	PTR	do_lbt			/* 12: LBT extension disabled */
-	PTR	do_watch		/* 13: Hardware watchpoint exception */
+	PTR	handle_reserved		/* 0: External interrupt, handled separately */
+	PTR	handle_reserved		/* 1: Reserved */
+	PTR	handle_reserved		/* 2: Reserved */
+	PTR	handle_reserved		/* 3: Reserved */
+	PTR	handle_reserved		/* 4: Reserved */
+	PTR	handle_reserved		/* 5: Reserved */
+	PTR	handle_reserved		/* 6: Reserved */
+	PTR	handle_reserved		/* 7: Reserved */
+	PTR	handle_ade		/* 8: Address error exception */
+	PTR	handle_ale		/* 9: Unaligned access exception */
+	PTR	handle_reserved		/* a: Reserved */
+	PTR	handle_sys		/* b: Syscall */
+	PTR	handle_bp		/* c: Breakpoint exception (break) */
+	PTR	handle_ri		/* d: Illegal instruction exception */
 	/* Fill remaining 14~63 with do_reserved */
 	.rept	50
-	PTR	do_reserved
+	PTR	handle_reserved
 	.endr
 
 /* General exception entry point (VS == 0) */
@@ -283,12 +306,30 @@ SYM_FUNC_START(handle_general_exception)
 	andi	t1, t1, 0x3f
 	beq	t1, zero, 1f	/* if irq */
 
-        csrrd	t0, LOONGARCH_CSR_EENTRY
-        slli.w	t1, t1, 0x9  /* get ex entry shift = Ecode * vec_size  */
-        add.w	t0, t0, t1
-        lu12i.w	t1, 0x4
-        sub.w	t0, t0, t1
-        jirl	zero,t0 , 0  /* go to exception_handler */
+        //csrrd	t0, LOONGARCH_CSR_EENTRY
+        //slli.w	t1, t1, 0x9  /* get ex entry shift = Ecode * vec_size  */
+        //add.w	t0, t0, t1
+        //lu12i.w	t1, 0x4
+        //sub.w	t0, t0, t1
+        //jirl	zero,t0 , 0  /* go to exception_handler */
+
+	// t1 is actually $13
+	//li.w    $r12, 0x44444444
+	//li.w    $r13, 0x10018
+	//st.w    $r12, $r13, 0
+
+	/* ----------------- Exception handling ----------------- */
+	/* Ensure ECODE index is within valid range (0~63) */
+	slli.w	t2, t1, 2		/* t2 = ECODE * 4 */
+	la.abs	t3, excp_handlers
+	add.w	t3, t3, t2
+	LONG_L	t0, t3, 0		/* t0 = handler function address */
+
+        //la.abs  t0, handle_ade
+
+	/* Call C handler, argument: pt_regs *regs = sp */
+	move	a0, sp
+	jirl	ra, t0, 0
 
 1:
 	SAVE_SOME

@@ -380,9 +380,15 @@ asmlinkage void do_ade(struct pt_regs *regs)
 {
 	enum ctx_state prev_state;
 
+	printk("In do_ade()\n");
+
 	prev_state = exception_enter();
 
 	die_if_kernel("Kernel ade access", regs);
+
+	// uty: test
+	//while(1){}
+
 	force_sig(SIGBUS);
 
 	/*

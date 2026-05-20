@@ -77,6 +77,7 @@ void __weak arch_cpu_idle_exit(void) { }
 void __weak arch_cpu_idle_dead(void) { }
 void __weak arch_cpu_idle(void)
 {
+	printk("++++++++++++++++ arch_cpu_idle()\n");
 	cpu_idle_force_poll = 1;
 	raw_local_irq_enable();
 }
@@ -88,6 +89,8 @@ void __weak arch_cpu_idle(void)
  */
 void __cpuidle default_idle_call(void)
 {
+	printk("in default_idle_call()\n");
+
 	if (current_clr_polling_and_test()) {
 		local_irq_enable();
 	} else {
@@ -106,7 +109,7 @@ void __cpuidle default_idle_call(void)
 		 */
 		trace_hardirqs_on_prepare();
 		lockdep_hardirqs_on_prepare(_THIS_IP_);
-		rcu_idle_enter();
+		//rcu_idle_enter();
 		lockdep_hardirqs_on(_THIS_IP_);
 
 		arch_cpu_idle();
@@ -119,7 +122,7 @@ void __cpuidle default_idle_call(void)
 		 */
 		raw_local_irq_disable();
 		lockdep_hardirqs_off(_THIS_IP_);
-		rcu_idle_exit();
+		//rcu_idle_exit();
 		lockdep_hardirqs_on(_THIS_IP_);
 		raw_local_irq_enable();
 

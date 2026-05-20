@@ -217,6 +217,13 @@ void panic(const char *fmt, ...)
 	if (old_cpu != PANIC_CPU_INVALID && old_cpu != this_cpu)
 		panic_smp_self_stop();
 
+	// uty: test
+	// already paniced, showed the epc and register stuff, then stop here
+	// 
+	// It won't stop here. Seems that the timer interrupt reschedule other
+	// thread to run.
+	//while(1) {}
+
 	console_verbose();
 	bust_spinlocks(1);
 	va_start(args, fmt);

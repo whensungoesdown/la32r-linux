@@ -1405,6 +1405,8 @@ static void __queue_work(int cpu, struct workqueue_struct *wq,
 	unsigned int work_flags;
 	unsigned int req_cpu = cpu;
 
+	//printk("++++++++++ queue_work: work=%px, func=%pS\n", work, work->func);
+
 	/*
 	 * While a work item is PENDING && off queue, a task trying to
 	 * steal the PENDING will busy-loop waiting for it to either get
@@ -2216,6 +2218,8 @@ __acquires(&pool->lock)
 	 * overridden through set_worker_desc().
 	 */
 	strscpy(worker->desc, pwq->wq->name, WORKER_DESC_LEN);
+
+	printk("in process_one_work() worker->current_func=0x%x, worker->desc=%s\n", (int)(worker->current_func), worker->desc);
 
 	list_del_init(&work->entry);
 

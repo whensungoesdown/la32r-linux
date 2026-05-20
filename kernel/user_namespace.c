@@ -296,6 +296,10 @@ static u32 map_id_range_down(struct uid_gid_map *map, u32 id, u32 count)
 {
 	struct uid_gid_extent *extent;
 	unsigned extents = map->nr_extents;
+
+
+	printk("						in map_id_range_down()\n");
+
 	smp_rmb();
 
 	if (extents <= UID_GID_MAP_MAX_BASE_EXTENTS)

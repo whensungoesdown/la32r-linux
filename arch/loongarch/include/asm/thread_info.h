@@ -66,7 +66,9 @@ static inline struct thread_info *current_thread_info(void)
 #define THREAD_SIZE_ORDER (0)
 #endif
 
-#define THREAD_SIZE (PAGE_SIZE << THREAD_SIZE_ORDER)
+// uty: test
+//#define THREAD_SIZE (PAGE_SIZE << THREAD_SIZE_ORDER)
+#define THREAD_SIZE 8192
 #define THREAD_MASK (THREAD_SIZE - 1UL)
 
 #define STACK_WARN	(THREAD_SIZE / 8)
