@@ -2080,6 +2080,9 @@ void __init inode_init_early(void)
 	if (hashdist)
 		return;
 
+	// uty: test
+	ihash_entries = 32;
+
 	inode_hashtable =
 		alloc_large_system_hash("Inode-cache",
 					sizeof(struct hlist_head),

@@ -437,8 +437,9 @@ void __init setup_arch(char **cmdline_p)
 	printk("	prefill_possible_map()\n");
 	prefill_possible_map();
 
-	printk("	skip cpu_cache_init()\n");
-	//cpu_cache_init();
+	// uty: test
+	printk("	cpu_cache_init()\n");
+	cpu_cache_init();
 	printk("	paging_init()\n");
 	paging_init();
 	printk("	boot_cpu_trap_init()\n");

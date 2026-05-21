@@ -13,7 +13,6 @@
 #include <linux/percpu.h>
 
 // uty: test
-//unsigned long lpj_fine = 300000;
 unsigned long lpj_fine = 0;
 unsigned long preset_lpj;
 static int __init lpj_setup(char *str)
@@ -47,7 +46,7 @@ static unsigned long calibrate_delay_direct(void)
 	int min = -1;
 	int i;
 
-	printk("in calibrate_delay_direct()\n");
+	//printk("in calibrate_delay_direct()\n");
 
 	if (read_current_timer(&pre_start) < 0 )
 		return 0;
@@ -265,7 +264,7 @@ static DEFINE_PER_CPU(unsigned long, cpu_loops_per_jiffy) = { 0 };
 unsigned long __attribute__((weak)) calibrate_delay_is_known(void)
 {
 	// uty: test
-	printk("in calibrate_delay_is_known()\n");
+	//printk("in calibrate_delay_is_known()\n");
 	//return 300000;
 	return 0;
 }
@@ -288,32 +287,32 @@ void calibrate_delay(void)
 	printk("in calibrated()\n");
 
 	if (per_cpu(cpu_loops_per_jiffy, this_cpu)) {
-		printk("!!! where 0\n");
+		//printk("!!! where 0\n");
 		lpj = per_cpu(cpu_loops_per_jiffy, this_cpu);
 		if (!printed)
 			pr_info("Calibrating delay loop (skipped) "
 				"already calibrated this CPU");
 	} else if (preset_lpj) {
-		printk("!!! where 1\n");
+		//printk("!!! where 1\n");
 		lpj = preset_lpj;
 		if (!printed)
 			pr_info("Calibrating delay loop (skipped) "
 				"preset value.. ");
 	} else if ((!printed) && lpj_fine) {
-		printk("!!! where 2 lpj_fine=%d\n", lpj_fine);
+		//printk("!!! where 2 lpj_fine=%d\n", lpj_fine);
 		lpj = lpj_fine;
 		pr_info("Calibrating delay loop (skipped), "
 			"value calculated using timer frequency.. ");
 	} else if ((lpj = calibrate_delay_is_known())) {
-		printk("!!! where 3\n");
+		//printk("!!! where 3\n");
 		;
 	} else if ((lpj = calibrate_delay_direct()) != 0) {
-		printk("!!! where 4\n");
+		//printk("!!! where 4\n");
 		if (!printed)
 			pr_info("Calibrating delay using timer "
 				"specific routine.. ");
 	} else {
-		printk("!!! where 5\n");
+		//printk("!!! where 5\n");
 		if (!printed)
 			pr_info("Calibrating delay loop... ");
 		lpj = calibrate_delay_converge();
@@ -324,12 +323,15 @@ void calibrate_delay(void)
 			lpj/(500000/HZ),
 			(lpj/(5000/HZ)) % 100, lpj);
 
-	printk("!!! where 6\n");
+	//printk("!!! where 6\n");
 
 	loops_per_jiffy = lpj;
 	printed = true;
 
-	printk("!!! where 7\n");
-	calibration_delay_done();
-	printk("!!! where 8\n");
+	//printk("!!! where 7\n");
+	
+	// uty: test
+	// skip calibration_delay_done()
+	//calibration_delay_done();
+	//printk("!!! where 8\n");
 }

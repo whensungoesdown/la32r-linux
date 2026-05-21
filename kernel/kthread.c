@@ -411,7 +411,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 		wait_for_completion(&done);
 	}
 
-	printk("                              position 0\n");
+	//printk("                              position 0\n");
 
 	task = create->result;
 	if (!IS_ERR(task)) {
@@ -425,7 +425,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 		vsnprintf(name, sizeof(name), namefmt, args);
 		set_task_comm(task, name);
 
-		printk("                              name=%s\n", name);
+		//printk("                              name=%s\n", name);
 
 		/*
 		 * root may have changed our (kthreadd's) priority or CPU mask.
@@ -436,7 +436,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
 				     housekeeping_cpumask(HK_FLAG_KTHREAD));
 	}
 
-	printk("                              task=0x%x\n", (int)task);
+	//printk("                              task=0x%x\n", (int)task);
 
 	kfree(create);
 	return task;
@@ -473,7 +473,7 @@ struct task_struct *kthread_create_on_node(int (*threadfn)(void *data),
 	struct task_struct *task;
 	va_list args;
 
-	printk("in kthread_create_on_node()\n");
+	//printk("in kthread_create_on_node()\n");
 
 	va_start(args, namefmt);
 	task = __kthread_create_on_node(threadfn, data, node, namefmt, args);
@@ -684,7 +684,7 @@ int kthreadd(void *unused)
 {
 	struct task_struct *tsk = current;
 
-	printk("in kthreadd()\n");
+	//printk("in kthreadd()\n");
 	/* Setup a clean context for our children to inherit. */
 	set_task_comm(tsk, "kthreadd");
 	ignore_signals(tsk);
@@ -696,11 +696,11 @@ int kthreadd(void *unused)
 
 	for (;;) {
 		/* 添加调试：打印当前运行队列中的请求数量 */
-		int req_count = 0;
-		struct kthread_create_info *pos;
-		list_for_each_entry(pos, &kthread_create_list, list)
-			req_count++;
-		printk("kthreadd: entering loop, kthread_create_list has %d entries\n", req_count);
+		//int req_count = 0;
+		//struct kthread_create_info *pos;
+		//list_for_each_entry(pos, &kthread_create_list, list)
+		//	req_count++;
+		//printk("kthreadd: entering loop, kthread_create_list has %d entries\n", req_count);
 
 		set_current_state(TASK_INTERRUPTIBLE);
 		if (list_empty(&kthread_create_list))
@@ -732,12 +732,12 @@ int kthreadd(void *unused)
 			//	printk("success\n");
 			//}
 			/* 添加错误检查 */
-			if (IS_ERR(create->result)) {
-				printk("kthreadd: failed to create thread, error %ld\n", PTR_ERR(create->result));
-			} else {
-				printk("kthreadd: successfully created thread, (pid=%d)\n", task_pid_vnr(create->result));
-				//printk("kthreadd: successfully created thread, (create->result=0x%x)\n", (int)(create->result));
-			}
+			//if (IS_ERR(create->result)) {
+			//	printk("kthreadd: failed to create thread, error %ld\n", PTR_ERR(create->result));
+			//} else {
+			//	//printk("kthreadd: successfully created thread, (pid=%d)\n", task_pid_vnr(create->result));
+			//	printk("kthreadd: successfully created thread, (create->result=0x%x)\n", (int)(create->result));
+			//}
 
 		}
 		spin_unlock(&kthread_create_lock);

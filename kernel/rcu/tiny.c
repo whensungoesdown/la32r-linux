@@ -109,6 +109,9 @@ static __latent_entropy void rcu_process_callbacks(struct softirq_action *unused
 	struct rcu_head *next, *list;
 	unsigned long flags;
 
+	// uty: test
+	return;
+
 	/* Move the ready-to-invoke callbacks to a local list. */
 	local_irq_save(flags);
 	if (rcu_ctrlblk.donetail == &rcu_ctrlblk.rcucblist) {

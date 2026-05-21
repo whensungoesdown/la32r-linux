@@ -492,6 +492,9 @@ int inode_permission(struct user_namespace *mnt_userns,
 {
 	int retval;
 
+	//printk("inode_permission: inode=%px, mask=0x%x, current=%px (%s)\n",
+	//		inode, mask, current, current->comm);
+
 	retval = sb_permission(inode->i_sb, inode, mask);
 	if (retval)
 		return retval;
@@ -1582,6 +1585,8 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 	struct dentry *dentry, *parent = nd->path.dentry;
 	int status = 1;
 
+	// uty: test
+	//nd->flags &= ~LOOKUP_RCU;
 	//printk("						in lookup_fast()\n");
 	/*
 	 * Rename seqlock is not required here because in the off chance
@@ -1594,6 +1599,7 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		// uty: test
 		//dentry = __d_lookup_rcu(parent, &nd->last, &seq);
 		dentry = __d_lookup(parent, &nd->last);
+		printk("__d_lookup return dentry=0x%x\n", (int)dentry);
 		//printk("						__d_lookup() finish\n");
 		if (unlikely(!dentry)) {
 			if (!try_to_unlazy(nd))
@@ -1608,8 +1614,9 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		//printk("						d_backing_inode()\n");
 		*inode = d_backing_inode(dentry);
 		//printk("						read_seqcount_retry()\n");
-		if (unlikely(read_seqcount_retry(&dentry->d_seq, seq)))
-			return ERR_PTR(-ECHILD);
+		// uty: test
+		//if (unlikely(read_seqcount_retry(&dentry->d_seq, seq)))
+		//	return ERR_PTR(-ECHILD);
 
 		/*
 		 * This sequence count validates that the parent had no
@@ -1619,8 +1626,9 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		 *  enough, we can use __read_seqcount_retry here.
 		 */
 		//printk("						__read_seqcount_retry()\n");
-		if (unlikely(__read_seqcount_retry(&parent->d_seq, nd->seq)))
-			return ERR_PTR(-ECHILD);
+		// uty: test
+		//if (unlikely(__read_seqcount_retry(&parent->d_seq, nd->seq)))
+		//	return ERR_PTR(-ECHILD);
 
 		*seqp = seq;
 		//printk("						d_revalidate()\n");
@@ -1994,8 +2002,8 @@ static const char *walk_component(struct nameidata *nd, int flags)
 	unsigned seq;
 
 	// uty: test
-	printk("					in walk_component(), nd->flags &= ~LOOKUP_RCU\n");
-	nd->flags &= ~LOOKUP_RCU;
+	//printk("					in walk_component(), nd->flags &= ~LOOKUP_RCU\n");
+	//nd->flags &= ~LOOKUP_RCU;
 
 
 	/*
@@ -2009,16 +2017,19 @@ static const char *walk_component(struct nameidata *nd, int flags)
 		//printk("					handle_dots()\n");
 		return handle_dots(nd, nd->last_type);
 	}
+
+	// uty: test
+	// skip lookup_fast
 	//printk("					lookup_fast()\n");
 	dentry = lookup_fast(nd, &inode, &seq);
 	//printk("					lookup_fast() finish\n");
 	if (IS_ERR(dentry))
 		return ERR_CAST(dentry);
 	if (unlikely(!dentry)) {
-		//printk("					lookup_slow()\n");
-		dentry = lookup_slow(&nd->last, nd->path.dentry, nd->flags);
-		if (IS_ERR(dentry))
-			return ERR_CAST(dentry);
+      	//printk("					lookup_slow()\n");
+      	dentry = lookup_slow(&nd->last, nd->path.dentry, nd->flags);
+      	if (IS_ERR(dentry))
+      		return ERR_CAST(dentry);
 	}
 	if (!(flags & WALK_MORE) && nd->depth)
 		put_link(nd);
@@ -2267,6 +2278,10 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 	int depth = 0; // depth <= nd->depth
 	int err;
 
+	printk("link_path_walk: name=%s, nd->flags=0x%x, nd->path.dentry=%px, nd->path.mnt=%px, current=%px (%s)\n",
+			name ? name : "(null)", nd->flags, nd->path.dentry, nd->path.mnt,
+			current, current->comm);
+
 	nd->last_type = LAST_ROOT;
 	nd->flags |= LOOKUP_PARENT;
 	if (IS_ERR(name))
@@ -2294,6 +2309,8 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 
 		//printk("					hash_name()\n");
 		hash_len = hash_name(nd->path.dentry, name);
+
+		printk("hash_len = 0x%llx\n", hash_len);
 
 		type = LAST_NORM;
 		//printk("					hashlen_len()\n");
@@ -2553,7 +2570,10 @@ int filename_lookup(int dfd, struct filename *name, unsigned flags,
 	//printk("			set_nameidata()\n");
 	set_nameidata(&nd, dfd, name, root);
 	//printk("			path_lookupat()\n");
-	retval = path_lookupat(&nd, flags | LOOKUP_RCU, path);
+	
+	// uty: test
+	//retval = path_lookupat(&nd, flags | LOOKUP_RCU, path);
+	retval = path_lookupat(&nd, flags, path);
 	if (unlikely(retval == -ECHILD))
 		retval = path_lookupat(&nd, flags, path);
 	if (unlikely(retval == -ESTALE))
@@ -2600,7 +2620,9 @@ static struct filename *filename_parentat(int dfd, struct filename *name,
 	if (IS_ERR(name))
 		return name;
 	set_nameidata(&nd, dfd, name, NULL);
-	retval = path_parentat(&nd, flags | LOOKUP_RCU, parent);
+	// uty: test
+	//retval = path_parentat(&nd, flags | LOOKUP_RCU, parent);
+	retval = path_parentat(&nd, flags, parent);
 	if (unlikely(retval == -ECHILD))
 		retval = path_parentat(&nd, flags, parent);
 	if (unlikely(retval == -ESTALE))
@@ -3359,7 +3381,10 @@ static const char *open_last_lookups(struct nameidata *nd,
 		if (nd->last.name[nd->last.len])
 			nd->flags |= LOOKUP_FOLLOW | LOOKUP_DIRECTORY;
 		/* we _can_ be in RCU mode here */
+		// uty: test 
+		// use lookup_slow instead
 		dentry = lookup_fast(nd, &inode, &seq);
+		//dentry = lookup_slow(&nd->last, nd->path.dentry, nd->flags);
 		if (IS_ERR(dentry))
 			return ERR_CAST(dentry);
 		if (likely(dentry))
@@ -3626,7 +3651,9 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
 	struct file *filp;
 
 	set_nameidata(&nd, dfd, pathname, NULL);
-	filp = path_openat(&nd, op, flags | LOOKUP_RCU);
+	// uty: test
+	//filp = path_openat(&nd, op, flags | LOOKUP_RCU);
+	filp = path_openat(&nd, op, flags);
 	if (unlikely(filp == ERR_PTR(-ECHILD)))
 		filp = path_openat(&nd, op, flags);
 	if (unlikely(filp == ERR_PTR(-ESTALE)))
@@ -3651,7 +3678,9 @@ struct file *do_file_open_root(const struct path *root,
 		return ERR_CAST(filename);
 
 	set_nameidata(&nd, -1, filename, root);
-	file = path_openat(&nd, op, flags | LOOKUP_RCU);
+	// uty: test
+	//file = path_openat(&nd, op, flags | LOOKUP_RCU);
+	file = path_openat(&nd, op, flags);
 	if (unlikely(file == ERR_PTR(-ECHILD)))
 		file = path_openat(&nd, op, flags);
 	if (unlikely(file == ERR_PTR(-ESTALE)))

@@ -1323,7 +1323,7 @@ static inline u64 drdtime(void)
         u32 val_h = 0;
         u64 ullTimeVal = 0;
 
-	printk("++++++++++++++++++++++++++++++ drdtime() ++++++++++++++++++++++++++++++\n");
+	//printk("++++++++++++++++++++++++++++++ drdtime() ++++++++++++++++++++++++++++++\n");
 
         __asm__ __volatile__(
                 "rdcntvl.w %0 \n\t"

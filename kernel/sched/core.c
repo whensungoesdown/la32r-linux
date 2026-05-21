@@ -4518,6 +4518,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	struct mm_struct *mm = rq->prev_mm;
 	long prev_state;
 
+	//printk("finish_task_switch: prev=%px, current=%px (%s)\n",
+        //   prev, current, current->comm);
+
 	/*
 	 * The previous task will have left us with a preempt_count of 2
 	 * because it left us after:
@@ -4548,12 +4551,19 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	 * transition, resulting in a double drop.
 	 */
 	prev_state = READ_ONCE(prev->__state);
+	//printk("	vtime_task_switch(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 	vtime_task_switch(prev);
+	//printk("	perf_event_task_sched_in(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 	perf_event_task_sched_in(prev, current);
+	//printk("	finish_task(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 	finish_task(prev);
+	//printk("	tick_nohz_task_switch(): current=%px (%s)\n", current, current->comm);
 	tick_nohz_task_switch();
+	//printk("	finish_lock_switch(): current=%px (%s)\n", current, current->comm);
 	finish_lock_switch(rq);
+	//printk("	finish_arch_post_lock_switch(): current=%px (%s)\n", current, current->comm);
 	finish_arch_post_lock_switch();
+	//printk("	kcov_finish_switch(): current=%px (%s)\n", current, current->comm);
 	kcov_finish_switch(current);
 	/*
 	 * kmap_local_sched_out() is invoked with rq::lock held and
@@ -4562,8 +4572,10 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	 * Restoring the maps on sched in does not require interrupts being
 	 * disabled either.
 	 */
+	//printk("	kmap_local_sched_in(): current=%px (%s)\n", current, current->comm);
 	kmap_local_sched_in();
 
+	//printk("	fire_sched_in_preempt_notifiers(): current=%px (%s)\n", current, current->comm);
 	fire_sched_in_preempt_notifiers(current);
 	/*
 	 * When switching through a kernel thread, the loop in
@@ -4578,7 +4590,9 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	 * - a sync_core for SYNC_CORE.
 	 */
 	if (mm) {
+		//printk("	membarrier_mm_sync_core_before_usermode(): current=%px (%s)\n", current, current->comm);
 		membarrier_mm_sync_core_before_usermode(mm);
+		//printk("	mmdrop(): current=%px (%s)\n", current, current->comm);
 		mmdrop(mm);
 	}
 	if (unlikely(prev_state == TASK_DEAD)) {
@@ -4589,14 +4603,18 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 		 * Remove function-return probe instances associated with this
 		 * task and put them back on the free list.
 		 */
+		//printk("	kprobe_flush_task(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 		kprobe_flush_task(prev);
 
 		/* Task is done with its stack. */
+		//printk("	put_task_stack(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 		put_task_stack(prev);
 
+		//printk("	put_task_struct_rcu_user(): prev=%px, current=%px (%s)\n", prev, current, current->comm);
 		put_task_struct_rcu_user(prev);
 	}
 
+	//printk("finish_task_switch() finish\n");
 	return rq;
 }
 
@@ -5919,7 +5937,7 @@ static void __sched notrace __schedule(bool preempt)
 	//printk("__schedule(): switching to pid=%d comm=%s\n", next->pid, next->comm);
 	//printk("__schedule: prev=%d (%s) -> next=%d (%s), nr_running=%d\n",
 	//		prev->pid, prev->comm, next->pid, next->comm, rq->nr_running);
-	printk("test\n");
+	//printk("test\n");
 
 	clear_tsk_need_resched(prev);
 	clear_preempt_need_resched();

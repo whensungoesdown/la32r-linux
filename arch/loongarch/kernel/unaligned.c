@@ -402,6 +402,9 @@ asmlinkage void do_ale(struct pt_regs *regs)
 	unsigned int *pc;
 	enum ctx_state prev_state;
 
+	//printk("++++++++++++++++++++++++++++++ ALE: epc=%lx, badvaddr=%lx\n", regs->csr_epc, regs->csr_badvaddr);
+
+
 	prev_state = exception_enter();
 	perf_sw_event(PERF_COUNT_SW_ALIGNMENT_FAULTS,
 			1, regs, regs->csr_badvaddr);

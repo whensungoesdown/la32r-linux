@@ -992,8 +992,11 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 
 	printk("build_all_zonelists()\n");
 	build_all_zonelists(NULL);
-	printk("skip page_alloc_init()\n");
-	//page_alloc_init();
+
+	// uty: test
+	// 
+	printk("page_alloc_init()\n");
+	page_alloc_init();
 
 	pr_notice("Kernel command line: %s\n", saved_command_line);
 	/* parameters may set static keys */
@@ -1408,7 +1411,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 	char msgbuf[64];
 	int ret;
 
-	printk("!!! do_one_initcall() fn=0x%x\n", (int)fn);
+	//printk("!!! do_one_initcall() fn=0x%x\n", (int)fn);
 
 	if (initcall_blacklisted(fn))
 		return -EPERM;
@@ -1479,7 +1482,7 @@ static void __init do_initcall_level(int level, char *command_line)
 {
 	initcall_entry_t *fn;
 
-	printk("!!! Executing initcall level %d\n", level);
+	//printk("!!! Executing initcall level %d\n", level);
 
 	parse_args(initcall_level_names[level],
 		   command_line, __start___param,

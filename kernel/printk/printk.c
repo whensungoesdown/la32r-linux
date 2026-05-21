@@ -2330,7 +2330,7 @@ asmlinkage __visible int printk(const char *fmt, ...)
 	
 	// uty: test
 	va_list ap;
-	char buf[128];
+	static char buf[128];
 	int n;
 
 	va_start(ap, fmt);

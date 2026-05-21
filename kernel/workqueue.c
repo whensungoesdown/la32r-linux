@@ -2219,7 +2219,7 @@ __acquires(&pool->lock)
 	 */
 	strscpy(worker->desc, pwq->wq->name, WORKER_DESC_LEN);
 
-	printk("in process_one_work() worker->current_func=0x%x, worker->desc=%s\n", (int)(worker->current_func), worker->desc);
+	//printk("in process_one_work() worker->current_func=0x%x, worker->desc=%s\n", (int)(worker->current_func), worker->desc);
 
 	list_del_init(&work->entry);
 
@@ -3461,16 +3461,16 @@ static void wq_init_lockdep(struct workqueue_struct *wq)
 {
 	char *lock_name;
 
-	printk("			lockdep_register_key()\n");
+	//printk("			lockdep_register_key()\n");
 	lockdep_register_key(&wq->key);
 	lock_name = kasprintf(GFP_KERNEL, "%s%s", "(wq_completion)", wq->name);
 	if (!lock_name)
 		lock_name = wq->name;
 
 	wq->lock_name = lock_name;
-	printk("			lockdep_init_map()\n");
+	//printk("			lockdep_init_map()\n");
 	lockdep_init_map(&wq->lockdep_map, lock_name, &wq->key, 0);
-	printk("			lockdep_init_map() finish\n");
+	//printk("			lockdep_init_map() finish\n");
 }
 
 static void wq_unregister_lockdep(struct workqueue_struct *wq)
@@ -4377,7 +4377,7 @@ err_free_wq:
 	kfree(wq);
 	return NULL;
 err_destroy:
-	printk("		destroy_workqueue()\n");
+	//printk("		destroy_workqueue()\n");
 	destroy_workqueue(wq);
 	return NULL;
 }
