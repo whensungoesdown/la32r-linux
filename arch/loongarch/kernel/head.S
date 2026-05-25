@@ -25,6 +25,10 @@ SYM_CODE_START(kernel_entry)    		# kernel entry point
 	li.w    $r13, 0x10018
 	st.w    $r12, $r13, 0
 
+	# Trun on icache
+	# addi.w   t0, $r0, 0x1           # t0 = 0x1
+	# csrwr    t0, 0x101              # 
+
 	la		t0, __bss_start		# clear .bss
 	PTR_S		zero, t0, 0
 	la		t1, __bss_stop - LONGSIZE

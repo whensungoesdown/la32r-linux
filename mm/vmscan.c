@@ -4293,7 +4293,7 @@ int kswapd_run(int nid)
 	pg_data_t *pgdat = NODE_DATA(nid);
 	int ret = 0;
 
-	printk("	kswapd_run() pgdat=0x%x\n", (int)pgdat);
+	//printk("	kswapd_run() pgdat=0x%x\n", (int)pgdat);
 
 	if (pgdat->kswapd)
 	{
@@ -4301,7 +4301,7 @@ int kswapd_run(int nid)
 		return 0;
 	}
 
-	printk("	kthread_run()\n");
+	//printk("	kthread_run()\n");
 	pgdat->kswapd = kthread_run(kswapd, pgdat, "kswapd%d", nid);
 	if (IS_ERR(pgdat->kswapd)) {
 		/* failure at boot is fatal */
@@ -4338,7 +4338,7 @@ static int __init kswapd_init(void)
 	swap_setup();
 	for_each_node_state(nid, N_MEMORY)
 	{
-		printk("kswapd_init() nid=%d\n", nid);
+		//printk("kswapd_init() nid=%d\n", nid);
  		kswapd_run(nid);
 	}
 	return 0;

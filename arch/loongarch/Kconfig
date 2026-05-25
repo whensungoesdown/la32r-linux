@@ -127,6 +127,7 @@ config MACH_LOONGSON64
 
 config MACH_LOONGSON32
 	bool "Loongson 32-bit family of machines"
+	select ARCH_HAS_BINFMT_FLAT
 #	select IRQ_LOONGARCH_CPU
 	select NR_CPUS_DEFAULT_1
 #	select SYS_SUPPORTS_HIGHMEM

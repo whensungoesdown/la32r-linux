@@ -1599,7 +1599,7 @@ static struct dentry *lookup_fast(struct nameidata *nd,
 		// uty: test
 		//dentry = __d_lookup_rcu(parent, &nd->last, &seq);
 		dentry = __d_lookup(parent, &nd->last);
-		printk("__d_lookup return dentry=0x%x\n", (int)dentry);
+		//printk("__d_lookup return dentry=0x%x\n", (int)dentry);
 		//printk("						__d_lookup() finish\n");
 		if (unlikely(!dentry)) {
 			if (!try_to_unlazy(nd))
@@ -2278,9 +2278,9 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 	int depth = 0; // depth <= nd->depth
 	int err;
 
-	printk("link_path_walk: name=%s, nd->flags=0x%x, nd->path.dentry=%px, nd->path.mnt=%px, current=%px (%s)\n",
-			name ? name : "(null)", nd->flags, nd->path.dentry, nd->path.mnt,
-			current, current->comm);
+	//printk("link_path_walk: name=%s, nd->flags=0x%x, nd->path.dentry=%px, nd->path.mnt=%px, current=%px (%s)\n",
+	//		name ? name : "(null)", nd->flags, nd->path.dentry, nd->path.mnt,
+	//		current, current->comm);
 
 	nd->last_type = LAST_ROOT;
 	nd->flags |= LOOKUP_PARENT;
@@ -2310,7 +2310,7 @@ static int link_path_walk(const char *name, struct nameidata *nd)
 		//printk("					hash_name()\n");
 		hash_len = hash_name(nd->path.dentry, name);
 
-		printk("hash_len = 0x%llx\n", hash_len);
+		//printk("hash_len = 0x%llx\n", hash_len);
 
 		type = LAST_NORM;
 		//printk("					hashlen_len()\n");

@@ -494,18 +494,18 @@ pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type,
 {
 	pid_t nr = 0;
 
-	printk("__task_pid_nr_ns: task=%px, type=%d, ns=%px, current=%px (%s)\n",
-           task, type, ns, current, current->comm);
+	//printk("__task_pid_nr_ns: task=%px, type=%d, ns=%px, current=%px (%s)\n",
+        //   task, type, ns, current, current->comm);
 
 	rcu_read_lock();
 	if (!ns)
 	{
-		printk("task_active_pid_ns()\n");
+		//printk("task_active_pid_ns()\n");
 		ns = task_active_pid_ns(current);
 	}
-	printk("pid_nr_ns()\n");
+	//printk("pid_nr_ns()\n");
 	nr = pid_nr_ns(rcu_dereference(*task_pid_ptr(task, type)), ns);
-	printk("pid_nr_ns() finish\n");
+	//printk("pid_nr_ns() finish\n");
 	rcu_read_unlock();
 
 	return nr;

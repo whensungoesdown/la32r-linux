@@ -843,6 +843,8 @@ static int load_elf_binary(struct linux_binprm *bprm)
 	struct mm_struct *mm;
 	struct pt_regs *regs;
 
+	printk("++++++++++++++++++++++++++++++ load_elf_binary() +++++++++++++++++\n");
+
 	retval = -ENOEXEC;
 	/* First of all, some simple consistency checks */
 	if (memcmp(elf_ex->e_ident, ELFMAG, SELFMAG) != 0)
@@ -2298,6 +2300,7 @@ end_coredump:
 
 static int __init init_elf_binfmt(void)
 {
+	printk("+++++++++++++++ init_elf_binfmt() ++++++++++++++++++++\n");
 	register_binfmt(&elf_format);
 	return 0;
 }

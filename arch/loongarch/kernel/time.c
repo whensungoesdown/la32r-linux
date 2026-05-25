@@ -54,7 +54,7 @@ static int constant_set_state_oneshot(struct clock_event_device *evt)
 {
 	unsigned long timer_config;
 
-	printk("!!!  constant_set_state_oneshot()\n");
+	//printk("!!!  constant_set_state_oneshot()\n");
 
 	spin_lock(&state_lock);
 
@@ -93,7 +93,7 @@ static int constant_set_state_periodic(struct clock_event_device *evt)
 	// uty: test
 	//timer_config = 0x2493e3;
 
-	printk("!!! timer_config=0x%x()\n", (int)timer_config);
+	//printk("!!! timer_config=0x%x()\n", (int)timer_config);
 
 	csr_writel(timer_config, LOONGARCH_CSR_TCFG);
 
@@ -111,7 +111,7 @@ static int constant_timer_next_event(unsigned long delta, struct clock_event_dev
 {
 	unsigned long timer_config;
 
-	printk("!!! constant_timer_next_event() delta=%d\n", (int)delta);
+	//printk("!!! constant_timer_next_event() delta=%d\n", (int)delta);
 	//delta = 1000000;
 
 	//delta &= CSR_TCFG_VAL;
@@ -182,7 +182,7 @@ int constant_clockevent_init(void)
 
 	clockevents_config_and_register(cd, const_clock_freq, min_delta, max_delta);
 
-	printk("const_clock_freq = %d Hz\n", (int)const_clock_freq);
+	//printk("const_clock_freq = %d Hz\n", (int)const_clock_freq);
 
 	if (timer_irq_installed)
 		return 0;
@@ -196,7 +196,7 @@ int constant_clockevent_init(void)
 	// uty: test
 	//set_csr_ecfg(0x800);
 	lpj_fine = get_loops_per_jiffy();
-	pr_info("Constant clock event device register\n");
+	//pr_info("Constant clock event device register\n");
 
 	return 0;
 }

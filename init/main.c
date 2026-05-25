@@ -933,6 +933,19 @@ static void __init print_unknown_bootoptions(void)
 	memblock_free(__pa(unknown_options), len);
 }
 
+// uty: test
+static inline void enable_icache(void)
+{
+    unsigned long tmp = 1;
+
+    __asm__ volatile (
+        "csrwr %0, 0x101"
+        : 
+        : "r"(tmp)
+        : "memory"
+    );
+}
+
 asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 {
 	char *command_line;
@@ -989,6 +1002,8 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	// uty: test
 	//printk("test memory access violation\n");
 	//*(int*)0xa0000000 = 0;
+	//printk("");
+	//enable_icache();
 
 	printk("build_all_zonelists()\n");
 	build_all_zonelists(NULL);
@@ -1191,7 +1206,7 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	}
 	printk("sched_clock_init()\n");
 	sched_clock_init();
-	printk("+++++++++++ calibrate_delay() ++++++++++\n");
+	//printk("+++++++++++ calibrate_delay() ++++++++++\n");
 	calibrate_delay();
 	printk("pid_idr_init()\n");
 	pid_idr_init();
@@ -1723,6 +1738,17 @@ void __init console_on_rootfs(void)
 	fput(file);
 }
 
+static int __init print_func(void)
+{
+    unsigned char *ptr = (unsigned char *)wait_for_initramfs;
+    int i;
+    printk("wait_for_initramfs bytes: ");
+    for (i = 0; i < 16; i++)
+        printk("%02x ", ptr[i]);
+    printk("\n");
+    return 0;
+}
+
 static noinline void __init kernel_init_freeable(void)
 {
 	/* Now the scheduler is fully set up and can do blocking allocations */
@@ -1773,7 +1799,14 @@ static noinline void __init kernel_init_freeable(void)
 	kunit_run_all_tests();
 
 	printk("kernel_init()->		wait_for_initramfs()\n");
+
+	// uty: test
+	//print_func();
+	//while(1) {}
+	// BUG: 0x2000170 was overwriten and full of zeros
+
 	wait_for_initramfs();
+
 	printk("kernel_init()->		console_on_rootfs()\n");
 	console_on_rootfs();
 

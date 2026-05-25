@@ -1760,7 +1760,9 @@ static int exec_binprm(struct linux_binprm *bprm)
 		if (depth > 5)
 			return -ELOOP;
 
+		printk("		search_binary_handler()\n");
 		ret = search_binary_handler(bprm);
+		printk("		search_binary_handler() ret=%d\n", ret);
 		if (ret < 0)
 			return ret;
 		if (!bprm->interpreter)
@@ -1797,18 +1799,22 @@ static int bprm_execve(struct linux_binprm *bprm,
 	struct file *file;
 	int retval;
 
+	printk("	prepare_bprm_creds()\n");
 	retval = prepare_bprm_creds(bprm);
 	if (retval)
 		return retval;
 
+	printk("	check_unsafe_exec()\n");
 	check_unsafe_exec(bprm);
 	current->in_execve = 1;
 
+	printk("	do_open_execat()\n");
 	file = do_open_execat(fd, filename, flags);
 	retval = PTR_ERR(file);
 	if (IS_ERR(file))
 		goto out_unmark;
 
+	printk("	sched_exec()\n");
 	sched_exec();
 
 	bprm->file = file;
@@ -1824,14 +1830,18 @@ static int bprm_execve(struct linux_binprm *bprm,
 	if (bprm->fdpath && get_close_on_exec(fd))
 		bprm->interp_flags |= BINPRM_FLAGS_PATH_INACCESSIBLE;
 
+	printk("	security_bprm_creds_for_exec()\n");
 	/* Set the unchanging part of bprm->cred */
 	retval = security_bprm_creds_for_exec(bprm);
 	if (retval)
 		goto out;
 
+	printk("	exec_binprm()\n");
 	retval = exec_binprm(bprm);
 	if (retval < 0)
 		goto out;
+
+	printk("	exec_binprm() finish\n");
 
 	/* execve succeeded */
 	current->fs->in_exec = 0;
@@ -1945,16 +1955,21 @@ int kernel_execve(const char *kernel_filename,
 	int fd = AT_FDCWD;
 	int retval;
 
+	printk("kernel_execve() kernel_filename=%s\n", kernel_filename);
+
+	printk("getname_kernel()\n");
 	filename = getname_kernel(kernel_filename);
 	if (IS_ERR(filename))
 		return PTR_ERR(filename);
 
+	printk("alloc_bprm()\n");
 	bprm = alloc_bprm(fd, filename);
 	if (IS_ERR(bprm)) {
 		retval = PTR_ERR(bprm);
 		goto out_ret;
 	}
 
+	printk("count_strings_kernel()\n");
 	retval = count_strings_kernel(argv);
 	if (WARN_ON_ONCE(retval == 0))
 		retval = -EINVAL;
@@ -1962,28 +1977,34 @@ int kernel_execve(const char *kernel_filename,
 		goto out_free;
 	bprm->argc = retval;
 
+	printk("count_strings_kernel()\n");
 	retval = count_strings_kernel(envp);
 	if (retval < 0)
 		goto out_free;
 	bprm->envc = retval;
 
+	printk("bprm_stack_limits()\n");
 	retval = bprm_stack_limits(bprm);
 	if (retval < 0)
 		goto out_free;
 
+	printk("copy_string_kernel()\n");
 	retval = copy_string_kernel(bprm->filename, bprm);
 	if (retval < 0)
 		goto out_free;
 	bprm->exec = bprm->p;
 
+	printk("copy_string_kernel()\n");
 	retval = copy_strings_kernel(bprm->envc, envp, bprm);
 	if (retval < 0)
 		goto out_free;
 
+	printk("copy_string_kernel()\n");
 	retval = copy_strings_kernel(bprm->argc, argv, bprm);
 	if (retval < 0)
 		goto out_free;
 
+	printk("bprm_execve()\n");
 	retval = bprm_execve(bprm, fd, filename, 0);
 out_free:
 	free_bprm(bprm);

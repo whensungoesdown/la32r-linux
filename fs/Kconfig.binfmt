@@ -4,7 +4,7 @@ menu "Executable file formats"
 
 config BINFMT_ELF
 	bool "Kernel support for ELF binaries"
-	depends on MMU
+#	depends on MMU
 	select ELFCORE
 	default y
 	help
@@ -45,7 +45,8 @@ config ARCH_USE_GNU_PROPERTY
 config BINFMT_ELF_FDPIC
 	bool "Kernel support for FDPIC ELF binaries"
 	default y if !BINFMT_ELF
-	depends on (ARM || (SUPERH && !MMU))
+#	depends on (ARM || (SUPERH && !MMU))
+	depends on (ARM || !MMU)
 	select ELFCORE
 	help
 	  ELF FDPIC binaries are based on ELF, but allow the individual load

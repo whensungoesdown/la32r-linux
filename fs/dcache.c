@@ -1775,13 +1775,13 @@ static struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 	dentry = kmem_cache_alloc(dentry_cache, GFP_KERNEL);
 	//dentry = kzalloc(sizeof(struct dentry), GFP_ATOMIC);
 	//dentry = kzalloc(256, GFP_KERNEL);
-	printk("+++++++++++++++ __d_alloc() dentry=0x%x\n", (int)dentry);
-	if (name) {
-		printk("  name: '%.*s', len=%u, hash=%u\n",
-				name->len, name->name, name->len, name->hash);
-	} else {
-		printk("  name: (null)\n");
-	}
+	//printk("+++++++++++++++ __d_alloc() dentry=0x%x\n", (int)dentry);
+	//if (name) {
+	//	printk("  name: '%.*s', len=%u, hash=%u\n",
+	//			name->len, name->name, name->len, name->hash);
+	//} else {
+	//	printk("  name: (null)\n");
+	//}
 
 	if (!dentry)
 		return NULL;
@@ -2477,13 +2477,13 @@ struct dentry *__d_lookup(const struct dentry *parent, const struct qstr *name)
 	//hlist_bl_for_each_entry_rcu(dentry, node, b, d_hash) {
 	hlist_bl_for_each_entry(dentry, node, b, d_hash) {
 
-	        printk("  candidate dentry=%px\n", dentry);
-	        printk("  candidate dentry=%px, name=%s, hash=%u\n", dentry, dentry->d_name.name, dentry->d_name.hash);
+	        //printk("  candidate dentry=%px\n", dentry);
+	        //printk("  candidate dentry=%px, name=%s, hash=%u\n", dentry, dentry->d_name.name, dentry->d_name.hash);
 
-		printk("  dentry=%px parent=%px flags=%x refcnt=%d\n",
-				dentry, dentry->d_parent, dentry->d_flags, dentry->d_lockref.count);
-		
-		printk("  node=%px next=%px\n", node, node->next);
+		//printk("  dentry=%px parent=%px flags=%x refcnt=%d\n",
+		//		dentry, dentry->d_parent, dentry->d_flags, dentry->d_lockref.count);
+		//
+		//printk("  node=%px next=%px\n", node, node->next);
 
 		if (unlikely(node->next == node)) {
 			printk("Self-loop in bucket %px, resetting to empty\n", b);
@@ -2589,8 +2589,8 @@ static void __d_rehash(struct dentry *entry)
 {
 	struct hlist_bl_head *b = d_hash(entry->d_name.hash);
 
-	printk("+++++++++++++++++++++++++++++++++ REHASH: dentry=%px name=%s parent=%px b=%px b->first=%px (before add)\n",
-			entry, entry->d_name.name, entry->d_parent, b, b->first);
+	//printk("+++++++++++++++++++++++++++++++++ REHASH: dentry=%px name=%s parent=%px b=%px b->first=%px (before add)\n",
+	//		entry, entry->d_name.name, entry->d_parent, b, b->first);
 
 	hlist_bl_lock(b);
 	// uty: test
@@ -3319,12 +3319,12 @@ static void __init dcache_init_early(void)
 					0,
 					0);
 
-	printk("++++++++++++++++ alloc_large_system_hash: allocated, dentry_hashtable=%px, d_hash_shift=%u, size=%lu\n",
-			dentry_hashtable, d_hash_shift, 1UL << d_hash_shift);
+	//printk("++++++++++++++++ alloc_large_system_hash: allocated, dentry_hashtable=%px, d_hash_shift=%u, size=%lu\n",
+	//		dentry_hashtable, d_hash_shift, 1UL << d_hash_shift);
 
 	d_hash_shift = 32 - d_hash_shift;
 
-	printk("d_hash_shift=%d\n", d_hash_shift);
+	//printk("d_hash_shift=%d\n", d_hash_shift);
 }
 
 static void __init dcache_init(void)
@@ -3358,11 +3358,11 @@ static void __init dcache_init(void)
 
 
 	// 打印哈希桶信息
-	for (i = 0; i < (1 << d_hash_shift); i++) {
-		struct hlist_bl_head *b = &dentry_hashtable[i];
-		if (i < 10 || i > (1<<d_hash_shift)-10) // 只打印开头和结尾
-			printk("+++++++++++++++++++++++++++ hash bucket %d: b=%px first=%px\n", i, b, b->first);
-	}
+	//for (i = 0; i < (1 << d_hash_shift); i++) {
+	//	struct hlist_bl_head *b = &dentry_hashtable[i];
+	//	if (i < 10 || i > (1<<d_hash_shift)-10) // 只打印开头和结尾
+	//		printk("+++++++++++++++++++++++++++ hash bucket %d: b=%px first=%px\n", i, b, b->first);
+	//}
 }
 
 /* SLAB cache for __getname() consumers */
@@ -3382,22 +3382,22 @@ void __init vfs_caches_init_early(void)
 
 void __init vfs_caches_init(void)
 {
-	printk("	kmem_cache_create_usercopy()\n");
+	//printk("	kmem_cache_create_usercopy()\n");
 	names_cachep = kmem_cache_create_usercopy("names_cache", PATH_MAX, 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC, 0, PATH_MAX, NULL);
 
-	printk("	dcache_init()\n");
+	//printk("	dcache_init()\n");
 	dcache_init();
-	printk("	inode_init()\n");
+	//printk("	inode_init()\n");
 	inode_init();
-	printk("	files_init()\n");
+	//printk("	files_init()\n");
 	files_init();
-	printk("	files_maxfiles_init()\n");
+	//printk("	files_maxfiles_init()\n");
 	files_maxfiles_init();
-	printk("	mnt_init()\n");
+	//printk("	mnt_init()\n");
 	mnt_init();
-	printk("	bdev_cache_init()\n");
+	//printk("	bdev_cache_init()\n");
 	bdev_cache_init();
-	printk("	chrdev_init()\n");
+	//printk("	chrdev_init()\n");
 	chrdev_init();
 }

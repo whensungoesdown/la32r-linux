@@ -59,7 +59,7 @@ asmlinkage void plat_irq_dispatch(int irq)
 		epc = read_csr_epc();
 		tcfg = read_csr_tcfg();
 		estat = read_csr_estat();
-		printk("!!! plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x\n", epc, tcfg, estat);
+		printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
 	}
 	//pending = read_csr_estat() & read_csr_ecfg();
 	pending = read_csr_estat(); // ecfg not implemented yet

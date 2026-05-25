@@ -127,7 +127,7 @@ static void async_run_entry_fn(struct work_struct *work)
 		 entry->func, task_pid_nr(current));
 	calltime = ktime_get();
 
-	printk("!!! ktime_get() calltime=0x%x\n", (int)calltime);
+	//printk("!!! ktime_get() calltime=0x%x\n", (int)calltime);
 
 	entry->func(entry->data, entry->cookie);
 

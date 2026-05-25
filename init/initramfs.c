@@ -47,7 +47,7 @@ static ssize_t __init xwrite(struct file *file, const char *p, size_t count,
 static __initdata char *message;
 static void __init error(char *x)
 {
-	printk("error: %s\n", x);
+	//printk("error: %s\n", x);
 	if (!message)
 		message = x;
 }
@@ -241,7 +241,7 @@ static __initdata char *header_buf, *symlink_buf, *name_buf;
 
 static int __init do_start(void)
 {
-	printk("do_start()\n");
+	//printk("do_start()\n");
 	read_into(header_buf, 110, GotHeader);
 	return 0;
 }
@@ -249,7 +249,7 @@ static int __init do_start(void)
 static int __init do_collect(void)
 {
 	unsigned long n = remains;
-	printk("do_collect()\n");
+	//printk("do_collect()\n");
 	if (byte_count < n)
 		n = byte_count;
 	memcpy(collect, victim, n);
@@ -263,7 +263,7 @@ static int __init do_collect(void)
 
 static int __init do_header(void)
 {
-	printk("do_header()\n");
+	//printk("do_header()\n");
 	if (memcmp(collected, "070707", 6)==0) {
 		error("incorrect cpio method used: use -H newc option");
 		return 1;
@@ -294,7 +294,7 @@ static int __init do_header(void)
 
 static int __init do_skip(void)
 {
-	printk("do_skip()\n");
+	//printk("do_skip()\n");
 	if (this_header + byte_count < next_header) {
 		eat(byte_count);
 		return 1;
@@ -307,7 +307,7 @@ static int __init do_skip(void)
 
 static int __init do_reset(void)
 {
-	printk("do_reset()\n");
+	//printk("do_reset()\n");
 	while (byte_count && *victim == '\0')
 		eat(1);
 	if (byte_count && (this_header & 3))
@@ -319,18 +319,18 @@ static void __init clean_path(char *path, umode_t fmode)
 {
 	struct kstat st;
 
-	printk("		in clean_path() path=%s, fmode=%d\n", path, fmode);
+	//printk("		in clean_path() path=%s, fmode=%d\n", path, fmode);
 
 	if (!init_stat(path, &st, AT_SYMLINK_NOFOLLOW) &&
 	    (st.mode ^ fmode) & S_IFMT) {
 		if (S_ISDIR(st.mode))
 		{
-			printk("		init_rmdir()\n");
+			//printk("		init_rmdir()\n");
 			init_rmdir(path);
 		}
 		else
 		{
-			printk("		init_unlink()\n");
+			//printk("		init_unlink()\n");
 			init_unlink(path);
 		}
 	}
@@ -353,7 +353,7 @@ static __initdata loff_t wfile_pos;
 
 static int __init do_name(void)
 {
-	printk("do_name()\n");
+	//printk("do_name()\n");
 	state = SkipIt;
 	next_state = Reset;
 	if (strcmp(collected, "TRAILER!!!") == 0) {
@@ -397,51 +397,51 @@ static int __init do_name(void)
 
 static int __init do_copy(void)
 {
-	printk("do_copy()\n");
+	//printk("do_copy()\n");
 	if (byte_count >= body_len) {
 		struct timespec64 t[2] = { };
-		printk("	xwrite()\n");
+		//printk("	xwrite()\n");
 		if (xwrite(wfile, victim, body_len, &wfile_pos) != body_len)
 			error("write error");
 
 		t[0].tv_sec = mtime;
 		t[1].tv_sec = mtime;
-		printk("	vfs_utimes()\n");
+		//printk("	vfs_utimes()\n");
 		vfs_utimes(&wfile->f_path, t);
 
-		printk("	fput()\n");
+		//printk("	fput()\n");
 		fput(wfile);
-		printk("	eat()\n");
+		//printk("	eat()\n");
 		eat(body_len);
-		printk("	eat() finish\n");
+		//printk("	eat() finish\n");
 		state = SkipIt;
 		return 0;
 	} else {
-		printk("	xwrite()\n");
+		//printk("	xwrite()\n");
 		if (xwrite(wfile, victim, byte_count, &wfile_pos) != byte_count)
 			error("write error");
-		printk("	xwrite() finish\n");
+		//printk("	xwrite() finish\n");
 		body_len -= byte_count;
-		printk("	eat()\n");
+		//printk("	eat()\n");
 		eat(byte_count);
-		printk("	eat() finish\n");
+		//printk("	eat() finish\n");
 		return 1;
 	}
 }
 
 static int __init do_symlink(void)
 {
-	printk("do_symlink()\n");
+	//printk("do_symlink()\n");
 	collected[N_ALIGN(name_len) + body_len] = '\0';
-	printk("	clean_path()\n");
+	//printk("	clean_path()\n");
 	clean_path(collected, 0);
-	printk("	init_symlink()\n");
+	//printk("	init_symlink()\n");
 	init_symlink(collected + N_ALIGN(name_len), collected);
-	printk("	init_chown()\n");
+	//printk("	init_chown()\n");
 	init_chown(collected, uid, gid, AT_SYMLINK_NOFOLLOW);
-	printk("	do_utime()\n");
+	//printk("	do_utime()\n");
 	do_utime(collected, mtime);
-	printk("	do_utime() finish\n");
+	//printk("	do_utime() finish\n");
 	state = SkipIt;
 	next_state = Reset;
 	return 0;
@@ -515,7 +515,7 @@ static char * __init unpack_to_rootfs(char *buf, unsigned long len)
 	while (!message && len) {
 		loff_t saved_offset = this_header;
 		if (*buf == '0' && !(this_header & 3)) {
-			printk("!!! unpack_to_rootfs() cpio\n");
+			//printk("!!! unpack_to_rootfs() cpio\n");
 			state = Start;
 			written = write_buffer(buf, len);
 			buf += written;
@@ -532,15 +532,15 @@ static char * __init unpack_to_rootfs(char *buf, unsigned long len)
 		decompress = decompress_method(buf, len, &compress_name);
 		pr_debug("Detected %s compressed data\n", compress_name);
 
-		printk("!!! decompress=0x%x\n", (int)decompress);
+		//printk("!!! decompress=0x%x\n", (int)decompress);
 
 		if (decompress) {
 			int res;
-			printk("	decompress()\n");
+			//printk("	decompress()\n");
 			//int res = decompress(buf, len, NULL, flush_buffer, NULL,
 			res = decompress(buf, len, NULL, flush_buffer, NULL,
 				   &my_inptr, error);
-			printk("	decompress() finish res=%d\n", (int)res);
+			//printk("	decompress() finish res=%d\n", (int)res);
 
 			if (res)
 				error("decompressor failed");
@@ -718,20 +718,20 @@ static void __init do_populate_rootfs(void *unused, async_cookie_t cookie)
 	//printk("+++++++++++++ do_populate_rootfs() skip, return\n");
 	//return 0;
 
-	printk("!!! do_populate_rootfs() __initramfs_start=0x%x, __initramfs_size=0x%x\n", (int)__initramfs_start, (int)__initramfs_size);
-	printk("                         initrd_start=0x%x, initrd_end=0x%x\n", (int)initrd_start, (int)initrd_end);
+	//printk("!!! do_populate_rootfs() __initramfs_start=0x%x, __initramfs_size=0x%x\n", (int)__initramfs_start, (int)__initramfs_size);
+	//printk("                         initrd_start=0x%x, initrd_end=0x%x\n", (int)initrd_start, (int)initrd_end);
 
 	/* Load the built in initramfs */
 	//char *err = unpack_to_rootfs(__initramfs_start, __initramfs_size);
 	err = unpack_to_rootfs(__initramfs_start, __initramfs_size);
-	printk("unpack_to_rootfs() finish\n");
+	//printk("unpack_to_rootfs() finish\n");
 
 	if (err)
 		panic_show_mem("%s", err); /* Failed to decompress INTERNAL initramfs */
 
 	if (!initrd_start || IS_ENABLED(CONFIG_INITRAMFS_FORCE))
 	{
-		printk("do_populate_rootfs() goto done\n");
+		//printk("do_populate_rootfs() goto done\n");
 		goto done;
 	}
 
@@ -768,7 +768,7 @@ static async_cookie_t initramfs_cookie;
 void wait_for_initramfs(void)
 {
 	// uty: test
-	printk("In wait_for_initramfs()\n");
+	printk("===== do not delete ======== wait_for_initramfs() =====================\n");
 
 	if (!initramfs_cookie) {
 		/*

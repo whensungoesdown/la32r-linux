@@ -42,7 +42,7 @@
 
 typedef char *elf_caddr_t;
 
-#if 0
+#if 1
 #define kdebug(fmt, ...) printk("FDPIC "fmt"\n" ,##__VA_ARGS__ )
 #else
 #define kdebug(fmt, ...) do {} while(0)
@@ -89,6 +89,7 @@ static struct linux_binfmt elf_fdpic_format = {
 
 static int __init init_elf_fdpic_binfmt(void)
 {
+	printk("+++++++++++++++++++ init_elf_fdpic_binfmt() +++++++++++++++++\n");
 	register_binfmt(&elf_fdpic_format);
 	return 0;
 }
@@ -349,8 +350,9 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 		set_personality(PER_LINUX_FDPIC);
 	else
 		set_personality(PER_LINUX);
-	if (elf_read_implies_exec(&exec_params.hdr, executable_stack))
-		current->personality |= READ_IMPLIES_EXEC;
+	// uty: test
+	//if (elf_read_implies_exec(&exec_params.hdr, executable_stack))
+	//	current->personality |= READ_IMPLIES_EXEC;
 
 	setup_new_exec(bprm);
 
