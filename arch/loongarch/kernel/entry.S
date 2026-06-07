@@ -340,7 +340,8 @@ SYM_FUNC_START(handle_general_exception)
 
 	/* Call C handler, argument: pt_regs *regs = sp */
 	move	a0, sp
-	jirl	ra, t0, 0
+	//jirl	ra, t0, 0
+	jirl	$r0, t0, 0
 
 	// uty: test
 loop:

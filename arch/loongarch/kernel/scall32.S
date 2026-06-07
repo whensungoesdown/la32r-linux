@@ -51,8 +51,8 @@ SYM_FUNC_START(handle_sys)
 	//LONG_S	t2, sp, PT_EUEN
 	//LONG_S	t0, sp, PT_EUEN
 
-	//cfi_st	ra, PT_R1
-	cfi_st	zero, PT_R1
+	cfi_st	ra, PT_R1
+	//cfi_st	zero, PT_R1
 	cfi_st	a0, PT_R4
 	cfi_st	a1, PT_R5
 	cfi_st	a2, PT_R6
