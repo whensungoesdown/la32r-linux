@@ -380,7 +380,9 @@ asmlinkage void do_ade(struct pt_regs *regs)
 {
 	enum ctx_state prev_state;
 
-	printk("In do_ade()\n");
+	printk("In do_ade(): epc=%pS, badvaddr=0x%lx\n",
+			(void *)regs->csr_epc,
+			regs->csr_badvaddr);
 
 	prev_state = exception_enter();
 

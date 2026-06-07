@@ -242,7 +242,8 @@
 	li.w	t0, 0x7
 	csrxchg	zero, t0, LOONGARCH_CSR_CRMD
 	// uty: test
-	csrrd	x0, PERCPU_BASE_KS
+	//csrrd	x0, PERCPU_BASE_KS
+	move  x0, zero 
 	.endm
 
 /* Move to kernel mode and enable interrupts. */
@@ -251,12 +252,15 @@
 	li.w	t1, (1 << 2)
 	csrxchg	t1, t0, LOONGARCH_CSR_CRMD
 	// uty: test
-	csrrd	x0, PERCPU_BASE_KS
+	//csrrd	x0, PERCPU_BASE_KS
+	move  x0, zero 
 	.endm
 
 /* Just move to kernel mode and leave interrupts as they are. */
 	.macro	KMODE
-	csrrd	x0, PERCPU_BASE_KS
+	// uty: test
+	//csrrd	x0, PERCPU_BASE_KS
+	move  x0, zero 
 	.endm
 
 #endif /* _ASM_STACKFRAME_H */

@@ -42,10 +42,12 @@ void local_flush_cache_all(void)
 /* Cache operations. */
 void local_flush_icache_range(unsigned long start, unsigned long end)
 {
-	asm volatile ("\tibar 0\n"::);
-#ifdef BX_SOC
-	local_flush_cache_all();
-#endif
+	// uty: test
+	printk("local_flush_icache_range()\n");
+//	asm volatile ("\tibar 0\n"::);
+//#ifdef BX_SOC
+//	local_flush_cache_all();
+//#endif
 }
 
 void __update_cache(unsigned long address, pte_t pte)

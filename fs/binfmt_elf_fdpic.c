@@ -110,13 +110,16 @@ static int is_elf(struct elfhdr *hdr, struct file *file)
 		return 0;
 	if (!elf_check_arch(hdr))
 		return 0;
+
+	printk("is_elf: file->f_op->mmap = %pS\n", file->f_op->mmap);
+
 	if (!file->f_op->mmap)
 		return 0;
 	return 1;
 }
 
 #ifndef elf_check_fdpic
-#define elf_check_fdpic(x) 0
+#define elf_check_fdpic(x) 1
 #endif
 
 #ifndef elf_check_const_displacement
@@ -221,10 +224,13 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 #endif
 	}
 
+	printk("elf_fdpic_fetch_phdrs()\n");
 	/* read the program header table */
 	retval = elf_fdpic_fetch_phdrs(&exec_params, bprm->file);
 	if (retval < 0)
 		goto error;
+
+	printk("elf_fdpic_fetch_phdrs() finish\n");
 
 	/* scan for a program header that specifies an interpreter */
 	phdr = exec_params.phdrs;
@@ -410,30 +416,38 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 		PAGE_ALIGN(current->mm->start_brk);
 
 #else
+	// uty: test
+	
 	/* create a stack area and zero-size brk area */
-	stack_size = (stack_size + PAGE_SIZE - 1) & PAGE_MASK;
-	if (stack_size < PAGE_SIZE * 2)
-		stack_size = PAGE_SIZE * 2;
+//	stack_size = (stack_size + PAGE_SIZE - 1) & PAGE_MASK;
+//	if (stack_size < PAGE_SIZE * 2)
+//		stack_size = PAGE_SIZE * 2;
+//
+//	stack_prot = PROT_READ | PROT_WRITE;
+//	if (executable_stack == EXSTACK_ENABLE_X ||
+//	    (executable_stack == EXSTACK_DEFAULT && VM_STACK_FLAGS & VM_EXEC))
+//		stack_prot |= PROT_EXEC;
+//
+//	current->mm->start_brk = vm_mmap(NULL, 0, stack_size, stack_prot,
+//					 MAP_PRIVATE | MAP_ANONYMOUS |
+//					 MAP_UNINITIALIZED | MAP_GROWSDOWN,
+//					 0);
+//
+//	if (IS_ERR_VALUE(current->mm->start_brk)) {
+//		retval = current->mm->start_brk;
+//		current->mm->start_brk = 0;
+//		goto error;
+//	}
+//
+//	current->mm->brk = current->mm->start_brk;
+//	current->mm->context.end_brk = current->mm->start_brk;
+//	current->mm->start_stack = current->mm->start_brk + stack_size;
 
-	stack_prot = PROT_READ | PROT_WRITE;
-	if (executable_stack == EXSTACK_ENABLE_X ||
-	    (executable_stack == EXSTACK_DEFAULT && VM_STACK_FLAGS & VM_EXEC))
-		stack_prot |= PROT_EXEC;
 
-	current->mm->start_brk = vm_mmap(NULL, 0, stack_size, stack_prot,
-					 MAP_PRIVATE | MAP_ANONYMOUS |
-					 MAP_UNINITIALIZED | MAP_GROWSDOWN,
-					 0);
-
-	if (IS_ERR_VALUE(current->mm->start_brk)) {
-		retval = current->mm->start_brk;
-		current->mm->start_brk = 0;
-		goto error;
-	}
-
+	stack_size = PAGE_SIZE * 2;
+	current->mm->start_brk = 0x3ff0000;
 	current->mm->brk = current->mm->start_brk;
-	current->mm->context.end_brk = current->mm->start_brk;
-	current->mm->start_stack = current->mm->start_brk + stack_size;
+	current->mm->start_stack = 0x3fffff0;
 #endif
 
 	if (create_elf_fdpic_tables(bprm, current->mm,
@@ -463,6 +477,17 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 	finalize_exec(bprm);
 	/* everything is now ready... get the userspace context ready to roll */
 	entryaddr = interp_params.entry_addr ?: exec_params.entry_addr;
+	printk("entryaddr=0x%x\n", (int)entryaddr);
+	//printk("try entry 0x3f00600 main()\n");
+	//entryaddr = 0x3f00600;
+
+	//printk("0x3f78328 : (0x%x)\n", *(int*)0x3f78328);
+	//printk("0x3f78314 : (0x%x)\n", *(int*)0x3f78314);
+	//printk("0x3f7823c : (0x%x)\n", *(int*)0x3f7823c);
+	//printk("0x3f783c0 : (0x%x)\n", *(int*)0x3f783c0);
+
+	//printk("try entry 0x3f00640 __libc_start_main()\n");
+	//entryaddr = 0x3f00640;
 	start_thread(regs, entryaddr, current->mm->start_stack);
 
 	retval = 0;
@@ -774,22 +799,27 @@ static int elf_fdpic_map_file(struct elf_fdpic_params *params,
 	load_addr = params->load_addr;
 	seg = loadmap->segs;
 
-	/* map the requested LOADs into the memory space */
-	switch (params->flags & ELF_FDPIC_FLAG_ARRANGEMENT) {
-	case ELF_FDPIC_FLAG_CONSTDISP:
-	case ELF_FDPIC_FLAG_CONTIGUOUS:
-#ifndef CONFIG_MMU
-		ret = elf_fdpic_map_file_constdisp_on_uclinux(params, file, mm);
-		if (ret < 0)
-			return ret;
-		break;
-#endif
-	default:
-		ret = elf_fdpic_map_file_by_direct_mmap(params, file, mm);
-		if (ret < 0)
-			return ret;
-		break;
-	}
+	// uty: test
+	ret = elf_fdpic_map_file_constdisp_on_uclinux(params, file, mm);
+	if (ret < 0)
+		return ret;
+
+//	/* map the requested LOADs into the memory space */
+//	switch (params->flags & ELF_FDPIC_FLAG_ARRANGEMENT) {
+//	case ELF_FDPIC_FLAG_CONSTDISP:
+//	case ELF_FDPIC_FLAG_CONTIGUOUS:
+//#ifndef CONFIG_MMU
+//		ret = elf_fdpic_map_file_constdisp_on_uclinux(params, file, mm);
+//		if (ret < 0)
+//			return ret;
+//		break;
+//#endif
+//	default:
+//		ret = elf_fdpic_map_file_by_direct_mmap(params, file, mm);
+//		if (ret < 0)
+//			return ret;
+//		break;
+//	}
 
 	/* map the entry point */
 	if (params->hdr.e_entry) {
@@ -949,11 +979,16 @@ static int elf_fdpic_map_file_constdisp_on_uclinux(
 			top = phdr->p_vaddr + phdr->p_memsz;
 	}
 
+	// uty: test
+	printk("in elf_fdpic_map_file_constdisp_on_uclinux() load_addr=0x%x\n", (int)load_addr);
+	load_addr = 0x3f00000;
+	maddr = 0x3f00000;
+
 	/* allocate one big anon block for everything */
-	maddr = vm_mmap(NULL, load_addr, top - base,
-			PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, 0);
-	if (IS_ERR_VALUE(maddr))
-		return (int) maddr;
+	//maddr = vm_mmap(NULL, load_addr, top - base,
+	//		PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE, 0);
+	//if (IS_ERR_VALUE(maddr))
+	//	return (int) maddr;
 
 	if (load_addr != 0)
 		load_addr += PAGE_ALIGN(top - base);
@@ -968,8 +1003,12 @@ static int elf_fdpic_map_file_constdisp_on_uclinux(
 		seg->p_vaddr = phdr->p_vaddr;
 		seg->p_memsz = phdr->p_memsz;
 
+		printk("read_code() set->addr=0x%x, phdr->p_offset=0x%x, phdr->p_filesz=0x%x\n", 
+				(int)(seg->addr), (int)(phdr->p_offset), (int)(phdr->p_filesz));
 		ret = read_code(file, seg->addr, phdr->p_offset,
 				       phdr->p_filesz);
+		printk("read_code() return 0x%x\n", ret);
+
 		if (ret < 0)
 			return ret;
 
@@ -978,11 +1017,11 @@ static int elf_fdpic_map_file_constdisp_on_uclinux(
 			params->elfhdr_addr = seg->addr;
 
 		/* clear any space allocated but not loaded */
-		if (phdr->p_filesz < phdr->p_memsz) {
-			if (clear_user((void *) (seg->addr + phdr->p_filesz),
-				       phdr->p_memsz - phdr->p_filesz))
-				return -EFAULT;
-		}
+		//if (phdr->p_filesz < phdr->p_memsz) {
+		//	if (clear_user((void *) (seg->addr + phdr->p_filesz),
+		//		       phdr->p_memsz - phdr->p_filesz))
+		//		return -EFAULT;
+		//}
 
 		if (mm) {
 			if (phdr->p_flags & PF_X) {

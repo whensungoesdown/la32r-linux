@@ -47,6 +47,7 @@ resume_userspace:
 					# between sampling and return
 	LONG_L	a2, tp, TI_FLAGS	# current->work
 	andi	t0, a2, _TIF_WORK_MASK	# (ignoring syscall_trace)
+	// uty: test
 	bnez	t0, work_pending
 	b	restore_all
 SYM_CODE_END(__ret_from_irq)
@@ -81,17 +82,17 @@ SYM_CODE_START(ret_from_fork)
 SYM_CODE_END(ret_from_fork)
 
 SYM_CODE_START(syscall_exit)
-#ifdef CONFIG_DEBUG_RSEQ
-	move	a0, sp
-	bl	rseq_syscall
-#endif
-	local_irq_disable		# make sure need_resched and
-					# signals dont change between
-					# sampling and return
-	LONG_L	a2, tp, TI_FLAGS	# current->work
-	li.w	t0, _TIF_ALLWORK_MASK
-	and	t0, a2, t0
-	bnez	t0, syscall_exit_work
+//#ifdef CONFIG_DEBUG_RSEQ
+//	move	a0, sp
+//	bl	rseq_syscall
+//#endif
+//	local_irq_disable		# make sure need_resched and
+//					# signals dont change between
+//					# sampling and return
+//	LONG_L	a2, tp, TI_FLAGS	# current->work
+//	li.w	t0, _TIF_ALLWORK_MASK
+//	and	t0, a2, t0
+//	bnez	t0, syscall_exit_work
 
 restore_all:				# restore full frame
 	RESTORE_TEMP
@@ -99,6 +100,10 @@ restore_all:				# restore full frame
 restore_partial:		# restore partial frame
 	RESTORE_SOME
 	RESTORE_SP_AND_RET
+
+// uty: test
+loop2:
+	b loop2
 
 work_pending:
 	andi	t0, a2, _TIF_NEED_RESCHED # a2 is preloaded with TI_FLAGS
@@ -146,6 +151,7 @@ syscall_exit_work:
 	local_irq_enable		# could let syscall_trace_leave()
 					# call schedule() instead
 	move	a0, sp
+	// uty: test
 	bl	syscall_trace_leave
 	b	resume_userspace
 SYM_CODE_END(syscall_exit_partial)
@@ -320,16 +326,25 @@ SYM_FUNC_START(handle_general_exception)
 
 	/* ----------------- Exception handling ----------------- */
 	/* Ensure ECODE index is within valid range (0~63) */
-	slli.w	t2, t1, 2		/* t2 = ECODE * 4 */
-	la.abs	t3, excp_handlers
-	add.w	t3, t3, t2
-	LONG_L	t0, t3, 0		/* t0 = handler function address */
+	//slli.w	t2, t1, 2		/* t2 = ECODE * 4 */
+	//la.abs	t3, excp_handlers
+	//add.w	t3, t3, t2
+	//LONG_L	t0, t3, 0		/* t0 = handler function address */
+
+	slli.w	t0, t1, 2		/* t0 = ECODE * 4 */
+	la.abs	t1, excp_handlers
+	add.w	t1, t1, t0
+	LONG_L	t0, t1, 0		/* t0 = handler function address */
 
         //la.abs  t0, handle_ade
 
 	/* Call C handler, argument: pt_regs *regs = sp */
 	move	a0, sp
 	jirl	ra, t0, 0
+
+	// uty: test
+loop:
+	b loop
 
 1:
 	SAVE_SOME

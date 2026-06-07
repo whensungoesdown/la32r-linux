@@ -767,9 +767,6 @@ static async_cookie_t initramfs_cookie;
 
 void wait_for_initramfs(void)
 {
-	// uty: test
-	printk("===== do not delete ======== wait_for_initramfs() =====================\n");
-
 	if (!initramfs_cookie) {
 		/*
 		 * Something before rootfs_initcall wants to access

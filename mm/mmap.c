@@ -203,6 +203,8 @@ SYSCALL_DEFINE1(brk, unsigned long, brk)
 	bool downgraded = false;
 	LIST_HEAD(uf);
 
+	printk("brk() brk=0x%lx\n", brk);
+
 	if (mmap_write_lock_killable(mm))
 		return -EINTR;
 
@@ -1643,6 +1645,7 @@ SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
 		unsigned long, prot, unsigned long, flags,
 		unsigned long, fd, unsigned long, pgoff)
 {
+	printk("syscall mmap_pgoff()\n");
 	return ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
 }
 
@@ -2955,6 +2958,7 @@ EXPORT_SYMBOL(vm_munmap);
 
 SYSCALL_DEFINE2(munmap, unsigned long, addr, size_t, len)
 {
+	printk("syscall munmap()\n");
 	addr = untagged_addr(addr);
 	profile_munmap(addr);
 	return __vm_munmap(addr, len, true);

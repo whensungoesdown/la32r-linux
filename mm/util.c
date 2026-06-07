@@ -512,13 +512,21 @@ unsigned long vm_mmap_pgoff(struct file *file, unsigned long addr,
 	unsigned long populate;
 	LIST_HEAD(uf);
 
+	printk("vm_mmap_pgoff: file=%p, addr=0x%lx, len=%lu, prot=0x%lx, flag=0x%lx, pgoff=%lu\n",
+           file, addr, len, prot, flag, pgoff);
+
+	printk("security_mmap_file()\n");
 	ret = security_mmap_file(file, prot, flag);
 	if (!ret) {
+		printk("mmap_write_lock_killable()\n");
 		if (mmap_write_lock_killable(mm))
 			return -EINTR;
+		printk("do_mmap()\n");
 		ret = do_mmap(file, addr, len, prot, flag, pgoff, &populate,
 			      &uf);
+		printk("mmap_write_unlock()\n");
 		mmap_write_unlock(mm);
+		printk("userfaultfd_unmap_complete()\n");
 		userfaultfd_unmap_complete(mm, &uf);
 		if (populate)
 			mm_populate(ret, populate);

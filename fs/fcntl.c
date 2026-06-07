@@ -458,6 +458,8 @@ SYSCALL_DEFINE3(fcntl, unsigned int, fd, unsigned int, cmd, unsigned long, arg)
 	struct fd f = fdget_raw(fd);
 	long err = -EBADF;
 
+	printk("fcntl()\n");
+
 	if (!f.file)
 		goto out;
 

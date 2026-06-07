@@ -659,6 +659,7 @@ out:
 SYSCALL_DEFINE3(mprotect, unsigned long, start, size_t, len,
 		unsigned long, prot)
 {
+	printk("syscall mprotect()\n");
 	return do_mprotect_pkey(start, len, prot, -1);
 }
 

@@ -946,6 +946,17 @@ static inline void enable_icache(void)
     );
 }
 
+static int __init print_func(void)
+{
+    unsigned char *ptr = (unsigned char *)wait_for_initramfs;
+    int i;
+    printk("wait_for_initramfs bytes: ");
+    for (i = 0; i < 16; i++)
+        printk("%02x ", ptr[i]);
+    printk("\n");
+    return 0;
+}
+
 asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 {
 	char *command_line;
@@ -965,10 +976,8 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	printk("debug_objects_early_init()\n");
 	init_vmlinux_build_id();
 	printk("init_vmlinux_build_id()\n");
-
 	cgroup_init_early();
 	printk("cgroup_init_early()\n");
-
 	local_irq_disable();
 	printk("local_irq_disable()\n");
 	early_boot_irqs_disabled = true;
@@ -1007,12 +1016,8 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 
 	printk("build_all_zonelists()\n");
 	build_all_zonelists(NULL);
-
-	// uty: test
-	// 
 	printk("page_alloc_init()\n");
 	page_alloc_init();
-
 	pr_notice("Kernel command line: %s\n", saved_command_line);
 	/* parameters may set static keys */
 	printk("jump_label_init()\n");
@@ -1046,7 +1051,6 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	trap_init();
 	printk("mm_init()\n");
 	mm_init();
-
 	printk("ftrace_init()\n");
 	ftrace_init();
 
@@ -1738,17 +1742,6 @@ void __init console_on_rootfs(void)
 	fput(file);
 }
 
-static int __init print_func(void)
-{
-    unsigned char *ptr = (unsigned char *)wait_for_initramfs;
-    int i;
-    printk("wait_for_initramfs bytes: ");
-    for (i = 0; i < 16; i++)
-        printk("%02x ", ptr[i]);
-    printk("\n");
-    return 0;
-}
-
 static noinline void __init kernel_init_freeable(void)
 {
 	/* Now the scheduler is fully set up and can do blocking allocations */
@@ -1771,14 +1764,12 @@ static noinline void __init kernel_init_freeable(void)
 
 	printk("kernel_init()->		init_mm_internals()\n");
 	init_mm_internals();
-
 	printk("kernel_init()->		rcu_init_tasks_generic()\n");
 	rcu_init_tasks_generic();
 	printk("kernel_init()->		do_pre_smp_initcalls()\n");
 	do_pre_smp_initcalls();
 	printk("kernel_init()->		lockup_detector_init()\n");
 	lockup_detector_init();
-
 	printk("kernel_init()->		smp_init()\n");
 	smp_init();
 	printk("kernel_init()->		sched_init_smp()\n");
@@ -1794,7 +1785,6 @@ static noinline void __init kernel_init_freeable(void)
 
 	printk("kernel_init()->		do_basic_setup()\n");
 	do_basic_setup();
-
 	printk("kernel_init()->		kunit_run_all_tests()\n");
 	kunit_run_all_tests();
 

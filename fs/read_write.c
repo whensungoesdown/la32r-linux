@@ -484,6 +484,7 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 	if (unlikely(!access_ok(buf, count)))
 		return -EFAULT;
 
+	printk("		rw_verify_area()\n");
 	ret = rw_verify_area(READ, file, pos, count);
 	if (ret)
 		return ret;
@@ -491,15 +492,24 @@ ssize_t vfs_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 		count =  MAX_RW_COUNT;
 
 	if (file->f_op->read)
+	{
+		printk("		f->f_op->read()\n");
 		ret = file->f_op->read(file, buf, count, pos);
+	}
 	else if (file->f_op->read_iter)
+	{
+		printk("		new_sync_read()\n");
 		ret = new_sync_read(file, buf, count, pos);
+	}
 	else
 		ret = -EINVAL;
 	if (ret > 0) {
+		printk("		fsnotify_access()\n");
 		fsnotify_access(file);
+		printk("		add_rchar()\n");
 		add_rchar(current, ret);
 	}
+	printk("		inc_syscr()\n");
 	inc_syscr(current);
 	return ret;
 }
@@ -641,6 +651,7 @@ ssize_t ksys_read(unsigned int fd, char __user *buf, size_t count)
 
 SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 {
+	printk("syscall read()\n");
 	return ksys_read(fd, buf, count);
 }
 
@@ -667,7 +678,10 @@ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
-	return ksys_write(fd, buf, count);
+	printk("syscall write()\n");
+	// uty: test
+	return 0;
+	//return ksys_write(fd, buf, count);
 }
 
 ssize_t ksys_pread64(unsigned int fd, char __user *buf, size_t count,

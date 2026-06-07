@@ -284,7 +284,7 @@ void calibrate_delay(void)
 	static bool printed;
 	int this_cpu = smp_processor_id();
 
-	printk("in calibrated()\n");
+	//printk("in calibrated()\n");
 
 	if (per_cpu(cpu_loops_per_jiffy, this_cpu)) {
 		//printk("!!! where 0\n");
@@ -332,6 +332,6 @@ void calibrate_delay(void)
 	
 	// uty: test
 	// skip calibration_delay_done()
-	//calibration_delay_done();
+	calibration_delay_done();
 	//printk("!!! where 8\n");
 }

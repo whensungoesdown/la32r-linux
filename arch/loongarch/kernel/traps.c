@@ -755,3 +755,39 @@ void __init trap_init(void)
 	// "ibar 0" is not supported yet 
 	//local_flush_icache_range(eentry, eentry + 0x400);
 }
+
+
+void check_tp_and_regs(unsigned long tp, struct pt_regs *regs)
+{
+    struct thread_info *ti = (struct thread_info *)tp;
+    printk("check_tp: tp = %px\n", (void *)tp);
+    printk("check_tp: regs = %px\n", regs);
+    printk("check_tp: regs->csr_epc = 0x%x\n", (int)regs->csr_epc);
+    printk("check_tp: regs->regs[2] = 0x%x\n", (int)regs->regs[2]);
+    printk("check_tp: thread_info->task = %px\n", ti->task);
+    printk("check_tp: thread_info->flags = 0x%lx\n", ti->flags);
+    printk("check_tp: thread_info->preempt_count = %d\n", ti->preempt_count);
+    printk("check_tp: thread_info->regs = %px\n", ti->regs);
+}
+
+void check_syscall_routine (unsigned long syscall_routine)
+{
+    printk("check_syscall_routine: syscall_routine = %px\n", (void *)syscall_routine);
+}
+
+void check_syscall_number (unsigned long syscall_number)
+{
+    printk("check_syscall_number: syscall_number = 0x%x\n", (int)syscall_number);
+}
+
+void check_epc(void)
+{
+    unsigned long epc;
+    __asm__ __volatile__(
+        "csrrd %0, 0x6\n\t"
+        : "=r"(epc)
+        :
+        : "memory"
+    );
+    printk("check_epc: epc = 0x%lx\n", epc);
+}

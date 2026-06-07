@@ -69,7 +69,11 @@ asmlinkage void plat_irq_dispatch(int irq)
 
 	//set_irq_regs(old_regs);
 
-	//printk("!!! plat_irq_dispatch() finish\n");
+//	if (irq_counter >= 600) 
+//	{
+//		irq_counter = 0;
+//		printk("!!! plat_irq_dispatch() finish\n");
+//	}
 }
 
 void __init setup_IRQ(void)

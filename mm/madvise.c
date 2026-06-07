@@ -1222,6 +1222,7 @@ out:
 
 SYSCALL_DEFINE3(madvise, unsigned long, start, size_t, len_in, int, behavior)
 {
+	printk("syscall madvise()\n");
 	return do_madvise(current->mm, start, len_in, behavior);
 }
 

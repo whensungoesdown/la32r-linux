@@ -3093,6 +3093,8 @@ SYSCALL_DEFINE4(rt_sigprocmask, int, how, sigset_t __user *, nset,
 	sigset_t old_set, new_set;
 	int error;
 
+	printk("rt_sigprocmask()\n");
+
 	/* XXX: Don't preclude handling different sized sigset_t's.  */
 	if (sigsetsize != sizeof(sigset_t))
 		return -EINVAL;
