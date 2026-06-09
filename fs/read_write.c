@@ -688,18 +688,23 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
 	unsigned long tp_val;
+	struct pt_regs *regs = current_pt_regs();
+
+	printk("orig a0: %lx\n", regs->regs[4]);  // a0
+	printk("orig a1: %lx\n", regs->regs[5]);  // a1
+	printk("orig a2: %lx\n", regs->regs[6]);  // a2
 
 	__asm__ __volatile__("move %0, $tp\n" : "=r"(tp_val));
 	printk("tp (r2) = %px, current = %px\n", (void *)tp_val, current);
 
-	printk("syscall write: fd=%u, buf=%px, count=%zu\n", fd, buf, count);
+	printk("syscall write: fd=0x%x, buf=%px, count=%zu\n", fd, buf, count);
 	printk("current->files = %px, current->files->fdt = %px\n",
 			current->files,
 			current->files ? current->files->fdt : NULL);
 	// uty: test
 	//return 0;
-	//return ksys_write(fd, buf, count);
-	return ksys_write(1, buf, count);
+	return ksys_write(fd, buf, count);
+	//return ksys_write(1, buf, count);
 }
 
 ssize_t ksys_pread64(unsigned int fd, char __user *buf, size_t count,

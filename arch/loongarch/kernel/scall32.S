@@ -104,12 +104,12 @@ SYM_FUNC_START(handle_sys)
 	PTR_ADDIU	t1, t1, 4		# skip to next instruction
 	LONG_S	t1, sp, PT_EPC
 
-//	// uty: test
-//	PTR_LI	t1, _TIF_WORK_SYSCALL_ENTRY
-//	LONG_L	t0, tp, TI_FLAGS	# syscall tracing enabled?
-//	and	t0, t1, t0
-//	bnez	t0, syscall_trace_entry
-//
+	// uty: test
+	PTR_LI	t1, _TIF_WORK_SYSCALL_ENTRY
+	LONG_L	t0, tp, TI_FLAGS	# syscall tracing enabled?
+	and	t0, t1, t0
+	bnez	t0, syscall_trace_entry
+
 syscall_common:
 	/* Check to make sure we don't jump to a bogus syscall number. */
 	li.w	t0, __NR_syscalls
@@ -146,61 +146,61 @@ syscall_common:
 //	b loop
 
 	// uty: test
-	//LONG_L	t1, sp, PT_R11		# syscall number
-	//PTR_ADDIU	t1, t1, 1		# +1 for handle_signal
-	//LONG_S	t1, sp, PT_R0		# save it for syscall restarting
-	//LONG_S	v0, sp, PT_R4		# result
+	LONG_L	t1, sp, PT_R11		# syscall number
+	PTR_ADDIU	t1, t1, 1		# +1 for handle_signal
+	LONG_S	t1, sp, PT_R0		# save it for syscall restarting
+	LONG_S	v0, sp, PT_R4		# result
 
 la_syscall_exit:
 	// uty: test
-	//b	syscall_exit_partial
+	b	syscall_exit_partial
 	//b	syscall_exit
 	//la.abs	t0, ret_from_exception
 	//jirl    zero, t0, 0
 
-	RESTORE_TEMP
-	RESTORE_STATIC
-//restore_partial:		# restore partial frame
-	RESTORE_SOME
-
-	//// uty: test
-	//la.abs  t0, check_epc
-	//jirl    ra, t0, 0
-
-	//RESTORE_SP_AND_RET
-	ld.w    $r3,$r3,0xc
-	ertn
-
-// uty: test
-loop1:
-	b loop1
+//	RESTORE_TEMP
+//	RESTORE_STATIC
+////restore_partial:		# restore partial frame
+//	RESTORE_SOME
+//
+//	//// uty: test
+//	//la.abs  t0, check_epc
+//	//jirl    ra, t0, 0
+//
+//	//RESTORE_SP_AND_RET
+//	ld.w    $r3,$r3,0xc
+//	ertn
+//
+//// uty: test
+//loop1:
+//	b loop1
 /* ------------------------------------------------------------------------ */
 
-//syscall_trace_entry:
-//	SAVE_STATIC
-//	move	a0, sp
-//	move	a1, a7
-//	bl	syscall_trace_enter
-//
-//	blt	v0, zero, 1f			# seccomp failed? Skip syscall
-//
-//	RESTORE_STATIC
-//	LONG_L	a0, sp, PT_R4		# Restore argument registers
-//	LONG_L	a1, sp, PT_R5
-//	LONG_L	a2, sp, PT_R6
-//	LONG_L	a3, sp, PT_R7
-//	LONG_L	a4, sp, PT_R8
-//	LONG_L	a5, sp, PT_R9
-//	LONG_L	a6, sp, PT_R10
-//	LONG_L	a7, sp, PT_R11		# Restore syscall (maybe modified)
-//	b	syscall_common
-//
-//1:	b	syscall_exit
-//
-//	/*
-//	 * The system call does not exist in this kernel
-//	 */
-//
+syscall_trace_entry:
+	SAVE_STATIC
+	move	a0, sp
+	move	a1, a7
+	bl	syscall_trace_enter
+
+	blt	v0, zero, 1f			# seccomp failed? Skip syscall
+
+	RESTORE_STATIC
+	LONG_L	a0, sp, PT_R4		# Restore argument registers
+	LONG_L	a1, sp, PT_R5
+	LONG_L	a2, sp, PT_R6
+	LONG_L	a3, sp, PT_R7
+	LONG_L	a4, sp, PT_R8
+	LONG_L	a5, sp, PT_R9
+	LONG_L	a6, sp, PT_R10
+	LONG_L	a7, sp, PT_R11		# Restore syscall (maybe modified)
+	b	syscall_common
+
+1:	b	syscall_exit
+
+	/*
+	 * The system call does not exist in this kernel
+	 */
+
 illegal_syscall:
 	/* This also isn't a valid syscall, throw an error.  */
 	li.w	v0, -ENOSYS			# error
