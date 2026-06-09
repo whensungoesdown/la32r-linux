@@ -657,24 +657,18 @@ SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 
 ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 {
-	//struct fd f = fdget_pos(fd);
-	struct fd f;
+	struct fd f = fdget_pos(fd);
 	ssize_t ret = -EBADF;
 
-	printk("fdget_pos()\n");
-
-	f = fdget_pos(fd);
 	if (f.file) {
 		loff_t pos, *ppos = file_ppos(f.file);
 		if (ppos) {
 			pos = *ppos;
 			ppos = &pos;
 		}
-		printk("vfs_write()\n");
 		ret = vfs_write(f.file, buf, count, ppos);
 		if (ret >= 0 && ppos)
 			f.file->f_pos = pos;
-		printk("fdput_pos()\n");
 		fdput_pos(f);
 	}
 
@@ -687,20 +681,20 @@ ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
-	unsigned long tp_val;
-	struct pt_regs *regs = current_pt_regs();
-
-	printk("orig a0: %lx\n", regs->regs[4]);  // a0
-	printk("orig a1: %lx\n", regs->regs[5]);  // a1
-	printk("orig a2: %lx\n", regs->regs[6]);  // a2
-
-	__asm__ __volatile__("move %0, $tp\n" : "=r"(tp_val));
-	printk("tp (r2) = %px, current = %px\n", (void *)tp_val, current);
-
-	printk("syscall write: fd=0x%x, buf=%px, count=%zu\n", fd, buf, count);
-	printk("current->files = %px, current->files->fdt = %px\n",
-			current->files,
-			current->files ? current->files->fdt : NULL);
+//	unsigned long tp_val;
+//	struct pt_regs *regs = current_pt_regs();
+//
+//	printk("orig a0: %lx\n", regs->regs[4]);  // a0
+//	printk("orig a1: %lx\n", regs->regs[5]);  // a1
+//	printk("orig a2: %lx\n", regs->regs[6]);  // a2
+//
+//	__asm__ __volatile__("move %0, $tp\n" : "=r"(tp_val));
+//	printk("tp (r2) = %px, current = %px\n", (void *)tp_val, current);
+//
+//	printk("syscall write: fd=0x%x, buf=%px, count=%zu\n", fd, buf, count);
+//	printk("current->files = %px, current->files->fdt = %px\n",
+//			current->files,
+//			current->files ? current->files->fdt : NULL);
 	// uty: test
 	//return 0;
 	return ksys_write(fd, buf, count);

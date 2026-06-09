@@ -312,40 +312,18 @@ SYM_FUNC_START(handle_general_exception)
 	andi	t1, t1, 0x3f
 	beq	t1, zero, 1f	/* if irq */
 
-        //csrrd	t0, LOONGARCH_CSR_EENTRY
-        //slli.w	t1, t1, 0x9  /* get ex entry shift = Ecode * vec_size  */
-        //add.w	t0, t0, t1
-        //lu12i.w	t1, 0x4
-        //sub.w	t0, t0, t1
-        //jirl	zero,t0 , 0  /* go to exception_handler */
-
-	// t1 is actually $13
-	//li.w    $r12, 0x44444444
-	//li.w    $r13, 0x10018
-	//st.w    $r12, $r13, 0
-
 	/* ----------------- Exception handling ----------------- */
 	/* Ensure ECODE index is within valid range (0~63) */
-	//slli.w	t2, t1, 2		/* t2 = ECODE * 4 */
-	//la.abs	t3, excp_handlers
-	//add.w	t3, t3, t2
-	//LONG_L	t0, t3, 0		/* t0 = handler function address */
-
 	slli.w	t0, t1, 2		/* t0 = ECODE * 4 */
 	la.abs	t1, excp_handlers
 	add.w	t1, t1, t0
 	LONG_L	t0, t1, 0		/* t0 = handler function address */
 
-        //la.abs  t0, handle_ade
 
-	/* Call C handler, argument: pt_regs *regs = sp */
-	//move	a0, sp
-	//jirl	ra, t0, 0
+	/* Call C handler*/
+	// code wont return here, do not use ra before SAVE_SOME
+	//jirl	ra, t0, 0     
 	jirl	$r0, t0, 0
-
-	// uty: test
-loop:
-	b loop
 
 1:
 	SAVE_SOME

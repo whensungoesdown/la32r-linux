@@ -830,8 +830,6 @@ static struct file *__fget_files(struct files_struct *files, unsigned int fd,
 {
 	struct file *file;
 
-	printk("__fget_files: files=%px, fdt=%px, fd=%u\n", files, files->fdt, fd);
-
 	rcu_read_lock();
 loop:
 	file = files_lookup_fd_rcu(files, fd);
@@ -967,14 +965,9 @@ unsigned long __fdget_raw(unsigned int fd)
 
 unsigned long __fdget_pos(unsigned int fd)
 {
-	//unsigned long v = __fdget(fd);
-	unsigned long v;
-	//struct file *file = (struct file *)(v & ~3);
-	struct file * file;
+	unsigned long v = __fdget(fd);
+	struct file *file = (struct file *)(v & ~3);
 
-	printk("__fdget()\n");
-	v = __fdget(fd);
-	file = (struct file *)(v & ~3);
 	if (file && (file->f_mode & FMODE_ATOMIC_POS)) {
 		if (file_count(file) > 1) {
 			v |= FDPUT_POS_UNLOCK;
