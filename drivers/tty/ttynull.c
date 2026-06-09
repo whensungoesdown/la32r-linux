@@ -29,16 +29,19 @@ static void ttynull_hangup(struct tty_struct *tty)
 	tty_port_hangup(&ttynull_port);
 }
 
+void screen_write(char* buf, int n);
+
 static int ttynull_write(struct tty_struct *tty, const unsigned char *buf,
 			 int count)
 {
-	printk("ttynull_write() %s\n", buf);
+	//printk("ttynull_write() %s\n", buf);
+
+	screen_write(buf, count);
 	return count;
 }
 
 static unsigned int ttynull_write_room(struct tty_struct *tty)
 {
-	printk("ttynull_write_room()\n");
 	return 65536;
 }
 
