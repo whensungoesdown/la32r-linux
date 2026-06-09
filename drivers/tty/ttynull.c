@@ -32,11 +32,13 @@ static void ttynull_hangup(struct tty_struct *tty)
 static int ttynull_write(struct tty_struct *tty, const unsigned char *buf,
 			 int count)
 {
+	printk("ttynull_write() %s\n", buf);
 	return count;
 }
 
 static unsigned int ttynull_write_room(struct tty_struct *tty)
 {
+	printk("ttynull_write_room()\n");
 	return 65536;
 }
 

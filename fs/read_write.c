@@ -657,31 +657,49 @@ SYSCALL_DEFINE3(read, unsigned int, fd, char __user *, buf, size_t, count)
 
 ssize_t ksys_write(unsigned int fd, const char __user *buf, size_t count)
 {
-	struct fd f = fdget_pos(fd);
+	//struct fd f = fdget_pos(fd);
+	struct fd f;
 	ssize_t ret = -EBADF;
 
+	printk("fdget_pos()\n");
+
+	f = fdget_pos(fd);
 	if (f.file) {
 		loff_t pos, *ppos = file_ppos(f.file);
 		if (ppos) {
 			pos = *ppos;
 			ppos = &pos;
 		}
+		printk("vfs_write()\n");
 		ret = vfs_write(f.file, buf, count, ppos);
 		if (ret >= 0 && ppos)
 			f.file->f_pos = pos;
+		printk("fdput_pos()\n");
 		fdput_pos(f);
 	}
 
 	return ret;
 }
 
+// uty: test
+#include <linux/fdtable.h>
+
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
 {
-	printk("syscall write()\n");
+	unsigned long tp_val;
+
+	__asm__ __volatile__("move %0, $tp\n" : "=r"(tp_val));
+	printk("tp (r2) = %px, current = %px\n", (void *)tp_val, current);
+
+	printk("syscall write: fd=%u, buf=%px, count=%zu\n", fd, buf, count);
+	printk("current->files = %px, current->files->fdt = %px\n",
+			current->files,
+			current->files ? current->files->fdt : NULL);
 	// uty: test
-	return 0;
+	//return 0;
 	//return ksys_write(fd, buf, count);
+	return ksys_write(1, buf, count);
 }
 
 ssize_t ksys_pread64(unsigned int fd, char __user *buf, size_t count,

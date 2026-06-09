@@ -1726,6 +1726,9 @@ static int __ref kernel_init(void *unused)
 	      "See Linux Documentation/admin-guide/init.rst for guidance.");
 }
 
+// uty: test
+#include <linux/fdtable.h>
+
 /* Open /dev/console, for stdin/stdout/stderr, this should never fail */
 void __init console_on_rootfs(void)
 {
@@ -1736,6 +1739,14 @@ void __init console_on_rootfs(void)
 		pr_err("Warning: unable to open an initial console.\n");
 		return;
 	}
+
+	// uty: test
+	printk("current->files = %px, current->files->fdt = %px\n",
+			current->files,
+			current->files ? current->files->fdt : NULL);
+	printk("++++++++ file=0x%x\n", (int)file);
+	//
+	
 	init_dup(file);
 	init_dup(file);
 	init_dup(file);

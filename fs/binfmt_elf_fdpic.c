@@ -40,6 +40,9 @@
 #include <linux/uaccess.h>
 #include <asm/param.h>
 
+// uty: test
+#include <linux/fdtable.h>
+
 typedef char *elf_caddr_t;
 
 #if 1
@@ -200,6 +203,9 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 	int executable_stack;
 	int retval, i;
 	loff_t pos;
+
+	// uty: test
+	unsigned long tp_val;
 
 	kdebug("____ LOAD %d ____", current->pid);
 
@@ -488,6 +494,15 @@ static int load_elf_fdpic_binary(struct linux_binprm *bprm)
 
 	//printk("try entry 0x3f00640 __libc_start_main()\n");
 	//entryaddr = 0x3f00640;
+	
+	// uty: test
+	printk("+++++++ before calling start_thread()\n");
+
+	__asm__ __volatile__("move %0, $tp\n" : "=r"(tp_val));
+	printk("tp (r2) = %px, current = %px\n", (void *)tp_val, current);
+	printk("current->files = %px, current->files->fdt = %px\n",
+			current->files,
+			current->files ? current->files->fdt : NULL);
 	start_thread(regs, entryaddr, current->mm->start_stack);
 
 	retval = 0;

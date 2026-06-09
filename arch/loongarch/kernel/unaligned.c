@@ -404,7 +404,7 @@ asmlinkage void do_ale(struct pt_regs *regs)
 	unsigned int *pc;
 	enum ctx_state prev_state;
 
-	//printk("++++++++++++++++++++++++++++++ ALE: epc=%lx, badvaddr=%lx\n", regs->csr_epc, regs->csr_badvaddr);
+	printk("++++++++++++ ALE: epc=%lx, badvaddr=%lx\n", regs->csr_epc, regs->csr_badvaddr);
 
 
 	prev_state = exception_enter();

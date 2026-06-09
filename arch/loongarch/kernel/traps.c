@@ -768,6 +768,8 @@ void check_tp_and_regs(unsigned long tp, struct pt_regs *regs)
     printk("check_tp: thread_info->flags = 0x%lx\n", ti->flags);
     printk("check_tp: thread_info->preempt_count = %d\n", ti->preempt_count);
     printk("check_tp: thread_info->regs = %px\n", ti->regs);
+
+    //while (1) {}
 }
 
 void check_syscall_routine (unsigned long syscall_routine)

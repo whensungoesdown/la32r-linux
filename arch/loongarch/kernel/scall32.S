@@ -22,12 +22,12 @@ SYM_FUNC_START(handle_sys)
 	//SAVE_ALL
 
 	// try not use kernelsp
-	// //csrrd	t0, PERCPU_BASE_KS
-	// la.abs	t1, kernelsp
-	// //PTR_ADDU	t1, t1, t0
+	//csrrd	t0, PERCPU_BASE_KS
+	la.abs	t1, kernelsp
+	//PTR_ADDU	t1, t1, t0
 	 //or	t2, sp, zero
 	 or	t0, sp, zero
-	// LONG_L	sp, t1, 0
+	 LONG_L	sp, t1, 0
 
 	PTR_ADDIU	sp, sp, -PT_SIZE
 	// t2 is usersp
@@ -76,8 +76,8 @@ SYM_FUNC_START(handle_sys)
 	// now tp points to kernel address,
 	// but kernelsp & 0xffffe000 is not where kernel tp is
 	// there is no kernel tp
-	// PTR_LI	tp, ~_THREAD_MASK
-	// and	tp, tp, sp
+	PTR_LI	tp, ~_THREAD_MASK
+	and	tp, tp, sp
 
 //	// uty: test
 	SAVE_TEMP
