@@ -8,8 +8,8 @@
 #include <asm/addrspace.h>
 
 // uty: test
-//#define __sync()	__asm__ __volatile__("dbar 0" : : : "memory")
-#define __sync()	__asm__ __volatile__("": : :"memory")
+#define __sync()	__asm__ __volatile__("dbar 0" : : : "memory")
+//#define __sync()	__asm__ __volatile__("": : :"memory")
 
 #define fast_wmb()	__sync()
 #define fast_rmb()	__sync()
@@ -23,12 +23,12 @@
 #define iob()		fast_iob()
 
 // uty: test
-//#define __smp_mb()	__asm__ __volatile__("dbar 0" : : : "memory")
-#define __smp_mb()	__asm__ __volatile__("": : :"memory")
-//#define __smp_rmb()	__asm__ __volatile__("dbar 0" : : : "memory")
-#define __smp_rmb()	__asm__ __volatile__("" : : :"memory")
-//#define __smp_wmb()	__asm__ __volatile__("dbar 0" : : : "memory")
-#define __smp_wmb()	__asm__ __volatile__("" : : :"memory")
+#define __smp_mb()	__asm__ __volatile__("dbar 0" : : : "memory")
+//#define __smp_mb()	__asm__ __volatile__("": : :"memory")
+#define __smp_rmb()	__asm__ __volatile__("dbar 0" : : : "memory")
+//#define __smp_rmb()	__asm__ __volatile__("" : : :"memory")
+#define __smp_wmb()	__asm__ __volatile__("dbar 0" : : : "memory")
+//#define __smp_wmb()	__asm__ __volatile__("" : : :"memory")
 
 #ifdef CONFIG_SMP
 #define __WEAK_LLSC_MB		"	dbar 0  \n"

@@ -43,8 +43,8 @@ void local_flush_cache_all(void)
 void local_flush_icache_range(unsigned long start, unsigned long end)
 {
 	// uty: test
-	printk("local_flush_icache_range()\n");
-//	asm volatile ("\tibar 0\n"::);
+	printk("+++++++++ local_flush_icache_range() ibar 0\n");
+	asm volatile ("\tibar 0\n"::);
 //#ifdef BX_SOC
 //	local_flush_cache_all();
 //#endif

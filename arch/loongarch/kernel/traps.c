@@ -752,8 +752,8 @@ void __init trap_init(void)
 	// uty: test
 	//cache_error_setup();
 
-	// "ibar 0" is not supported yet 
-	//local_flush_icache_range(eentry, eentry + 0x400);
+	// only to test and execute ibar 0, the parameters have no use
+	local_flush_icache_range(eentry, eentry + 0x400);
 }
 
 
