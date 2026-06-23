@@ -41,7 +41,7 @@ extern unsigned long __xchg_called_with_bad_pointer(void)
 
 #ifdef CONFIG_32BIT
 // uty: test
-/*
+
 #define __xchg_asm(ld, st, m, val)				\
 ({								\
 	__typeof(val) __ret;					\
@@ -57,7 +57,8 @@ extern unsigned long __xchg_called_with_bad_pointer(void)
 								\
 	__ret;							\
 })
-*/
+
+/*
 #define __xchg_asm(ld, st, m, val)                              \
 ({                                                              \
         __typeof(val) __ret;                                    \
@@ -71,6 +72,7 @@ extern unsigned long __xchg_called_with_bad_pointer(void)
                                                                 \
         __ret;                                                  \
 })
+*/
 #endif
 extern unsigned long __xchg_small(volatile void *ptr, unsigned long val,
 				  unsigned int size);
@@ -131,6 +133,7 @@ static inline unsigned long __xchg(volatile void *ptr, unsigned long x,
 #endif
 
 #ifdef CONFIG_32BIT
+/*
 #define __cmpxchg_asm(ld, st, m, old, new)                              \
 ({                                                                      \
         __typeof(old) __ret;                                            \
@@ -145,6 +148,25 @@ static inline unsigned long __xchg(volatile void *ptr, unsigned long x,
         : "memory");                                                    \
                                                                         \
         __ret;                                                          \
+})
+*/
+#define __cmpxchg_asm(ld, st, m, old, new)				\
+({									\
+	__typeof(old) __ret;						\
+									\
+	__asm__ __volatile__(						\
+	"1:	" ld "	%0, %2		# __cmpxchg_asm \n"		\
+	"	bne	%0, %z3, 2f			\n"		\
+	"	or	$t0, %z4, $zero			\n"		\
+	"	" st "	$t0, %1				\n"		\
+	"	beq	$zero, $t0, 1b			\n"		\
+	"2:						\n"		\
+	__WEAK_LLSC_MB							\
+	: "=&r" (__ret), "=ZB"(*m)					\
+	: "ZB"(*m), "Jr" (old), "Jr" (new)				\
+	: "t0", "memory");						\
+									\
+	__ret;								\
 })
 #endif
 

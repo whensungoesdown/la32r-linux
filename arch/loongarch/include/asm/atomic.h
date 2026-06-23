@@ -73,7 +73,7 @@ static inline int arch_atomic_fetch_##op##_relaxed(int i, atomic_t *v)	\
 #endif
 
 #ifdef CONFIG_32BIT   /* CONFIG_32BIT */
-/*
+
 #define ATOMIC_OP(op, I, asm_op)                                        \
 static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
 {                                                                       \
@@ -87,7 +87,9 @@ static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
         :"r" (I)                                               \
         );                                                      \
 }
-*/
+
+
+/*
 #define ATOMIC_OP(op, I, asm_op)                                        \
 static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
 {                                                                       \
@@ -100,8 +102,9 @@ static __inline__ void arch_atomic_##op(int i, atomic_t * v)                 \
         :"r" (I)                                               \
         );                                                      \
 }
+*/
 
-/*
+
 #define ATOMIC_OP_RETURN(op, I, asm_op)                                    \
 static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)       \
 {                                                                             \
@@ -119,7 +122,8 @@ static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)    
                 : "r" (I));                                                  \
         return result;                                                        \
 }
-*/
+
+/*
 #define ATOMIC_OP_RETURN(op, I, asm_op)                                    \
 static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)       \
 {                                                                             \
@@ -135,8 +139,9 @@ static __inline__ int arch_atomic_##op##_return_relaxed(int i, atomic_t * v)    
                 : "r" (I));                                                  \
         return result;                                                        \
 }
+*/
 
-/*
+
 #define ATOMIC_FETCH_OP(op,I, asm_op)                                     \
 static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)        \
 {                                                                             \
@@ -154,8 +159,9 @@ static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)     
         : "r" (I));                                                  \
                                                                       \
         return result;                                                \
-}*/
+}
 
+/*
 #define ATOMIC_FETCH_OP(op, I, asm_op)                                     \
 static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)        \
 {                                                                             \
@@ -172,6 +178,7 @@ static __inline__ int arch_atomic_fetch_##op##_relaxed(int i, atomic_t * v)     
                                                                       \
         return temp;                                                         \
 }
+*/
 #endif
 
 #ifdef CONFIG_64BIT
@@ -224,7 +231,7 @@ ATOMIC_OPS(xor, i, xor)
  * Atomically test @v and subtract @i if @v is greater or equal than @i.
  * The function returns the old value of @v minus @i.
  */
-/*
+
 static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 {
 	int result;
@@ -260,7 +267,8 @@ static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 
 	return result;
 }
-*/
+
+/*
 static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 {
         int result;
@@ -290,6 +298,7 @@ static inline int arch_atomic_sub_if_positive(int i, atomic_t *v)
 
         return result;
 }
+*/
 #define arch_atomic_cmpxchg(v, o, n) (arch_cmpxchg(&((v)->counter), (o), (n)))
 #define arch_atomic_xchg(v, new) (arch_xchg(&((v)->counter), (new)))
 
