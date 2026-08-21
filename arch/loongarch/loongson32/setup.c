@@ -327,7 +327,8 @@ void __init platform_init(void)
 	/* init base address of io space */
 	set_io_port_base((unsigned long)
 		ioremap(LOONGSON_LIO_BASE, LOONGSON_LIO_SIZE));
-	efi_init();
+	// uty: test
+	//efi_init();
 #ifdef CONFIG_ACPI_TABLE_UPGRADE
 	acpi_table_upgrade();
 #endif
@@ -349,21 +350,22 @@ void __init platform_init(void)
 	smbios_parse();
 	pr_info("The BIOS Version: %s\n", b_info.bios_version);
 
-	efi_runtime_init();
+	// uty: test
+	//efi_runtime_init();
 
 }
 
-static int __init register_gop_device(void)
-{
-	void *pd;
-
-	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-		return 0;
-	pd = platform_device_register_data(NULL, "efi-framebuffer", 0,
-			&screen_info, sizeof(screen_info));
-	return PTR_ERR_OR_ZERO(pd);
-}
-subsys_initcall(register_gop_device);
+//static int __init register_gop_device(void)
+//{
+//	void *pd;
+//
+//	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+//		return 0;
+//	pd = platform_device_register_data(NULL, "efi-framebuffer", 0,
+//			&screen_info, sizeof(screen_info));
+//	return PTR_ERR_OR_ZERO(pd);
+//}
+//subsys_initcall(register_gop_device);
 
 #ifdef BX_SOC
 #include <linux/serial_8250.h>

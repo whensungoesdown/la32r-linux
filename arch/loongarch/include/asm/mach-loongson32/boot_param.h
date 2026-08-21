@@ -2,9 +2,10 @@
 #ifndef __ASM_MACH_LOONGSON32_BOOT_PARAM_H_
 #define __ASM_MACH_LOONGSON32_BOOT_PARAM_H_
 
-#ifdef CONFIG_VT
+// uty: test
+//#ifdef CONFIG_VT
 #include <linux/screen_info.h>
-#endif
+//#endif
 
 #define ADDRESS_TYPE_SYSRAM	1
 #define ADDRESS_TYPE_RESERVED	2
