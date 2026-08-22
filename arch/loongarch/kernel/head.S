@@ -19,6 +19,22 @@ SYM_ENTRY(_stext, SYM_L_GLOBAL, SYM_A_NONE)
 
 SYM_CODE_START(kernel_entry)    		# kernel entry point
 
+        // uty: test
+        li.w    $r12, 0x41414141
+        li.w    $r13, 0x10000
+        st.w    $r12, $r13, 0
+
+	//b 0
+
+	/* Config direct window and set PG */
+	PTR_LI		t0, 0xa0000011
+	csrwr		t0, LOONGARCH_CSR_DMWIN0
+	PTR_LI		t0, 0x80000001
+	csrwr		t0, LOONGARCH_CSR_DMWIN1
+	/* Enable PG */
+	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
+	csrwr		t0, LOONGARCH_CSR_CRMD
+
 	/* We might not get launched at the address the kernel is linked to,
 	   so we jump there.  */
 	la.abs		t0, 0f
@@ -59,13 +75,13 @@ dtb_found:
 #endif
 
 	/* Config direct window and set PG */
-	PTR_LI		t0, 0xa0000011
-	csrwr		t0, LOONGARCH_CSR_DMWIN0
-	PTR_LI		t0, 0x80000001
-	csrwr		t0, LOONGARCH_CSR_DMWIN1
+//	PTR_LI		t0, 0xa0000011
+//	csrwr		t0, LOONGARCH_CSR_DMWIN0
+//	PTR_LI		t0, 0x80000001
+//	csrwr		t0, LOONGARCH_CSR_DMWIN1
 	/* Enable PG */
-	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
-	csrwr		t0, LOONGARCH_CSR_CRMD
+//	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
+//	csrwr		t0, LOONGARCH_CSR_CRMD
 
 	/* KScratch3 used for percpu base, initialized as 0 */
 	csrwr		zero, PERCPU_BASE_KS

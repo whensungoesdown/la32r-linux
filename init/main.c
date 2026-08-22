@@ -911,6 +911,13 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
+	// uty: test
+	*(int*)0xa001001c = 'BBBB';
+
+	// uty: test
+	*(int*)0xa0010020 = 'CCCC';
+        //printk("Hello from start_kernel()\n");
+
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();
 	debug_objects_early_init();

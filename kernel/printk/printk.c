@@ -2186,6 +2186,118 @@ int vprintk_default(const char *fmt, va_list args)
 }
 EXPORT_SYMBOL_GPL(vprintk_default);
 
+
+// uty: test
+#define TEXT_VIDEO_RAM_START     0xa0010000
+#define TEXT_COLUMN_MAX              80
+#define TEXT_ROW_MAX                 25
+
+int g_screen_curr_row = 0;
+int g_screen_curr_col = 0;
+
+char g_screen[TEXT_ROW_MAX][TEXT_COLUMN_MAX] = {0};
+
+void u_memset(char* dest, char ch, int count)
+{
+    int i;
+    for (i = 0; i < count; i++) {
+        dest[i] = ch;
+    }
+}
+
+void *u_memcpy(void *dest, const void *src, unsigned n)
+{
+    int i;
+    const char *s = src;
+    char *d = dest;
+
+    for (i = 0; i < n; i++)
+        d[i] = s[i];
+    return dest;
+}
+
+
+void update_screen (void)
+{
+    u_memcpy((void*)TEXT_VIDEO_RAM_START, g_screen, TEXT_COLUMN_MAX * TEXT_ROW_MAX);
+}
+
+void scroll_screen_buffer(void)
+{
+    int row = 0;
+
+    // 将第1行到倒数第1行向上移动一行
+    for (row = 1; row < TEXT_ROW_MAX; row++) {
+        u_memcpy(g_screen[row - 1], g_screen[row], TEXT_COLUMN_MAX);
+    }
+
+    // 清空最后一行
+    u_memset(g_screen[TEXT_ROW_MAX - 1], ' ', TEXT_COLUMN_MAX);
+}
+
+void screen_write(char* buf, int n)
+{
+    int i = 0;
+    int j = 0;
+
+    while (i < n) {
+        // 处理换行符
+        if (buf[i] == '\n') {
+            g_screen_curr_row++;
+            g_screen_curr_col = 0;
+
+            if (g_screen_curr_row >= TEXT_ROW_MAX) {
+                scroll_screen_buffer();
+                g_screen_curr_row = TEXT_ROW_MAX - 1;
+            }
+            i++;
+            continue;
+        }
+
+        // 处理制表符 (Tab)
+        if (buf[i] == '\t') {
+            int spaces = 8 - (g_screen_curr_col % 8);
+            for (j = 0; j < spaces; j++) {
+                // 如果当前行已满，自动换行
+                if (g_screen_curr_col >= TEXT_COLUMN_MAX) {
+                    g_screen_curr_row++;
+                    g_screen_curr_col = 0;
+
+                    if (g_screen_curr_row >= TEXT_ROW_MAX) {
+                        scroll_screen_buffer();
+                        g_screen_curr_row = TEXT_ROW_MAX - 1;
+                    }
+                }
+
+                g_screen[g_screen_curr_row][g_screen_curr_col] = ' ';
+                g_screen_curr_col++;
+            }
+            i++;
+            continue;
+        }
+
+        // 如果当前行已满，自动换行
+        if (g_screen_curr_col >= TEXT_COLUMN_MAX) {
+            g_screen_curr_row++;
+            g_screen_curr_col = 0;
+
+            if (g_screen_curr_row >= TEXT_ROW_MAX) {
+                scroll_screen_buffer();
+                g_screen_curr_row = TEXT_ROW_MAX - 1;
+            }
+        }
+
+        // 写入普通字符
+        g_screen[g_screen_curr_row][g_screen_curr_col] = buf[i];
+        g_screen_curr_col++;
+        i++;
+    }
+
+    update_screen();
+}
+//
+
+
 /**
  * printk - print a kernel message
  * @fmt: format string
@@ -2209,14 +2321,28 @@ EXPORT_SYMBOL_GPL(vprintk_default);
  */
 asmlinkage __visible int printk(const char *fmt, ...)
 {
-	va_list args;
-	int r;
+	//va_list args;
+	//int r;
 
-	va_start(args, fmt);
-	r = vprintk(fmt, args);
-	va_end(args);
+	//va_start(args, fmt);
+	//r = vprintk(fmt, args);
+	//va_end(args);
 
-	return r;
+	//return r;
+	
+	// uty: test
+        va_list ap;
+        static char buf[256];
+        int n;
+
+        va_start(ap, fmt);
+        n = vscnprintf(buf, sizeof(buf), fmt, ap);
+        va_end(ap);
+
+        //early_console->write(early_console, buf, n);
+        screen_write(buf, n);
+
+        return 0;
 }
 EXPORT_SYMBOL(printk);
 

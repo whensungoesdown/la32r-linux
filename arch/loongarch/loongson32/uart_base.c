@@ -25,8 +25,11 @@ void prom_init_loongson_uart_base(void)
 {
 #ifdef CONFIG_LS_SOC
 	loongson_uart_base[0] =(unsigned long ) 0x9fe001e0;
-#elif CONFIG_BX_SOC
+#elif defined(CONFIG_BX_SOC)
 	loongson_uart_base[0] =(unsigned long ) 0x9fe40000;
+// uty: test
+#elif defined(CONFIG_SOC2_SOC)
+        loongson_uart_base[0] =(unsigned long ) 0x20000;
 #endif
 	_loongson_uart_base[0] =
 		(unsigned long)ioremap(loongson_uart_base[0], 8);
