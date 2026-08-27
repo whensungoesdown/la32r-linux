@@ -19,6 +19,16 @@ void __init fw_init_cmdline(void)
 	_fw_argv = (long *)fw_arg1;
 	_fw_envp = (long *)fw_arg2;
 
+	// uty: test
+	/* Debug: print bootloader parameters */
+        //printk("fw_init_cmdline: fw_arg0=%lx, fw_arg1=%lx, fw_arg2=%lx\n",
+        //       fw_arg0, fw_arg1, fw_arg2);
+        //printk("fw_init_cmdline: fw_argc=%d, _fw_argv=%p, _fw_envp=%p\n",
+        //       fw_argc, _fw_argv, _fw_envp);
+
+	//while(10){}
+	//return;
+
 	arcs_cmdline[0] = '\0';
 	for (i = 1; i < fw_argc; i++) {
 		strlcat(arcs_cmdline, fw_argv(i), COMMAND_LINE_SIZE);

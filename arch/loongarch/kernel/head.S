@@ -20,20 +20,20 @@ SYM_ENTRY(_stext, SYM_L_GLOBAL, SYM_A_NONE)
 SYM_CODE_START(kernel_entry)    		# kernel entry point
 
         // uty: test
-        li.w    $r12, 0x41414141
+        li.w    $r12, 0x41414142
         li.w    $r13, 0x10000
         st.w    $r12, $r13, 0
 
 	//b 0
 
-	/* Config direct window and set PG */
-	PTR_LI		t0, 0xa0000011
-	csrwr		t0, LOONGARCH_CSR_DMWIN0
-	PTR_LI		t0, 0x80000001
-	csrwr		t0, LOONGARCH_CSR_DMWIN1
-	/* Enable PG */
-	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
-	csrwr		t0, LOONGARCH_CSR_CRMD
+//	/* Config direct window and set PG */
+//	PTR_LI		t0, 0xa0000011
+//	csrwr		t0, LOONGARCH_CSR_DMWIN0
+//	PTR_LI		t0, 0x80000001
+//	csrwr		t0, LOONGARCH_CSR_DMWIN1
+//	/* Enable PG */
+//	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
+//	csrwr		t0, LOONGARCH_CSR_CRMD
 
 	/* We might not get launched at the address the kernel is linked to,
 	   so we jump there.  */
@@ -50,6 +50,11 @@ SYM_CODE_START(kernel_entry)    		# kernel entry point
 dtb_found:
 #endif
 
+        // uty: test
+        li.w    $r12, 0x41414143
+        li.w    $r13, 0x10000
+        st.w    $r12, $r13, 0
+
 #if 1
 	la		t0, __bss_start		# clear .bss
 	PTR_S		zero, t0, 0
@@ -60,14 +65,14 @@ dtb_found:
 	bne		t0, t1, 1b
 #endif
 
-	la		t0, fw_arg0
-	PTR_S		a0, t0, 0		# firmware arguments
-	la		t0, fw_arg1
-	PTR_S		a1, t0, 0
-	la		t0, fw_arg2
-	PTR_S		a2, t0, 0
-	la		t0, fw_arg3
-	PTR_S		a3, t0, 0
+//	la		t0, fw_arg0
+//	PTR_S		a0, t0, 0		# firmware arguments
+//	la		t0, fw_arg1
+//	PTR_S		a1, t0, 0
+//	la		t0, fw_arg2
+//	PTR_S		a2, t0, 0
+//	la		t0, fw_arg3
+//	PTR_S		a3, t0, 0
 
 #ifdef CONFIG_USE_OF
 	la		t0, fw_passed_dtb
@@ -75,13 +80,13 @@ dtb_found:
 #endif
 
 	/* Config direct window and set PG */
-//	PTR_LI		t0, 0xa0000011
-//	csrwr		t0, LOONGARCH_CSR_DMWIN0
-//	PTR_LI		t0, 0x80000001
-//	csrwr		t0, LOONGARCH_CSR_DMWIN1
-	/* Enable PG */
-//	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
-//	csrwr		t0, LOONGARCH_CSR_CRMD
+	PTR_LI		t0, 0xa0000011
+	csrwr		t0, LOONGARCH_CSR_DMWIN0
+	PTR_LI		t0, 0x80000001
+	csrwr		t0, LOONGARCH_CSR_DMWIN1
+        /* Enable PG */
+	li.w		t0, 0xb0		# PLV=0, IE=0, PG=1
+	csrwr		t0, LOONGARCH_CSR_CRMD
 
 	/* KScratch3 used for percpu base, initialized as 0 */
 	csrwr		zero, PERCPU_BASE_KS

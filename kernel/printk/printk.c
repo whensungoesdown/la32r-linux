@@ -2235,12 +2235,19 @@ void scroll_screen_buffer(void)
     u_memset(g_screen[TEXT_ROW_MAX - 1], ' ', TEXT_COLUMN_MAX);
 }
 
+//void uart_putchar(char c);
+
+void test_line(char* buf, int n);
+
 void screen_write(char* buf, int n)
 {
     int i = 0;
     int j = 0;
 
+    //test_line(buf, n);
+
     while (i < n) {
+
         // 处理换行符
         if (buf[i] == '\n') {
             g_screen_curr_row++;
@@ -2289,6 +2296,10 @@ void screen_write(char* buf, int n)
 
         // 写入普通字符
         g_screen[g_screen_curr_row][g_screen_curr_col] = buf[i];
+
+//        while (0 == ((*(int*)0xa0020004) & 0x1)) {}
+//	    *(int*)0xa0020000 = (int)buf[i];
+
         g_screen_curr_col++;
         i++;
     }
@@ -2297,6 +2308,62 @@ void screen_write(char* buf, int n)
 }
 //
 
+#define UART_DR                  0x80020000
+#define UART_STATUS              0x80020004
+
+int uart_putchar(char c)
+{
+    unsigned int uart_status = 0;
+
+    while (1)
+    {
+        uart_status = *(volatile unsigned int*)UART_STATUS;
+        if (1 == (uart_status & 0x1)) // tx_idle
+        {
+            break;
+        }
+    }
+
+    *(volatile unsigned int*)UART_DR = (int)c;
+
+    return 0;
+}
+
+//// Define registers as volatile pointers to prevent compiler optimization
+//#define UART_DR      (*(volatile unsigned int*)0x80020000)
+//#define UART_STATUS  (*(volatile unsigned int*)0x80020004)
+//
+//int uart_char(char c)
+//{
+//    // Wait until transmitter is idle (tx_idle bit = 1)
+//    while (!(UART_STATUS & 0x1)) {
+//        // Volatile guarantees re-reading STATUS each iteration
+//    }
+//
+//    // Send the character
+//    UART_DR = (unsigned int)c;
+//    return 0;
+//}
+
+int uart_puts (char* buf, int n)
+{
+    int i = 0;
+
+    for (i = 0; i < n; i++)
+    {
+        if (buf[i] == '\n')
+        {
+            uart_putchar('\r');
+            uart_putchar('\n');
+        }
+        else
+        {
+            uart_putchar(buf[i]);
+        }
+    }
+
+    return 0;    
+}
 
 /**
  * printk - print a kernel message
@@ -2340,7 +2407,12 @@ asmlinkage __visible int printk(const char *fmt, ...)
         va_end(ap);
 
         //early_console->write(early_console, buf, n);
+ 
+        uart_puts(buf, n);
+
         screen_write(buf, n);
+
+	    //*(int*)0xa0020000 = 0x41414141;
 
         return 0;
 }

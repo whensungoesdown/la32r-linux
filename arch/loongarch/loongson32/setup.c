@@ -204,8 +204,11 @@ static void __init smbios_parse(void)
 
 void __init early_init(void)
 {
+        printk("  fw_init_cmdline()\n");
 	fw_init_cmdline();
-	fw_init_environ();
+	// uty: test
+	//fw_init_environ();
+        printk("  early_memblock_init()\n");
 	early_memblock_init();
 }
 

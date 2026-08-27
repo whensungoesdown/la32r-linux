@@ -911,9 +911,25 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	char *command_line;
 	char *after_dashes;
 
+	int crmd = 0;
+	int uart_status = 0;
+
+	//while(1) {}
+	
+	asm volatile("csrrd   %0, 0x0\n\t"
+			"nop \n\t"
+			:"=r"(crmd)
+		    );
+	printk("\n\ncrmd=0x%x\n", crmd);
+
+        uart_status = *(int*)0xa0020004;
+
+	//while(1) {}
 	// uty: test
 	*(int*)0xa001001c = 'BBBB';
+	*(int*)0xa0020000 = 'BBBB';
 
+	//while(1) {}
 	// uty: test
 	*(int*)0xa0010020 = 'CCCC';
         //printk("Hello from start_kernel()\n");

@@ -401,6 +401,7 @@ extern void setup_early_printk(void);
 void __init setup_arch(char **cmdline_p)
 {
 	cpu_probe();
+        printk("early_init()\n");
 	early_init();
 
 #ifdef CONFIG_EARLY_PRINTK
@@ -408,11 +409,16 @@ void __init setup_arch(char **cmdline_p)
 #endif
 	bootcmdline_init(cmdline_p);
 
+        printk("init_initrd()\n");
 	init_initrd();
+        printk("platform_init()\n");
 	platform_init();
+        printk("finalize_initrd()\n");
 	finalize_initrd();
+        printk("cpu_report()\n");
 	cpu_report();
 
+        printk("arch_mem_init()\n");
 	arch_mem_init(cmdline_p);
 
 	resource_init();
