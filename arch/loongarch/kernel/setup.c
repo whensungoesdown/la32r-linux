@@ -303,6 +303,9 @@ static void __init arch_mem_init(char **cmdline_p)
 	memblock_set_node(0, PHYS_ADDR_MAX, &memblock.memory, 0);
 #endif
 
+	// uty: test
+	min_low_pfn = PFN_UP(memblock_start_of_DRAM());
+
 	/*
 	 * Prevent memblock from allocating high memory.
 	 * This cannot be done before max_low_pfn is detected, so up

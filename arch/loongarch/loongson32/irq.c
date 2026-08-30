@@ -16,31 +16,65 @@
 #include <asm/loongarchregs.h>
 #include <loongson.h>
 
+//void mach_irq_dispatch(unsigned int pending)
+//{
+//	if (pending & 0x800)
+//		do_IRQ(LOONGSON_TIMER_IRQ);
+//#ifndef CONFIG_BX_SOC
+//	if (pending & 0x20)
+//		do_IRQ(4);
+//	if (pending & 0x4)
+//		do_IRQ(LOONGSON_GMAC_IRQ) ; //in fact , it's for ehternet
+//	if (pending & 0x8)
+//		do_IRQ(LOONGSON_UART_IRQ);
+//#else
+//	else if (pending & 0x4)
+//		do_IRQ(LOONGSON_CPU_IRQ_BASE + 2); 	/* IP2 */
+//	else if (pending & 0x8)
+//		do_IRQ(LOONGSON_CPU_IRQ_BASE + 3); 	/* IP2 */
+//#endif
+//}
+
+// uty: test
 void mach_irq_dispatch(unsigned int pending)
 {
-	if (pending & 0x800)
-		do_IRQ(LOONGSON_TIMER_IRQ);
-#ifndef CONFIG_BX_SOC
-	if (pending & 0x20)
-		do_IRQ(4);
-	if (pending & 0x4)
-		do_IRQ(LOONGSON_GMAC_IRQ) ; //in fact , it's for ehternet
-	if (pending & 0x8)
-		do_IRQ(LOONGSON_UART_IRQ);
-#else
-	else if (pending & 0x4)
-		do_IRQ(LOONGSON_CPU_IRQ_BASE + 2); 	/* IP2 */
-	else if (pending & 0x8)
-		do_IRQ(LOONGSON_CPU_IRQ_BASE + 3); 	/* IP2 */
-#endif
+        if (pending & 0x8) // SOC2, IS[3] is timer interrupt
+                do_IRQ(LOONGSON_TIMER_IRQ);
 }
+
+//asmlinkage void plat_irq_dispatch(int irq)
+//{
+//	unsigned int pending;
+//	pending = read_csr_estat() & read_csr_ecfg();
+//	/* machine-specific plat_irq_dispatch */
+//	mach_irq_dispatch(pending);
+//}
+
+// uty: test
+static unsigned int irq_counter = 0;
 
 asmlinkage void plat_irq_dispatch(int irq)
 {
-	unsigned int pending;
-	pending = read_csr_estat() & read_csr_ecfg();
-	/* machine-specific plat_irq_dispatch */
-	mach_irq_dispatch(pending);
+        unsigned int pending;
+        unsigned int epc = 0;
+        unsigned int tcfg = 0;
+        unsigned int estat = 0;
+
+
+        // uty: test
+        if (++irq_counter >= 600)
+        {
+                irq_counter = 0;
+                epc = read_csr_epc();
+                tcfg = read_csr_tcfg();
+                estat = read_csr_estat();
+                printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
+        }
+        //pending = read_csr_estat() & read_csr_ecfg();
+        pending = read_csr_estat(); // ecfg not implemented yet
+
+        /* machine-specific plat_irq_dispatch */
+        mach_irq_dispatch(pending);
 }
 
 void __init setup_IRQ(void)

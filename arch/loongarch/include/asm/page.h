@@ -37,7 +37,10 @@
  * used in our early mem init code for all memory models.
  * So always define it.
  */
-#define ARCH_PFN_OFFSET	PFN_UP(PHYS_OFFSET)
+//#define ARCH_PFN_OFFSET	PFN_UP(PHYS_OFFSET)
+// uty: test
+extern unsigned long min_low_pfn;
+#define ARCH_PFN_OFFSET min_low_pfn
 
 extern void clear_page(void *page);
 extern void copy_page(void *to, void *from);

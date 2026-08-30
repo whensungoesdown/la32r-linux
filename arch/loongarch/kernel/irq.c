@@ -93,10 +93,22 @@ static inline void check_stack_overflow(void) {}
  * SMP cross-CPU interrupts have their own specific
  * handlers).
  */
+//void __irq_entry do_IRQ(unsigned int irq)
+//{
+//	irq_enter();
+//	check_stack_overflow();
+//	generic_handle_irq(irq);
+//	irq_exit();
+//}
+
+// uty: test
+irqreturn_t constant_timer_interrupt(int irq, void *data);
+
 void __irq_entry do_IRQ(unsigned int irq)
 {
-	irq_enter();
-	check_stack_overflow();
-	generic_handle_irq(irq);
-	irq_exit();
+        irq_enter();
+        check_stack_overflow();
+        constant_timer_interrupt(irq, NULL);
+        irq_exit();
 }
+

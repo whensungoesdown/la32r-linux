@@ -267,6 +267,10 @@ void setup_tlb_handler(void)
 }
 void tlb_init(void)
 {
+	// uty: test
+	printk("tlb_init() NOT READY, return !!!!!!!!!!!!!\n");
+	return;
+
 	write_csr_pagesize(PS_DEFAULT_SIZE);
 #ifdef CONFIG_64BIT
 	write_csr_stlbpgsize(PS_DEFAULT_SIZE);

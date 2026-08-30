@@ -149,3 +149,94 @@ syscall_exit_work:
 	bl	syscall_trace_leave
 	b	resume_userspace
 SYM_CODE_END(syscall_exit_partial)
+
+
+// uty: test
+
+excp_handlers:
+        PTR     handle_reserved         /* 0: External interrupt, handled separately */
+        PTR     handle_reserved         /* 1: Reserved */
+        PTR     handle_reserved         /* 2: Reserved */
+        PTR     handle_reserved         /* 3: Reserved */
+        PTR     handle_reserved         /* 4: Reserved */
+        PTR     handle_reserved         /* 5: Reserved */
+        PTR     handle_reserved         /* 6: Reserved */
+        PTR     handle_reserved         /* 7: Reserved */
+        PTR     handle_ade              /* 8: Address error exception */
+        PTR     handle_ale              /* 9: Unaligned access exception */
+        PTR     handle_reserved         /* a: Reserved */
+        PTR     handle_sys              /* b: Syscall */
+        PTR     handle_bp               /* c: Breakpoint exception (break) */
+        PTR     handle_ri               /* d: Illegal instruction exception */
+        /* Fill remaining 14~63 with do_reserved */
+        .rept   50
+        PTR     handle_reserved
+        .endr
+
+SYM_FUNC_START(handle_general_exception)
+
+        BACKUP_T0T1
+
+        csrrd   t0, LOONGARCH_CSR_ESTAT
+        srli.w  t1, t0, 0x10   /* get Ecode */
+        andi    t1, t1, 0x3f
+        beq     t1, zero, 1f    /* if irq */
+
+        /* ----------------- Exception handling ----------------- */
+        /* Ensure ECODE index is within valid range (0~63) */
+        slli.w  t0, t1, 2               /* t0 = ECODE * 4 */
+        la.abs  t1, excp_handlers
+        add.w   t1, t1, t0
+        LONG_L  t0, t1, 0               /* t0 = handler function address */
+
+
+        /* Call C handler*/
+        // code wont return here, do not use ra before SAVE_SOME
+        //jirl  ra, t0, 0     
+        jirl    $r0, t0, 0
+
+1:
+        SAVE_SOME
+        la.abs  t1, __arch_cpu_idle
+        LONG_L  t0, sp, PT_EPC
+
+        /* 32 byte rollback region */
+        ori     t0, t0, 0x1f
+        xori    t0, t0, 0x1f
+        bne     t0, t1, 2f
+        LONG_S  t0, sp, PT_EPC
+2:
+        SAVE_TEMP
+        SAVE_STATIC
+
+        CLI
+        TRACE_IRQS_OFF
+
+        ld.w    s0, tp, TI_REGS
+        st.w    sp, tp, TI_REGS
+        move    s1, sp
+
+        # uty: test
+        #csrrd  t0, LOONGARCH_CSR_TMID
+        move    t0, zero
+        la.abs  t1, irq_stack
+        slli.w  t0, t0, LONGLOG
+        ld.w    t0, t1, 0
+
+        li.w    t1, ~(_THREAD_SIZE-1)
+        and     t1, t1, sp
+        beq     t0, t1, 2f
+
+        li.w    t1, _IRQ_STACK_START
+        add.w   sp, t0, t1
+        st.w    s1,sp, 0
+
+2:
+        la.abs  t0, plat_irq_dispatch
+        jirl    ra, t0, 0
+
+        move    sp, s1
+
+        la.abs  t0, ret_from_irq
+        jirl    zero, t0, 0
+SYM_FUNC_END(handle_general_exception)

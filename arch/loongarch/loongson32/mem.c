@@ -45,6 +45,9 @@ void __init early_memblock_init(void)
 
 		switch (mem_type) {
 		case ADDRESS_TYPE_SYSRAM:
+			// uty: test
+			min_low_pfn = PFN_UP(memblock_start_of_DRAM());
+
 			memblock_add(mem_start, mem_size);
 			if (max_low_pfn < (mem_end >> PAGE_SHIFT))
 				max_low_pfn = mem_end >> PAGE_SHIFT;
