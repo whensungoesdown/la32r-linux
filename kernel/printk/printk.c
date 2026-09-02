@@ -2318,7 +2318,7 @@ int uart_putchar(char c)
     while (1)
     {
         uart_status = *(volatile unsigned int*)UART_STATUS;
-        if (1 == (uart_status & 0x1)) // tx_idle
+        if (0 == (uart_status & 0x1)) // uart_tx_busy
         {
             break;
         }

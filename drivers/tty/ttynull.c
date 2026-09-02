@@ -29,9 +29,15 @@ static void ttynull_hangup(struct tty_struct *tty)
 	tty_port_hangup(&ttynull_port);
 }
 
+int uart_puts (char* buf, int n);
+void screen_write(char* buf, int n);
+
 static int ttynull_write(struct tty_struct *tty, const unsigned char *buf,
 			 int count)
 {
+	// uty: test
+	uart_puts((char*)buf, count);
+	screen_write((char*)buf, count);
 	return count;
 }
 
@@ -57,6 +63,8 @@ static struct tty_driver *ttynull_device(struct console *c, int *index)
 static struct console ttynull_console = {
 	.name = "ttynull",
 	.device = ttynull_device,
+	// uty: test
+        .flags = CON_ENABLED,
 };
 
 static int __init ttynull_init(void)

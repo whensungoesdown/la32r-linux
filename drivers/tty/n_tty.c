@@ -1830,6 +1830,63 @@ static void n_tty_close(struct tty_struct *tty)
 	up_write(&tty->termios_rwsem);
 }
 
+#include <linux/mm.h>      /* 提供 PAGE_SHIFT 等 */
+#include <asm/pgtable.h>   /* 提供 PGDIR_SHIFT, PTRS_PER_PTE 等 */
+
+/**
+ * print_kernel_page_table - Dump kernel page table entries for a given address
+ * @addr: Virtual address to inspect (e.g., 0xC0000000)
+ *
+ * This function reads the kernel page table base from CSR_PGDH (0x1A),
+ * traverses the two-level page table (PGD -> PTE), and prints both the
+ * even and odd PTE entries (as TLB refill loads two consecutive PTEs).
+ */
+void print_kernel_page_table(unsigned long addr)
+{
+    unsigned long pgd_virt, pgd_entry;
+    unsigned long pte_virt, pte_lo, pte_hi;
+    unsigned long pgd_idx, pte_idx;
+    unsigned long tlb_elo0, tlb_elo1;
+    unsigned long pte_phys;
+
+    /* Read CSR_PGDH (physical address of PGD table, in kseg1) */
+    asm volatile("csrrd %0, 0x1A" : "=r"(pgd_virt));
+    pr_info("CSR_PGDH = 0x%lx\n", pgd_virt);
+    if (!pgd_virt)
+        return;
+
+    /* PGD index (assuming PGDIR_SHIFT = 22) */
+    pgd_idx = addr >> 22;
+    pgd_entry = *(unsigned long *)(pgd_virt + pgd_idx * 4);
+    pr_info("PGD idx=%lu, value=0x%lx\n", pgd_idx, pgd_entry);
+
+    /* Extract physical address of the PTE table (clear low 12 flags) */
+    pte_phys = pgd_entry & ~0xfff;
+    /* Convert to kseg1 virtual address if it's a physical address */
+    if (pte_phys < 0x80000000)
+        pte_virt = pte_phys + 0xa0000000;
+    else
+        pte_virt = pte_phys;
+
+    /* PTE index: for 4KB pages and 4-byte PTEs, PTRS_PER_PTE = 1024 */
+    pte_idx = (addr >> 12) & (1024 - 1);
+    pr_info("PTE index=%lu\n", pte_idx);
+
+    /*
+     * Read the even PTE (4 bytes) and the next PTE (odd page).
+     * TLB refill loads two entries at once: TLBELO0 for even, TLBELO1 for odd.
+     */
+    pte_lo = *(unsigned long *)(pte_virt + pte_idx * 4);
+    pte_hi = *(unsigned long *)(pte_virt + (pte_idx + 1) * 4);
+    pr_info("PTE[%lu]=0x%lx, PTE[%lu]=0x%lx\n",
+            pte_idx, pte_lo, pte_idx + 1, pte_hi);
+
+    /* Simulate TLBLO construction (matching tlbex-32.S) */
+    tlb_elo0 = ((pte_lo >> 12) << 8) | (pte_lo & 0xff);
+    tlb_elo1 = ((pte_hi >> 12) << 8) | (pte_hi & 0xff);
+    pr_info("TLBELO0=0x%lx, TLBELO1=0x%lx\n", tlb_elo0, tlb_elo1);
+}
+
 /**
  *	n_tty_open		-	open an ldisc
  *	@tty: terminal to open
@@ -1849,7 +1906,12 @@ static int n_tty_open(struct tty_struct *tty)
 	if (!ldata)
 		return -ENOMEM;
 
+	// uty: test
+	//print_kernel_page_table(0xC0000000);
+	//while(1){}
+
 	ldata->overrun_time = jiffies;
+
 	mutex_init(&ldata->atomic_read_lock);
 	mutex_init(&ldata->output_lock);
 

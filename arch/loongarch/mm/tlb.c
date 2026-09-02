@@ -253,23 +253,24 @@ static void output_pgtable_bits_defines(void)
 
 void setup_tlb_handler(void)
 {
-	static int run_once = 0;
+	//static int run_once = 0;
 
 	setup_pw();
 	output_pgtable_bits_defines();
 
 	/* The tlb handlers are generated only once */
-	if (!run_once) {
-		memcpy((void *)tlbrentry, handle_tlb_refill, 0x200);
-		local_flush_icache_range(tlbrentry, tlbrentry + 0x200);
-		run_once++;
-	}
+	// uty: test
+	//if (!run_once) {
+	//	memcpy((void *)tlbrentry, handle_tlb_refill, 0x200);
+	//	local_flush_icache_range(tlbrentry, tlbrentry + 0x200);
+	//	run_once++;
+	//}
 }
 void tlb_init(void)
 {
 	// uty: test
-	printk("tlb_init() NOT READY, return !!!!!!!!!!!!!\n");
-	return;
+	//printk("tlb_init() NOT READY, return !!!!!!!!!!!!!\n");
+	//return;
 
 	write_csr_pagesize(PS_DEFAULT_SIZE);
 #ifdef CONFIG_64BIT

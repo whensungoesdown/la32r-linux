@@ -621,6 +621,11 @@ void __init boot_cpu_trap_init(void)
 	eentry = (unsigned long)handle_general_exception;
         printk("eentry = 0x%lx\n", eentry);
         csr_writel(eentry, LOONGARCH_CSR_EENTRY);
+	
+	tlbrentry = (unsigned long)handle_tlb_refill;
+        printk("tlbrentry = 0x%lx\n", tlbrentry);
+        csr_writel(tlbrentry, LOONGARCH_CSR_TLBRENTRY);
+
 
 	if (!cpu_data[0].asid_cache)
 		cpu_data[0].asid_cache = asid_first_version(0);
