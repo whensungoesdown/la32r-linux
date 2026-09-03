@@ -12,6 +12,32 @@
 
 #include <asm/pgtable-32.h>
 
+// uty: test
+.macro set_tlbidx_by_esubcode tmp0, tmp1
+    csrrd   \tmp0, 0x10               // 读取 TLBIDX
+    li.w    \tmp1, 0xfffeffff         // 清除 I_D 位 (bit16)
+    and     \tmp0, \tmp0, \tmp1
+    csrwr   \tmp0, LOONGARCH_CSR_KS3  // 暂存到 KS3
+
+    csrrd   \tmp1, 0x5                // 读取 ESTAT
+    srli.w  \tmp1, \tmp1, 22          // 提取 ESUBCODE (bits 31:22)
+    andi    \tmp1, \tmp1, 0x1ff
+
+    li.w    \tmp0, 0x1
+    bne     \tmp1, \tmp0, .Lnot_esubcode1_\@
+    li.w    \tmp1, 0x00010000         // ESUBCODE == 1 → I_D = 1 (DTLB)
+    b       .Ldone_\@
+.Lnot_esubcode1_\@:
+    li.w    \tmp1, 0x0                // 否则 I_D = 0 (ITLB)
+.Ldone_\@:
+
+    csrrd   \tmp0, LOONGARCH_CSR_KS3  // 恢复 TLBIDX
+    or      \tmp0, \tmp0, \tmp1
+    csrwr   \tmp0, 0x10               // 写回 TLBIDX
+.endm
+
+
+
 	.macro tlb_do_page_fault, write
 	SYM_FUNC_START(tlb_do_page_fault_\write)
 	SAVE_ALL
@@ -38,6 +64,9 @@ SYM_FUNC_END(handle_tlb_rixi)
 
 SYM_FUNC_START(handle_tlb_load)
 	csrwr	ra, EXCEPTION_KS2
+	
+	// uty: test
+	set_tlbidx_by_esubcode t0, t1
 
 	lu12i.w	ra, 0xc
 	slli.w	ra, ra, 0x10
@@ -105,7 +134,7 @@ vmalloc_load:
 	 */
 
 nopage_tlb_load:
-	dbar	0
+	//dbar	0
         csrrd   ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_0
 	jirl	$r0, t0, 0
@@ -117,6 +146,9 @@ SYM_FUNC_END(handle_tlb_load)
 
 SYM_FUNC_START(handle_tlb_store)
 	csrwr	ra, EXCEPTION_KS2
+
+	// uty: test
+	set_tlbidx_by_esubcode t0, t1
 
 	lu12i.w ra, 0xc
         slli.w  ra, ra, 0x10
@@ -184,7 +216,7 @@ vmalloc_store:
 	 */
 
 nopage_tlb_store:
-	dbar	0
+	//dbar	0
 	csrrd	ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_1
 	jirl	$r0, t0, 0
@@ -193,6 +225,9 @@ SYM_FUNC_END(handle_tlb_store)
 
 SYM_FUNC_START(handle_tlb_modify)
 	csrwr	ra, EXCEPTION_KS2
+
+	// uty: test
+	set_tlbidx_by_esubcode t0, t1
 
 	/*
 	 * The vmalloc handling is not in the hotpath.
@@ -258,7 +293,7 @@ vmalloc_modify:
 
 
 nopage_tlb_modify:
-	dbar	0
+	//dbar	0
 	csrrd	ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_1
 	jirl	$r0, t0, 0
@@ -270,45 +305,46 @@ SYM_FUNC_START(handle_tlb_refill)
 	csrwr   t1, LOONGARCH_CSR_KS1
 	csrwr   ra, EXCEPTION_KS2
 
-        # ---- 串口输出字符 'A' ----
-        #li.w    t0, 0x20000           # 串口物理地址
-        #li.w    t1, 0x41
-        #st.b    t1, t0, 0
+//        # ---- 串口输出字符 'A' ----
+//        #li.w    t0, 0x20000           # 串口物理地址
+//        #li.w    t1, 0x41
+//        #st.b    t1, t0, 0
+//
+//        # ---- 读取 TLBIDX 并清除 I_D 位 ----
+//        csrrd   t0, 0x10              # t0 = TLBIDX
+//        li.w    t1, 0xfffeffff        # 掩码 ~0x00010000
+//        and     t0, t0, t1            # t0 = 清除 I_D 后的 TLBIDX
+//
+//        # ---- 暂存清除后的 TLBIDX 到 KS3 ----
+//        csrwr   t0, LOONGARCH_CSR_KS3
+//
+//        # ---- 提取 ESUBCODE ----
+//        csrrd   t1, 0x5               # t1 = ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff         # t1 = ESUBCODE (0 或 1)
+//
+//        # ---- 判断 ESUBCODE 是否等于 1 ----
+//        li.w    t0, 0x1               # t0 = 1（用作比较）
+//        bne     t1, t0, set_itlb      # 若 ESUBCODE != 1 → ITLB，跳转
+//
+//        # ---- ESUBCODE == 1 → DTLB refill ----
+//        li.w    t1, 0x00010000        # I_D = 1
+//        b       set_i_d_done
+//
+//set_itlb:
+//        # ---- ESUBCODE != 1 → ITLB refill ----
+//        li.w    t1, 0x0               # I_D = 0
+//
+//set_i_d_done:
+//
+//        # ---- 恢复 TLBIDX（从 KS3） ----
+//        csrrd   t0, LOONGARCH_CSR_KS3
+//
+//        # ---- 合并 I_D 并写回 TLBIDX ----
+//        or      t0, t0, t1
+//        csrwr   t0, 0x10
 
-        # ---- 读取 TLBIDX 并清除 I_D 位 ----
-        csrrd   t0, 0x10              # t0 = TLBIDX
-        li.w    t1, 0xfffeffff        # 掩码 ~0x00010000
-        and     t0, t0, t1            # t0 = 清除 I_D 后的 TLBIDX
-
-        # ---- 暂存清除后的 TLBIDX 到 KS3 ----
-        csrwr   t0, LOONGARCH_CSR_KS3
-
-        # ---- 提取 ESUBCODE ----
-        csrrd   t1, 0x5               # t1 = ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff         # t1 = ESUBCODE (0 或 1)
-
-        # ---- 判断 ESUBCODE 是否等于 1 ----
-        li.w    t0, 0x1               # t0 = 1（用作比较）
-        bne     t1, t0, set_itlb      # 若 ESUBCODE != 1 → ITLB，跳转
-
-        # ---- ESUBCODE == 1 → DTLB refill ----
-        li.w    t1, 0x00010000        # I_D = 1
-        b       set_i_d_done
-
-set_itlb:
-        # ---- ESUBCODE != 1 → ITLB refill ----
-        li.w    t1, 0x0               # I_D = 0
-
-set_i_d_done:
-
-        # ---- 恢复 TLBIDX（从 KS3） ----
-        csrrd   t0, LOONGARCH_CSR_KS3
-
-        # ---- 合并 I_D 并写回 TLBIDX ----
-        or      t0, t0, t1
-        csrwr   t0, 0x10
-
+	set_tlbidx_by_esubcode t0, t1
 
 	csrrd	t0, LOONGARCH_CSR_PGD
 	csrrd   t1, LOONGARCH_CSR_BADV

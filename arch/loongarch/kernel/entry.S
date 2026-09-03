@@ -155,13 +155,13 @@ SYM_CODE_END(syscall_exit_partial)
 
 excp_handlers:
         PTR     handle_reserved         /* 0: External interrupt, handled separately */
-        PTR     handle_reserved         /* 1: Reserved */
-        PTR     handle_reserved         /* 2: Reserved */
-        PTR     handle_reserved         /* 3: Reserved */
-        PTR     handle_reserved         /* 4: Reserved */
+        PTR     handle_tlb_load         /* 1: TLB miss on a load */
+        PTR     handle_tlb_store        /* 2: TLB miss on a store */
+        PTR     handle_tlb_load         /* 3: TLB miss on a ifetch */
+        PTR     handle_tlb_modify       /* 4: TLB modified fault */
         PTR     handle_reserved         /* 5: Reserved */
         PTR     handle_reserved         /* 6: Reserved */
-        PTR     handle_reserved         /* 7: Reserved */
+        PTR     handle_reserved         /* 7: TLB Privilege Error */
         PTR     handle_ade              /* 8: Address error exception */
         PTR     handle_ale              /* 9: Unaligned access exception */
         PTR     handle_reserved         /* a: Reserved */

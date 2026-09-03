@@ -17,23 +17,26 @@
 	.cfi_sections	.debug_frame
 	.align	5
 SYM_FUNC_START(handle_sys)
-	csrrd	t0, PERCPU_BASE_KS
+	// uty: test PERCPU_BASE_KS has an issue
+	//csrrd	t0, PERCPU_BASE_KS
+	move  t0, zero
+
 	la.abs	t1, kernelsp
 	PTR_ADDU	t1, t1, t0
-	or	t2, sp, zero
+	or	t0, sp, zero
 	LONG_L	sp, t1, 0
 
 	PTR_ADDIU	sp, sp, -PT_SIZE
-	cfi_st	t2, PT_R3
+	cfi_st	t1, PT_R3
 	cfi_rel_offset  sp, PT_R3
-	csrrd	t2, LOONGARCH_CSR_PRMD
-	LONG_S	t2, sp, PT_PRMD
-	csrrd	t2, LOONGARCH_CSR_CRMD
-	LONG_S	t2, sp, PT_CRMD
-	csrrd	t2, LOONGARCH_CSR_ECFG
-	LONG_S	t2, sp, PT_ECFG
-	csrrd	t2, LOONGARCH_CSR_EUEN
-	LONG_S	t2, sp, PT_EUEN
+	csrrd	t1, LOONGARCH_CSR_PRMD
+	LONG_S	t1, sp, PT_PRMD
+	csrrd	t1, LOONGARCH_CSR_CRMD
+	LONG_S	t1, sp, PT_CRMD
+	csrrd	t1, LOONGARCH_CSR_ECFG
+	LONG_S	t1, sp, PT_ECFG
+	csrrd	t1, LOONGARCH_CSR_EUEN
+	LONG_S	t1, sp, PT_EUEN
 	cfi_st	ra, PT_R1
 	cfi_st	a0, PT_R4
 	cfi_st	a1, PT_R5
@@ -55,7 +58,13 @@ SYM_FUNC_START(handle_sys)
 	PTR_LI	tp, ~_THREAD_MASK
 	and	tp, tp, sp
 
-	STI
+	//STI
+	// uty: test
+	SAVE_TEMP
+	SAVE_STATIC
+	
+	CLI
+	//
 
 	/* save the initial A0 value (needed in signal handlers) */
 	LONG_S	a0, sp, PT_ORIG_A0
