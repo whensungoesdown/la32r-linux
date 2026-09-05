@@ -24,6 +24,7 @@ SYM_FUNC_START(__arch_cpu_idle)
 	nop
 	nop
 	nop
+# uty: test
 	idle	0
 	/* end of rollback region */
 1:

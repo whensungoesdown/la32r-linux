@@ -17,26 +17,28 @@
 	.cfi_sections	.debug_frame
 	.align	5
 SYM_FUNC_START(handle_sys)
-	// uty: test PERCPU_BASE_KS has an issue
+	// uty: test
+	// only use t0 t1 before SAVE_SOME or SAVE_ALL
+	//SAVE_ALL
 	//csrrd	t0, PERCPU_BASE_KS
-	move  t0, zero
-
 	la.abs	t1, kernelsp
-	PTR_ADDU	t1, t1, t0
-	or	t0, sp, zero
-	LONG_L	sp, t1, 0
+	//PTR_ADDU	t1, t1, t0
+	 //or	t2, sp, zero
+	 or	t0, sp, zero
+	 LONG_L	sp, t1, 0
 
 	PTR_ADDIU	sp, sp, -PT_SIZE
-	cfi_st	t1, PT_R3
+	cfi_st	t0, PT_R3
 	cfi_rel_offset  sp, PT_R3
-	csrrd	t1, LOONGARCH_CSR_PRMD
-	LONG_S	t1, sp, PT_PRMD
-	csrrd	t1, LOONGARCH_CSR_CRMD
-	LONG_S	t1, sp, PT_CRMD
-	csrrd	t1, LOONGARCH_CSR_ECFG
-	LONG_S	t1, sp, PT_ECFG
-	csrrd	t1, LOONGARCH_CSR_EUEN
-	LONG_S	t1, sp, PT_EUEN
+	csrrd	t0, LOONGARCH_CSR_PRMD
+	LONG_S	t0, sp, PT_PRMD
+	csrrd	t0, LOONGARCH_CSR_CRMD
+	LONG_S	t0, sp, PT_CRMD
+	//csrrd	t0, LOONGARCH_CSR_ECFG
+	//LONG_S	t0, sp, PT_ECFG
+	//csrrd	t0, LOONGARCH_CSR_EUEN
+	//LONG_S	t0, sp, PT_EUEN
+
 	cfi_st	ra, PT_R1
 	cfi_st	a0, PT_R4
 	cfi_st	a1, PT_R5
@@ -46,8 +48,8 @@ SYM_FUNC_START(handle_sys)
 	cfi_st	a5, PT_R9
 	cfi_st	a6, PT_R10
 	cfi_st	a7, PT_R11
-	csrrd	ra, LOONGARCH_CSR_EPC
-	LONG_S	ra, sp, PT_EPC
+	csrrd	t0, LOONGARCH_CSR_EPC
+	LONG_S	t0, sp, PT_EPC
 
 	cfi_rel_offset ra, PT_EPC
 
@@ -58,13 +60,14 @@ SYM_FUNC_START(handle_sys)
 	PTR_LI	tp, ~_THREAD_MASK
 	and	tp, tp, sp
 
-	//STI
-	// uty: test
+//	// uty: test
 	SAVE_TEMP
 	SAVE_STATIC
-	
+
+	// can't handle nested exception now
+//	STI
+	// uty: test
 	CLI
-	//
 
 	/* save the initial A0 value (needed in signal handlers) */
 	LONG_S	a0, sp, PT_ORIG_A0
@@ -81,6 +84,7 @@ syscall_common:
 	/* Check to make sure we don't jump to a bogus syscall number. */
 	li.w	t0, __NR_syscalls
 	PTR_SUBU	t2, a7, t0
+
 	bgez	t2, illegal_syscall
 
 	/* Syscall number held in a7 */
@@ -89,6 +93,7 @@ syscall_common:
 	PTR_ADDU	t0, t2, t0
 	LONG_L	t2, t0, 0		#syscall routine
 	beqz    t2, illegal_syscall
+
 
 	jalr	t2			# Do The Real Thing (TM)
 
