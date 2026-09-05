@@ -12,30 +12,22 @@
 
 #include <asm/pgtable-32.h>
 
-// uty: test
-.macro set_tlbidx_by_esubcode tmp0, tmp1
-    csrrd   \tmp0, 0x10               // 读取 TLBIDX
-    li.w    \tmp1, 0xfffeffff         // 清除 I_D 位 (bit16)
-    and     \tmp0, \tmp0, \tmp1
-    csrwr   \tmp0, LOONGARCH_CSR_KS3  // 暂存到 KS3
-
-    csrrd   \tmp1, 0x5                // 读取 ESTAT
-    srli.w  \tmp1, \tmp1, 22          // 提取 ESUBCODE (bits 31:22)
-    andi    \tmp1, \tmp1, 0x1ff
-
-    li.w    \tmp0, 0x1
-    bne     \tmp1, \tmp0, .Lnot_esubcode1_\@
-    li.w    \tmp1, 0x00010000         // ESUBCODE == 1 → I_D = 1 (DTLB)
-    b       .Ldone_\@
-.Lnot_esubcode1_\@:
-    li.w    \tmp1, 0x0                // 否则 I_D = 0 (ITLB)
-.Ldone_\@:
-
-    csrrd   \tmp0, LOONGARCH_CSR_KS3  // 恢复 TLBIDX
-    or      \tmp0, \tmp0, \tmp1
-    csrwr   \tmp0, 0x10               // 写回 TLBIDX
-.endm
-
+	// uty: test
+	.macro set_tlbidx_by_esubcode tmp0, tmp1
+	    csrrd   \tmp1, 0x5                // Read ESTAT
+	    srli.w  \tmp1, \tmp1, 22
+	    andi    \tmp1, \tmp1, 0x1ff
+	
+	    li.w    \tmp0, 1
+	    bne     \tmp1, \tmp0, .Lnot_esubcode1_\@
+	    li.w    \tmp0, 0x00010000         // rd: value to write (set bit16)
+	    b       .Ldone_\@
+	.Lnot_esubcode1_\@:
+	    li.w    \tmp0, 0x00000000         // rd: value to write (clear bit16)
+	.Ldone_\@:
+	    li.w    \tmp1, 0x00010000         // rj: mask (only bit16)
+	    csrxchg \tmp0, \tmp1, 0x10        // Now tmp0 = old TLBIDX, CSR updated
+	.endm
 
 
 	.macro tlb_do_page_fault, write
@@ -134,7 +126,7 @@ vmalloc_load:
 	 */
 
 nopage_tlb_load:
-	//dbar	0
+	dbar	0
         csrrd   ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_0
 	jirl	$r0, t0, 0
@@ -216,7 +208,7 @@ vmalloc_store:
 	 */
 
 nopage_tlb_store:
-	//dbar	0
+	dbar	0
 	csrrd	ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_1
 	jirl	$r0, t0, 0
@@ -293,7 +285,7 @@ vmalloc_modify:
 
 
 nopage_tlb_modify:
-	//dbar	0
+	dbar	0
 	csrrd	ra, EXCEPTION_KS2
 	la.abs	t0, tlb_do_page_fault_1
 	jirl	$r0, t0, 0
