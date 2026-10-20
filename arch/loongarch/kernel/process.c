@@ -82,6 +82,10 @@ void start_thread(struct pt_regs *regs, unsigned long pc, unsigned long sp)
 	clear_used_math();
 	regs->csr_epc = pc;
 	regs->regs[3] = sp;
+
+	// uty: test
+	printk("start_thread: pc = 0x%lx, sp = 0x%lx\n", pc, sp);
+
 }
 
 void exit_thread(struct task_struct *tsk)
@@ -265,3 +269,54 @@ void loongarch_dump_regs64(u64 *uregs, const struct pt_regs *regs)
 	uregs[LOONGARCH64_EF_CSR_ESTAT] = regs->csr_estat;
 }
 #endif /* CONFIG_64BIT */
+
+// uty: test
+#include <linux/uaccess.h>
+
+void dump_pt_regs_at_restore(struct pt_regs *regs)
+{
+    unsigned int argc_val = 0;
+    unsigned long argv0 = 0, argv1 = 0;
+    int err;
+
+    pr_info("=== PT_REGS at restore_all ===\n");
+    pr_info("csr_epc (user pc) = 0x%lx\n", regs->csr_epc);
+    pr_info("regs[3] (user sp) = 0x%lx\n", regs->regs[3]);
+    pr_info("regs[1]=0x%lx regs[2]=0x%lx regs[4]=0x%lx regs[5]=0x%lx regs[6]=0x%lx\n",
+            regs->regs[1], regs->regs[2], regs->regs[4],
+            regs->regs[5], regs->regs[6]);
+
+    /* 安全地读取用户栈上的 argc / argv[0] / argv[1] */
+    err = get_user(argc_val, (unsigned int __user *)regs->regs[3]);
+    if (!err)
+        pr_info("*(user sp)      = %u (argc)\n", argc_val);
+    else
+        pr_info("get_user argc failed: %d\n", err);
+
+    err = get_user(argv0, (unsigned long __user *)(regs->regs[3] + 4));
+    if (!err)
+        pr_info("*(user sp + 4)  = 0x%lx (argv[0])\n", argv0);
+
+    err = get_user(argv1, (unsigned long __user *)(regs->regs[3] + 8));
+    if (!err)
+        pr_info("*(user sp + 8)  = 0x%lx (argv[1])\n", argv1);
+}
+
+void dump_tlb_pf_caller(struct pt_regs *regs)
+{
+    unsigned long estat, ecode, esubcode;
+    unsigned long ks2;
+
+    /* 读 CSR_ESTAT 的 Ecode/ESubCode */
+    asm volatile("csrrd %0, 0x5" : "=r"(estat));
+    ecode    = (estat >> 16) & 0x3f;
+    esubcode = (estat >> 22) & 0x1ff;
+
+    /* 读 EXCEPTION_KS2（handle_tlb_load 把原始 ra 存在这里） */
+    asm volatile("csrrd %0, 0x7" : "=r"(ks2));
+
+    pr_info("tlb_do_page_fault: ra=0x%lx epc=0x%lx badv=0x%lx "
+            "ecode=0x%lx esubcode=0x%lx ks2=0x%lx\n",
+            regs->regs[1], regs->csr_epc, regs->csr_badvaddr,
+            ecode, esubcode, ks2);
+}

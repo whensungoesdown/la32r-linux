@@ -204,6 +204,10 @@
 	csrwr	v0, LOONGARCH_CSR_PRMD
 	LONG_L	v0, sp, PT_EPC
 	csrwr	v0, LOONGARCH_CSR_EPC
+
+	// uty: test
+	LONG_L  v0, sp, PT_PRMD
+
 	andi    v0, v0, 0x3	/* extract pplv bit */
 	beqz    v0, 8f
 	cfi_ld  x0, PT_R21, \docfi
@@ -257,4 +261,12 @@
 	csrrd	x0, PERCPU_BASE_KS
 	.endm
 
+	// uty: test
+
+	.macro	RESTORE_ALL_AND_RET docfi=0
+	RESTORE_STATIC \docfi
+	RESTORE_TEMP \docfi
+	RESTORE_SOME \docfi
+	RESTORE_SP_AND_RET \docfi
+	.endm	
 #endif /* _ASM_STACKFRAME_H */

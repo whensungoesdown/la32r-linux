@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-only
+//// SPDX-License-Identifier: GPL-2.0-only
 /*
  * linux/fs/binfmt_elf.c
  *
@@ -191,6 +191,9 @@ create_elf_tables(struct linux_binprm *bprm, const struct elfhdr *exec,
 	const struct cred *cred = current_cred();
 	struct vm_area_struct *vma;
 
+	// uty: test
+	//unsigned int argc_val = 0;
+
 	/*
 	 * In some cases (e.g. Hyper-Threading), we want to avoid L1
 	 * evictions by the processes running on the same package. One
@@ -357,6 +360,14 @@ create_elf_tables(struct linux_binprm *bprm, const struct elfhdr *exec,
 	/* Put the elf_info on the stack in the right place.  */
 	if (copy_to_user(sp, mm->saved_auxv, ei_index * sizeof(elf_addr_t)))
 		return -EFAULT;
+
+	// uty: test
+	//if (get_user(argc_val, (unsigned int __user *)bprm->p) == 0)
+	//	pr_info("create_elf_tables: *(bprm->p)=%u, bprm->p=0x%lx\n",
+	//			argc_val, bprm->p);
+	//else
+	//	pr_info("create_elf_tables: get_user failed, bprm->p=0x%lx\n", bprm->p);
+
 	return 0;
 }
 
@@ -843,6 +854,10 @@ static int load_elf_binary(struct linux_binprm *bprm)
 	struct mm_struct *mm;
 	struct pt_regs *regs;
 
+	// uty: test
+	//unsigned int buf[4] = {0, 0, 0, 0};
+
+
 	retval = -ENOEXEC;
 	/* First of all, some simple consistency checks */
 	if (memcmp(elf_ex->e_ident, ELFMAG, SELFMAG) != 0)
@@ -1310,6 +1325,37 @@ out_free_interp:
 #endif
 
 	finalize_exec(bprm);
+	// uty: test
+	printk("START_THREAD() elf_entry=0x%x\n", (int)elf_entry);
+	//printk("ELF: bprm->p = 0x%lx, argc = %d, envc = %d\n", bprm->p, bprm->argc, bprm->envc);
+	
+	// 在 elf_entry + 4 处写入 0x50000000
+	//{
+	//	u32 val = 0x50000000;
+	//	void __user *p = (void __user *)((unsigned long)elf_entry + 4);
+	//	if (copy_to_user(p, &val, sizeof(val)) == 0) {
+	//		printk("write 0x50000000 to elf_entry+4 ok\n");
+	//	} else {
+	//		printk("write to elf_entry+4 failed\n");
+	//	}
+	//}
+	//
+	//if (copy_from_user(buf, (const void __user *)elf_entry, 16) == 0) {
+	//	printk("elf_entry[0]=0x%08x elf_entry[1]=0x%08x "
+	//			"elf_entry[2]=0x%08x elf_entry[3]=0x%08x\n",
+	//			buf[0], buf[1], buf[2], buf[3]);
+	//} else {
+	//	printk("elf_entry @ 0x%x: copy_from_user failed\n", (int)elf_entry);
+	//}
+
+	//if (copy_from_user(buf, (const void __user *)(elf_entry + 0xeb0), 16) == 0) {
+	//	printk("elf_entry + eb0[0]=0x%08x elf_entry[1]=0x%08x "
+	//			"elf_entry[2]=0x%08x elf_entry[3]=0x%08x\n",
+	//			buf[0], buf[1], buf[2], buf[3]);
+	//} else {
+	//	printk("elf_entry @ 0x%x: copy_from_user failed\n", (int)elf_entry);
+	//}
+
 	START_THREAD(elf_ex, regs, elf_entry, bprm->p);
 	retval = 0;
 out:

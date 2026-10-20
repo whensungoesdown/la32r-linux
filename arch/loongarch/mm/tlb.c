@@ -17,6 +17,8 @@
 
 void local_flush_tlb_all(void)
 {
+        // uty: test
+        printk("invtlb_all\n");
 	invtlb_all(INVTLB_CURRENT_ALL, 0, 0);
 }
 EXPORT_SYMBOL(local_flush_tlb_all);
@@ -60,6 +62,9 @@ void local_flush_tlb_range(struct vm_area_struct *vma, unsigned long start,
 			int asid = cpu_asid(cpu, mm);
 
 			while (start < end) {
+
+                                // uty: test
+                                printk("invtlb INVTLB_ADDR_GFALSE_AND_ASID asid=%d, start=0x%x\n", asid, (int)start);
 				invtlb(INVTLB_ADDR_GFALSE_AND_ASID, asid, start);
 				start += (PAGE_SIZE << 1);
 			}
@@ -88,6 +93,8 @@ void local_flush_tlb_kernel_range(unsigned long start, unsigned long end)
 		end &= (PAGE_MASK << 1);
 
 		while (start < end) {
+                        // uty: test
+                        printk("invtlb INVTLB_ADDR_GTRUE_OR_ASID asid=0, start=0x%x\n", (int)start);
 			invtlb_addr(INVTLB_ADDR_GTRUE_OR_ASID, 0, start);
 			start += (PAGE_SIZE << 1);
 		}
@@ -106,6 +113,8 @@ void local_flush_tlb_page(struct vm_area_struct *vma, unsigned long page)
 
 		newpid = cpu_asid(cpu, vma->vm_mm);
 		page &= (PAGE_MASK << 1);
+                // uty: test
+                printk("invtlb INVTLB_ADDR_GFALSE_AND_ASID newpid=%d, page=0x%x\n", newpid, (int)page);
 		invtlb(INVTLB_ADDR_GFALSE_AND_ASID, newpid, page);
 	} else {
 		cpumask_clear_cpu(cpu, mm_cpumask(vma->vm_mm));
@@ -119,6 +128,8 @@ void local_flush_tlb_page(struct vm_area_struct *vma, unsigned long page)
 void local_flush_tlb_one(unsigned long page)
 {
 	page &= (PAGE_MASK << 1);
+        // uty: test
+        printk("invtlb INVTLB_ADDR_GTRUE_OR_ASID asid=0, page=0x%x\n", (int)page);
 	invtlb_addr(INVTLB_ADDR_GTRUE_OR_ASID, 0, page);
 }
 

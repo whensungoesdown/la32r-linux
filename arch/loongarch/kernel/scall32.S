@@ -25,7 +25,8 @@ SYM_FUNC_START(handle_sys)
 	LONG_L	sp, t1, 0
 
 	PTR_ADDIU	sp, sp, -PT_SIZE
-	cfi_st	t1, PT_R3
+	//cfi_st	t1, PT_R3
+	cfi_st	t0, PT_R3
 	cfi_rel_offset  sp, PT_R3
 	csrrd	t1, LOONGARCH_CSR_PRMD
 	LONG_S	t1, sp, PT_PRMD
@@ -63,6 +64,17 @@ SYM_FUNC_START(handle_sys)
 	
 	CLI
 	//
+
+        // uty: test
+        # ---- 串口输出字符 'Z' ----
+        li.w    t0, 0xa0020000           # 串口物理地址
+        li.w    t1, 0x5A
+        st.b    t1, t0, 0
+	li.w    t0, 0xa0020004           # 串口状态寄存器
+1:
+        ld.w    t1, t0, 0                # 读状态
+        bnez    t1, 1b                   # 非 0 则继续等待
+
 
 	/* save the initial A0 value (needed in signal handlers) */
 	LONG_S	a0, sp, PT_ORIG_A0

@@ -93,7 +93,13 @@ SYM_CODE_START(syscall_exit)
 	and	t0, a2, t0
 	bnez	t0, syscall_exit_work
 
+
+	// uty: test
+	//move    a0, sp                  # a0 = &pt_regs
+        //bl      dump_pt_regs_at_restore
+
 restore_all:				# restore full frame
+
 	RESTORE_TEMP
 	RESTORE_STATIC
 restore_partial:		# restore partial frame
@@ -157,7 +163,7 @@ excp_handlers:
         PTR     handle_reserved         /* 0: External interrupt, handled separately */
         PTR     handle_tlb_load         /* 1: TLB miss on a load */
         PTR     handle_tlb_store        /* 2: TLB miss on a store */
-        PTR     handle_tlb_load         /* 3: TLB miss on a ifetch */
+        PTR     handle_tlb_fetch        /* 3: TLB miss on a ifetch */
         PTR     handle_tlb_modify       /* 4: TLB modified fault */
         PTR     handle_reserved         /* 5: Reserved */
         PTR     handle_reserved         /* 6: Reserved */
@@ -173,9 +179,39 @@ excp_handlers:
         PTR     handle_reserved
         .endr
 
+
+.macro R3_OUT_HEX_NIBBLE shift
+    move    t1, $r3
+    srli.w  t1, t1, \shift
+    andi    t1, t1, 0xf
+    slti    t0, t1, 10
+    bnez    t0, 1f
+    addi.w  t1, t1, 0x37          # 'A' - 10
+    b       2f
+1:  addi.w  t1, t1, 0x30          # '0'
+2:  li.w    t0, 0xa0020000        # serial data register
+    st.b    t1, t0, 0
+    li.w    t0, 0xa0020004        # serial status register
+3:  ld.w    t1, t0, 0
+    bnez    t1, 3b
+.endm
+
 SYM_FUNC_START(handle_general_exception)
 
         BACKUP_T0T1
+
+    # Output R3[31:28], [27:24], ..., [3:0]
+//    R3_OUT_HEX_NIBBLE 28
+//    R3_OUT_HEX_NIBBLE 24
+//    R3_OUT_HEX_NIBBLE 20
+//    R3_OUT_HEX_NIBBLE 16
+//    R3_OUT_HEX_NIBBLE 12
+//    R3_OUT_HEX_NIBBLE 8
+//    R3_OUT_HEX_NIBBLE 4
+//    R3_OUT_HEX_NIBBLE 0
+
+	// uty: test
+	CLI
 
         csrrd   t0, LOONGARCH_CSR_ESTAT
         srli.w  t1, t0, 0x10   /* get Ecode */

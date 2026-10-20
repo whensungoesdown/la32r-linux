@@ -446,6 +446,11 @@ asmlinkage void do_ri(struct pt_regs *regs)
 	unsigned int opcode = 0;
 	int status = -1;
 
+	// uty: test
+	printk("Illegal instruction at epc=%lx, badv=%lx, insn=%08x\n",
+			regs->csr_epc, regs->csr_badvaddr,
+			*(unsigned int *)regs->csr_epc);   /* 谨慎，可能触发二次异常 */
+
 	prev_state = exception_enter();
 	current->thread.trap_nr = read_csr_excode();
 
