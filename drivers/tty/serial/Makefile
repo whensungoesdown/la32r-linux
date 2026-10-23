@@ -3,6 +3,9 @@
 # Makefile for the kernel serial device drivers.
 #
 
+# uty: test
+obj-$(CONFIG_SERIAL_SOC2) += soc2_uart.o
+
 obj-$(CONFIG_SERIAL_CORE) += serial_core.o
 
 obj-$(CONFIG_SERIAL_EARLYCON) += earlycon.o

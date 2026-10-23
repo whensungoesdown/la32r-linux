@@ -6,6 +6,15 @@
 menu "Serial drivers"
 	depends on HAS_IOMEM
 
+# uty: test
+config SERIAL_SOC2
+      bool "SoC2 UART support"
+      depends on LOONGARCH
+      select SERIAL_CORE
+      select SERIAL_CORE_CONSOLE
+      help
+        UART of the SoC2 FPGA system (cpu7b).
+
 config SERIAL_EARLYCON
 	bool
 	depends on SERIAL_CORE

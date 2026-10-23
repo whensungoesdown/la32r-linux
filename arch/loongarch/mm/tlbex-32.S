@@ -164,8 +164,8 @@
 	SYM_FUNC_START(tlb_do_page_fault_\write)
 	SAVE_ALL
 	// uty: test
-	move    a0, sp
-    	bl      dump_tlb_pf_caller
+//	move    a0, sp
+//    	bl      dump_tlb_pf_caller
 
 	csrrd	a2, LOONGARCH_CSR_BADV
 	KMODE
@@ -197,45 +197,45 @@ SYM_FUNC_START(handle_tlb_fetch)
         //csrrd   t0, LOONGARCH_CSR_BADV      # t0 = BADV
         //csrwr   t0, LOONGARCH_CSR_TLBEHI    # TLBEHI = t0
 
-        # ---- 串口输出字符 'F' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x46
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-        csrrd   t1, 0x5                // Read ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff
-        addi.w  t1, t1, 0x30           // print '0' or '1'
-        li.w    t0, 0xa0020000           # 串口物理地址
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output BADV[31:28], [27:24], ..., [3:0]
-    OUT_HEX_NIBBLE 28
-    OUT_HEX_NIBBLE 24
-    OUT_HEX_NIBBLE 20
-    OUT_HEX_NIBBLE 16
-    OUT_HEX_NIBBLE 12
-    OUT_HEX_NIBBLE 8
-    OUT_HEX_NIBBLE 4
-    OUT_HEX_NIBBLE 0
-
-    # Output TLBEHI[31:28], [27:24], ..., [3:0]
-    TLBEHI_OUT_HEX_NIBBLE 28
-    TLBEHI_OUT_HEX_NIBBLE 24
-    TLBEHI_OUT_HEX_NIBBLE 20
-    TLBEHI_OUT_HEX_NIBBLE 16
-    TLBEHI_OUT_HEX_NIBBLE 12
-    TLBEHI_OUT_HEX_NIBBLE 8
-    TLBEHI_OUT_HEX_NIBBLE 4
-    TLBEHI_OUT_HEX_NIBBLE 0
+//        # ---- 串口输出字符 'F' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x46
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//        csrrd   t1, 0x5                // Read ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff
+//        addi.w  t1, t1, 0x30           // print '0' or '1'
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//    # Output BADV[31:28], [27:24], ..., [3:0]
+//    OUT_HEX_NIBBLE 28
+//    OUT_HEX_NIBBLE 24
+//    OUT_HEX_NIBBLE 20
+//    OUT_HEX_NIBBLE 16
+//    OUT_HEX_NIBBLE 12
+//    OUT_HEX_NIBBLE 8
+//    OUT_HEX_NIBBLE 4
+//    OUT_HEX_NIBBLE 0
+//
+//    # Output TLBEHI[31:28], [27:24], ..., [3:0]
+//    TLBEHI_OUT_HEX_NIBBLE 28
+//    TLBEHI_OUT_HEX_NIBBLE 24
+//    TLBEHI_OUT_HEX_NIBBLE 20
+//    TLBEHI_OUT_HEX_NIBBLE 16
+//    TLBEHI_OUT_HEX_NIBBLE 12
+//    TLBEHI_OUT_HEX_NIBBLE 8
+//    TLBEHI_OUT_HEX_NIBBLE 4
+//    TLBEHI_OUT_HEX_NIBBLE 0
 
 	// uty: test
 	//set_tlbidx_by_esubcode t0, t1
@@ -292,57 +292,57 @@ label_smp_pgtable_fetch:
         add.w   t0, t0, ra
 	csrwr	t0, LOONGARCH_CSR_TLBELO1
 
-    # Output TLBELO0[31:28], [27:24], ..., [3:0]
-    TLBELO0_OUT_HEX_NIBBLE 28
-    TLBELO0_OUT_HEX_NIBBLE 24
-    TLBELO0_OUT_HEX_NIBBLE 20
-    TLBELO0_OUT_HEX_NIBBLE 16
-    TLBELO0_OUT_HEX_NIBBLE 12
-    TLBELO0_OUT_HEX_NIBBLE 8
-    TLBELO0_OUT_HEX_NIBBLE 4
-    TLBELO0_OUT_HEX_NIBBLE 0
-
-    # Output TLBELO1[31:28], [27:24], ..., [3:0]
-    TLBELO1_OUT_HEX_NIBBLE 28
-    TLBELO1_OUT_HEX_NIBBLE 24
-    TLBELO1_OUT_HEX_NIBBLE 20
-    TLBELO1_OUT_HEX_NIBBLE 16
-    TLBELO1_OUT_HEX_NIBBLE 12
-    TLBELO1_OUT_HEX_NIBBLE 8
-    TLBELO1_OUT_HEX_NIBBLE 4
-    TLBELO1_OUT_HEX_NIBBLE 0
-
-    # Output TLBIDX[31:28], [27:24], ..., [3:0]
-    TLBIDX_OUT_HEX_NIBBLE 28
-    TLBIDX_OUT_HEX_NIBBLE 24
-    TLBIDX_OUT_HEX_NIBBLE 20
-    TLBIDX_OUT_HEX_NIBBLE 16
-    TLBIDX_OUT_HEX_NIBBLE 12
-    TLBIDX_OUT_HEX_NIBBLE 8
-    TLBIDX_OUT_HEX_NIBBLE 4
-    TLBIDX_OUT_HEX_NIBBLE 0
-
+//    # Output TLBELO0[31:28], [27:24], ..., [3:0]
+//    TLBELO0_OUT_HEX_NIBBLE 28
+//    TLBELO0_OUT_HEX_NIBBLE 24
+//    TLBELO0_OUT_HEX_NIBBLE 20
+//    TLBELO0_OUT_HEX_NIBBLE 16
+//    TLBELO0_OUT_HEX_NIBBLE 12
+//    TLBELO0_OUT_HEX_NIBBLE 8
+//    TLBELO0_OUT_HEX_NIBBLE 4
+//    TLBELO0_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBELO1[31:28], [27:24], ..., [3:0]
+//    TLBELO1_OUT_HEX_NIBBLE 28
+//    TLBELO1_OUT_HEX_NIBBLE 24
+//    TLBELO1_OUT_HEX_NIBBLE 20
+//    TLBELO1_OUT_HEX_NIBBLE 16
+//    TLBELO1_OUT_HEX_NIBBLE 12
+//    TLBELO1_OUT_HEX_NIBBLE 8
+//    TLBELO1_OUT_HEX_NIBBLE 4
+//    TLBELO1_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBIDX[31:28], [27:24], ..., [3:0]
+//    TLBIDX_OUT_HEX_NIBBLE 28
+//    TLBIDX_OUT_HEX_NIBBLE 24
+//    TLBIDX_OUT_HEX_NIBBLE 20
+//    TLBIDX_OUT_HEX_NIBBLE 16
+//    TLBIDX_OUT_HEX_NIBBLE 12
+//    TLBIDX_OUT_HEX_NIBBLE 8
+//    TLBIDX_OUT_HEX_NIBBLE 4
+//    TLBIDX_OUT_HEX_NIBBLE 0
+//
 	tlbwr
-        // uty: test
-        # ---- 串口输出字符 'f' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x66
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-
-    # Output EPC[31:28], [27:24], ..., [3:0]
-    EPC_OUT_HEX_NIBBLE 28
-    EPC_OUT_HEX_NIBBLE 24
-    EPC_OUT_HEX_NIBBLE 20
-    EPC_OUT_HEX_NIBBLE 16
-    EPC_OUT_HEX_NIBBLE 12
-    EPC_OUT_HEX_NIBBLE 8
-    EPC_OUT_HEX_NIBBLE 4
-    EPC_OUT_HEX_NIBBLE 0
+//        // uty: test
+//        # ---- 串口输出字符 'f' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x66
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//
+//    # Output EPC[31:28], [27:24], ..., [3:0]
+//    EPC_OUT_HEX_NIBBLE 28
+//    EPC_OUT_HEX_NIBBLE 24
+//    EPC_OUT_HEX_NIBBLE 20
+//    EPC_OUT_HEX_NIBBLE 16
+//    EPC_OUT_HEX_NIBBLE 12
+//    EPC_OUT_HEX_NIBBLE 8
+//    EPC_OUT_HEX_NIBBLE 4
+//    EPC_OUT_HEX_NIBBLE 0
 
 	csrrd	t0, LOONGARCH_CSR_KS0
 	csrrd	t1, LOONGARCH_CSR_KS1
@@ -374,45 +374,45 @@ SYM_FUNC_START(handle_tlb_load)
         //csrrd   t0, LOONGARCH_CSR_BADV      # t0 = BADV
         //csrwr   t0, LOONGARCH_CSR_TLBEHI    # TLBEHI = t0
 
-        # ---- 串口输出字符 'L' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x4c
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-        csrrd   t1, 0x5                // Read ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff
-        addi.w  t1, t1, 0x30           // print '0' or '1'
-        li.w    t0, 0xa0020000           # 串口物理地址
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output BADV[31:28], [27:24], ..., [3:0]
-    OUT_HEX_NIBBLE 28
-    OUT_HEX_NIBBLE 24
-    OUT_HEX_NIBBLE 20
-    OUT_HEX_NIBBLE 16
-    OUT_HEX_NIBBLE 12
-    OUT_HEX_NIBBLE 8
-    OUT_HEX_NIBBLE 4
-    OUT_HEX_NIBBLE 0
-
-    # Output TLBEHI[31:28], [27:24], ..., [3:0]
-    TLBEHI_OUT_HEX_NIBBLE 28
-    TLBEHI_OUT_HEX_NIBBLE 24
-    TLBEHI_OUT_HEX_NIBBLE 20
-    TLBEHI_OUT_HEX_NIBBLE 16
-    TLBEHI_OUT_HEX_NIBBLE 12
-    TLBEHI_OUT_HEX_NIBBLE 8
-    TLBEHI_OUT_HEX_NIBBLE 4
-    TLBEHI_OUT_HEX_NIBBLE 0
+//        # ---- 串口输出字符 'L' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x4c
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//        csrrd   t1, 0x5                // Read ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff
+//        addi.w  t1, t1, 0x30           // print '0' or '1'
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//    # Output BADV[31:28], [27:24], ..., [3:0]
+//    OUT_HEX_NIBBLE 28
+//    OUT_HEX_NIBBLE 24
+//    OUT_HEX_NIBBLE 20
+//    OUT_HEX_NIBBLE 16
+//    OUT_HEX_NIBBLE 12
+//    OUT_HEX_NIBBLE 8
+//    OUT_HEX_NIBBLE 4
+//    OUT_HEX_NIBBLE 0
+//
+//    # Output TLBEHI[31:28], [27:24], ..., [3:0]
+//    TLBEHI_OUT_HEX_NIBBLE 28
+//    TLBEHI_OUT_HEX_NIBBLE 24
+//    TLBEHI_OUT_HEX_NIBBLE 20
+//    TLBEHI_OUT_HEX_NIBBLE 16
+//    TLBEHI_OUT_HEX_NIBBLE 12
+//    TLBEHI_OUT_HEX_NIBBLE 8
+//    TLBEHI_OUT_HEX_NIBBLE 4
+//    TLBEHI_OUT_HEX_NIBBLE 0
 
 	// uty: test
 	//set_tlbidx_by_esubcode t0, t1
@@ -467,47 +467,47 @@ label_smp_pgtable_load:
         add.w   t0, t0, ra
 	csrwr	t0, LOONGARCH_CSR_TLBELO1
 
-    # Output TLBELO0[31:28], [27:24], ..., [3:0]
-    TLBELO0_OUT_HEX_NIBBLE 28
-    TLBELO0_OUT_HEX_NIBBLE 24
-    TLBELO0_OUT_HEX_NIBBLE 20
-    TLBELO0_OUT_HEX_NIBBLE 16
-    TLBELO0_OUT_HEX_NIBBLE 12
-    TLBELO0_OUT_HEX_NIBBLE 8
-    TLBELO0_OUT_HEX_NIBBLE 4
-    TLBELO0_OUT_HEX_NIBBLE 0
-
-    # Output TLBELO1[31:28], [27:24], ..., [3:0]
-    TLBELO1_OUT_HEX_NIBBLE 28
-    TLBELO1_OUT_HEX_NIBBLE 24
-    TLBELO1_OUT_HEX_NIBBLE 20
-    TLBELO1_OUT_HEX_NIBBLE 16
-    TLBELO1_OUT_HEX_NIBBLE 12
-    TLBELO1_OUT_HEX_NIBBLE 8
-    TLBELO1_OUT_HEX_NIBBLE 4
-    TLBELO1_OUT_HEX_NIBBLE 0
-
-    # Output TLBIDX[31:28], [27:24], ..., [3:0]
-    TLBIDX_OUT_HEX_NIBBLE 28
-    TLBIDX_OUT_HEX_NIBBLE 24
-    TLBIDX_OUT_HEX_NIBBLE 20
-    TLBIDX_OUT_HEX_NIBBLE 16
-    TLBIDX_OUT_HEX_NIBBLE 12
-    TLBIDX_OUT_HEX_NIBBLE 8
-    TLBIDX_OUT_HEX_NIBBLE 4
-    TLBIDX_OUT_HEX_NIBBLE 0
+//    # Output TLBELO0[31:28], [27:24], ..., [3:0]
+//    TLBELO0_OUT_HEX_NIBBLE 28
+//    TLBELO0_OUT_HEX_NIBBLE 24
+//    TLBELO0_OUT_HEX_NIBBLE 20
+//    TLBELO0_OUT_HEX_NIBBLE 16
+//    TLBELO0_OUT_HEX_NIBBLE 12
+//    TLBELO0_OUT_HEX_NIBBLE 8
+//    TLBELO0_OUT_HEX_NIBBLE 4
+//    TLBELO0_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBELO1[31:28], [27:24], ..., [3:0]
+//    TLBELO1_OUT_HEX_NIBBLE 28
+//    TLBELO1_OUT_HEX_NIBBLE 24
+//    TLBELO1_OUT_HEX_NIBBLE 20
+//    TLBELO1_OUT_HEX_NIBBLE 16
+//    TLBELO1_OUT_HEX_NIBBLE 12
+//    TLBELO1_OUT_HEX_NIBBLE 8
+//    TLBELO1_OUT_HEX_NIBBLE 4
+//    TLBELO1_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBIDX[31:28], [27:24], ..., [3:0]
+//    TLBIDX_OUT_HEX_NIBBLE 28
+//    TLBIDX_OUT_HEX_NIBBLE 24
+//    TLBIDX_OUT_HEX_NIBBLE 20
+//    TLBIDX_OUT_HEX_NIBBLE 16
+//    TLBIDX_OUT_HEX_NIBBLE 12
+//    TLBIDX_OUT_HEX_NIBBLE 8
+//    TLBIDX_OUT_HEX_NIBBLE 4
+//    TLBIDX_OUT_HEX_NIBBLE 0
 
 
 	tlbwr
-        // uty: test
-        # ---- 串口输出字符 'l' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x6c
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
+//        // uty: test
+//        # ---- 串口输出字符 'l' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x6c
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 
 	csrrd	t0, LOONGARCH_CSR_KS0
 	csrrd	t1, LOONGARCH_CSR_KS1
@@ -541,46 +541,46 @@ SYM_FUNC_START(handle_tlb_store)
         //csrrd   t0, LOONGARCH_CSR_BADV      # t0 = BADV
         //csrwr   t0, LOONGARCH_CSR_TLBEHI    # TLBEHI = t0
 
-        # ---- 串口输出字符 'S' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x53
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-
-        csrrd   t1, 0x5                // Read ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff
-        addi.w  t1, t1, 0x30           // print '0' or '1'
-        li.w    t0, 0xa0020000           # 串口物理地址
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output BADV[31:28], [27:24], ..., [3:0]
-    OUT_HEX_NIBBLE 28
-    OUT_HEX_NIBBLE 24
-    OUT_HEX_NIBBLE 20
-    OUT_HEX_NIBBLE 16
-    OUT_HEX_NIBBLE 12
-    OUT_HEX_NIBBLE 8
-    OUT_HEX_NIBBLE 4
-    OUT_HEX_NIBBLE 0
-
-    # Output TLBEHI[31:28], [27:24], ..., [3:0]
-    TLBEHI_OUT_HEX_NIBBLE 28
-    TLBEHI_OUT_HEX_NIBBLE 24
-    TLBEHI_OUT_HEX_NIBBLE 20
-    TLBEHI_OUT_HEX_NIBBLE 16
-    TLBEHI_OUT_HEX_NIBBLE 12
-    TLBEHI_OUT_HEX_NIBBLE 8
-    TLBEHI_OUT_HEX_NIBBLE 4
-    TLBEHI_OUT_HEX_NIBBLE 0
+//        # ---- 串口输出字符 'S' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x53
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//
+//        csrrd   t1, 0x5                // Read ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff
+//        addi.w  t1, t1, 0x30           // print '0' or '1'
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//    # Output BADV[31:28], [27:24], ..., [3:0]
+//    OUT_HEX_NIBBLE 28
+//    OUT_HEX_NIBBLE 24
+//    OUT_HEX_NIBBLE 20
+//    OUT_HEX_NIBBLE 16
+//    OUT_HEX_NIBBLE 12
+//    OUT_HEX_NIBBLE 8
+//    OUT_HEX_NIBBLE 4
+//    OUT_HEX_NIBBLE 0
+//
+//    # Output TLBEHI[31:28], [27:24], ..., [3:0]
+//    TLBEHI_OUT_HEX_NIBBLE 28
+//    TLBEHI_OUT_HEX_NIBBLE 24
+//    TLBEHI_OUT_HEX_NIBBLE 20
+//    TLBEHI_OUT_HEX_NIBBLE 16
+//    TLBEHI_OUT_HEX_NIBBLE 12
+//    TLBEHI_OUT_HEX_NIBBLE 8
+//    TLBEHI_OUT_HEX_NIBBLE 4
+//    TLBEHI_OUT_HEX_NIBBLE 0
 
 	// uty: test
 	//set_tlbidx_by_esubcode t0, t1
@@ -635,57 +635,57 @@ label_smp_pgtable_store:
         add.w   t1, t1, ra
 	csrwr	t1, LOONGARCH_CSR_TLBELO1
 
-    # Output TLBELO0[31:28], [27:24], ..., [3:0]
-    TLBELO0_OUT_HEX_NIBBLE 28
-    TLBELO0_OUT_HEX_NIBBLE 24
-    TLBELO0_OUT_HEX_NIBBLE 20
-    TLBELO0_OUT_HEX_NIBBLE 16
-    TLBELO0_OUT_HEX_NIBBLE 12
-    TLBELO0_OUT_HEX_NIBBLE 8
-    TLBELO0_OUT_HEX_NIBBLE 4
-    TLBELO0_OUT_HEX_NIBBLE 0
-
-    # Output TLBELO1[31:28], [27:24], ..., [3:0]
-    TLBELO1_OUT_HEX_NIBBLE 28
-    TLBELO1_OUT_HEX_NIBBLE 24
-    TLBELO1_OUT_HEX_NIBBLE 20
-    TLBELO1_OUT_HEX_NIBBLE 16
-    TLBELO1_OUT_HEX_NIBBLE 12
-    TLBELO1_OUT_HEX_NIBBLE 8
-    TLBELO1_OUT_HEX_NIBBLE 4
-    TLBELO1_OUT_HEX_NIBBLE 0
-
-    # Output TLBIDX[31:28], [27:24], ..., [3:0]
-    TLBIDX_OUT_HEX_NIBBLE 28
-    TLBIDX_OUT_HEX_NIBBLE 24
-    TLBIDX_OUT_HEX_NIBBLE 20
-    TLBIDX_OUT_HEX_NIBBLE 16
-    TLBIDX_OUT_HEX_NIBBLE 12
-    TLBIDX_OUT_HEX_NIBBLE 8
-    TLBIDX_OUT_HEX_NIBBLE 4
-    TLBIDX_OUT_HEX_NIBBLE 0
+//    # Output TLBELO0[31:28], [27:24], ..., [3:0]
+//    TLBELO0_OUT_HEX_NIBBLE 28
+//    TLBELO0_OUT_HEX_NIBBLE 24
+//    TLBELO0_OUT_HEX_NIBBLE 20
+//    TLBELO0_OUT_HEX_NIBBLE 16
+//    TLBELO0_OUT_HEX_NIBBLE 12
+//    TLBELO0_OUT_HEX_NIBBLE 8
+//    TLBELO0_OUT_HEX_NIBBLE 4
+//    TLBELO0_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBELO1[31:28], [27:24], ..., [3:0]
+//    TLBELO1_OUT_HEX_NIBBLE 28
+//    TLBELO1_OUT_HEX_NIBBLE 24
+//    TLBELO1_OUT_HEX_NIBBLE 20
+//    TLBELO1_OUT_HEX_NIBBLE 16
+//    TLBELO1_OUT_HEX_NIBBLE 12
+//    TLBELO1_OUT_HEX_NIBBLE 8
+//    TLBELO1_OUT_HEX_NIBBLE 4
+//    TLBELO1_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBIDX[31:28], [27:24], ..., [3:0]
+//    TLBIDX_OUT_HEX_NIBBLE 28
+//    TLBIDX_OUT_HEX_NIBBLE 24
+//    TLBIDX_OUT_HEX_NIBBLE 20
+//    TLBIDX_OUT_HEX_NIBBLE 16
+//    TLBIDX_OUT_HEX_NIBBLE 12
+//    TLBIDX_OUT_HEX_NIBBLE 8
+//    TLBIDX_OUT_HEX_NIBBLE 4
+//    TLBIDX_OUT_HEX_NIBBLE 0
 
 	tlbwr
 
-        // uty: test
-        # ---- 串口输出字符 's' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x73
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output EPC[31:28], [27:24], ..., [3:0]
-    EPC_OUT_HEX_NIBBLE 28
-    EPC_OUT_HEX_NIBBLE 24
-    EPC_OUT_HEX_NIBBLE 20
-    EPC_OUT_HEX_NIBBLE 16
-    EPC_OUT_HEX_NIBBLE 12
-    EPC_OUT_HEX_NIBBLE 8
-    EPC_OUT_HEX_NIBBLE 4
-    EPC_OUT_HEX_NIBBLE 0
+//        // uty: test
+//        # ---- 串口输出字符 's' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x73
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//    # Output EPC[31:28], [27:24], ..., [3:0]
+//    EPC_OUT_HEX_NIBBLE 28
+//    EPC_OUT_HEX_NIBBLE 24
+//    EPC_OUT_HEX_NIBBLE 20
+//    EPC_OUT_HEX_NIBBLE 16
+//    EPC_OUT_HEX_NIBBLE 12
+//    EPC_OUT_HEX_NIBBLE 8
+//    EPC_OUT_HEX_NIBBLE 4
+//    EPC_OUT_HEX_NIBBLE 0
 
 	csrrd   t0, LOONGARCH_CSR_KS0
 	csrrd	t1, LOONGARCH_CSR_KS1
@@ -716,25 +716,25 @@ SYM_FUNC_START(handle_tlb_modify)
         //csrrd   t0, LOONGARCH_CSR_BADV      # t0 = BADV
         //csrwr   t0, LOONGARCH_CSR_TLBEHI    # TLBEHI = t0
 
-        # ---- 串口输出字符 'M' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x4d
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-        csrrd   t1, 0x5                // Read ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff
-        addi.w  t1, t1, 0x30           // print '0' or '1'
-        li.w    t0, 0xa0020000           # 串口物理地址
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
+//        # ---- 串口输出字符 'M' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x4d
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//        csrrd   t1, 0x5                // Read ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff
+//        addi.w  t1, t1, 0x30           // print '0' or '1'
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 
 	// uty: test
 	//set_tlbidx_by_esubcode t0, t1
@@ -794,15 +794,15 @@ label_smp_pgtable_modify:
 
 	tlbwr
 
-        // uty: test
-        # ---- 串口输出字符 'm' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x6d
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
+//        // uty: test
+//        # ---- 串口输出字符 'm' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x6d
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 
 	csrrd	t0, LOONGARCH_CSR_KS0
 	csrrd	t1, LOONGARCH_CSR_KS1
@@ -835,88 +835,88 @@ SYM_FUNC_START(handle_tlb_refill)
         //csrrd   t0, LOONGARCH_CSR_BADV      # t0 = BADV
         //csrwr   t0, LOONGARCH_CSR_TLBEHI    # TLBEHI = t0
 
-        # ---- 串口输出字符 'R' ----
-        li.w    t0, 0x20000           # 串口物理地址
-        li.w    t1, 0x52
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-        csrrd   t1, 0x5                // Read ESTAT
-        srli.w  t1, t1, 22
-        andi    t1, t1, 0x1ff
-        addi.w  t1, t1, 0x30           // print '0' or '1'
-        li.w    t0, 0x20000           # 串口物理地址
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output KS0[31:28], [27:24], ..., [3:0]
-    KS0_OUT_HEX_NIBBLE 28
-    KS0_OUT_HEX_NIBBLE 24
-    KS0_OUT_HEX_NIBBLE 20
-    KS0_OUT_HEX_NIBBLE 16
-    KS0_OUT_HEX_NIBBLE 12
-    KS0_OUT_HEX_NIBBLE 8
-    KS0_OUT_HEX_NIBBLE 4
-    KS0_OUT_HEX_NIBBLE 0
-
-//    # ---- 输出 BADV 最高字节 (31:24) ----
-//    csrrd   t1, LOONGARCH_CSR_BADV   # 读 BADV
-//    srli.w  t1, t1, 24               # 右移 24 位，取最高字节
-//    andi    t1, t1, 0xff             # 只保留低 8 位
-//    li.w    t0, 0x20000              # 串口数据寄存器
-//    st.b    t1, t0, 0                # 写字节到串口
-//    li.w    t0, 0xa0020004           # 串口状态寄存器
+//        # ---- 串口输出字符 'R' ----
+//        li.w    t0, 0x20000           # 串口物理地址
+//        li.w    t1, 0x52
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
 //1:
-//    ld.w    t1, t0, 0                # 读状态
-//    bnez    t1, 1b                   # 非 0 则等待
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 //
-//    # ---- 输出 BADV 次高字节 (23:16) ----
-//    csrrd   t1, LOONGARCH_CSR_BADV
-//    srli.w  t1, t1, 16
-//    andi    t1, t1, 0xff
-//    li.w    t0, 0x20000
-//    st.b    t1, t0, 0
-//    li.w    t0, 0xa0020004
-//2:
-//    ld.w    t1, t0, 0
-//    bnez    t1, 2b
+//        csrrd   t1, 0x5                // Read ESTAT
+//        srli.w  t1, t1, 22
+//        andi    t1, t1, 0x1ff
+//        addi.w  t1, t1, 0x30           // print '0' or '1'
+//        li.w    t0, 0x20000           # 串口物理地址
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 //
-//    # ---- 输出 BADV 字节 (15:8) ----
-//    csrrd   t1, LOONGARCH_CSR_BADV
-//    srli.w  t1, t1, 8
-//    andi    t1, t1, 0xff
-//    li.w    t0, 0x20000
-//    st.b    t1, t0, 0
-//    li.w    t0, 0xa0020004
-//3:
-//    ld.w    t1, t0, 0
-//    bnez    t1, 3b
+//    # Output KS0[31:28], [27:24], ..., [3:0]
+//    KS0_OUT_HEX_NIBBLE 28
+//    KS0_OUT_HEX_NIBBLE 24
+//    KS0_OUT_HEX_NIBBLE 20
+//    KS0_OUT_HEX_NIBBLE 16
+//    KS0_OUT_HEX_NIBBLE 12
+//    KS0_OUT_HEX_NIBBLE 8
+//    KS0_OUT_HEX_NIBBLE 4
+//    KS0_OUT_HEX_NIBBLE 0
 //
-//    # ---- 输出 BADV 最低字节 (7:0) ----
-//    csrrd   t1, LOONGARCH_CSR_BADV
-//    andi    t1, t1, 0xff
-//    li.w    t0, 0x20000
-//    st.b    t1, t0, 0
-//    li.w    t0, 0xa0020004
-//4:
-//    ld.w    t1, t0, 0
-//    bnez    t1, 4b
-
-    # Output BADV[31:28], [27:24], ..., [3:0]
-    OUT_HEX_NIBBLE 28
-    OUT_HEX_NIBBLE 24
-    OUT_HEX_NIBBLE 20
-    OUT_HEX_NIBBLE 16
-    OUT_HEX_NIBBLE 12
-    OUT_HEX_NIBBLE 8
-    OUT_HEX_NIBBLE 4
-    OUT_HEX_NIBBLE 0
+////    # ---- 输出 BADV 最高字节 (31:24) ----
+////    csrrd   t1, LOONGARCH_CSR_BADV   # 读 BADV
+////    srli.w  t1, t1, 24               # 右移 24 位，取最高字节
+////    andi    t1, t1, 0xff             # 只保留低 8 位
+////    li.w    t0, 0x20000              # 串口数据寄存器
+////    st.b    t1, t0, 0                # 写字节到串口
+////    li.w    t0, 0xa0020004           # 串口状态寄存器
+////1:
+////    ld.w    t1, t0, 0                # 读状态
+////    bnez    t1, 1b                   # 非 0 则等待
+////
+////    # ---- 输出 BADV 次高字节 (23:16) ----
+////    csrrd   t1, LOONGARCH_CSR_BADV
+////    srli.w  t1, t1, 16
+////    andi    t1, t1, 0xff
+////    li.w    t0, 0x20000
+////    st.b    t1, t0, 0
+////    li.w    t0, 0xa0020004
+////2:
+////    ld.w    t1, t0, 0
+////    bnez    t1, 2b
+////
+////    # ---- 输出 BADV 字节 (15:8) ----
+////    csrrd   t1, LOONGARCH_CSR_BADV
+////    srli.w  t1, t1, 8
+////    andi    t1, t1, 0xff
+////    li.w    t0, 0x20000
+////    st.b    t1, t0, 0
+////    li.w    t0, 0xa0020004
+////3:
+////    ld.w    t1, t0, 0
+////    bnez    t1, 3b
+////
+////    # ---- 输出 BADV 最低字节 (7:0) ----
+////    csrrd   t1, LOONGARCH_CSR_BADV
+////    andi    t1, t1, 0xff
+////    li.w    t0, 0x20000
+////    st.b    t1, t0, 0
+////    li.w    t0, 0xa0020004
+////4:
+////    ld.w    t1, t0, 0
+////    bnez    t1, 4b
+//
+//    # Output BADV[31:28], [27:24], ..., [3:0]
+//    OUT_HEX_NIBBLE 28
+//    OUT_HEX_NIBBLE 24
+//    OUT_HEX_NIBBLE 20
+//    OUT_HEX_NIBBLE 16
+//    OUT_HEX_NIBBLE 12
+//    OUT_HEX_NIBBLE 8
+//    OUT_HEX_NIBBLE 4
+//    OUT_HEX_NIBBLE 0
 
 //        # ---- 读取 TLBIDX 并清除 I_D 位 ----
 //        csrrd   t0, 0x10              # t0 = TLBIDX
@@ -994,35 +994,35 @@ SYM_FUNC_START(handle_tlb_refill)
         add.w   t1, t1, ra
 	csrwr	t1, LOONGARCH_CSR_TLBELO1
 
-    # Output TLBELO0[31:28], [27:24], ..., [3:0]
-    TLBELO0_OUT_HEX_NIBBLE 28
-    TLBELO0_OUT_HEX_NIBBLE 24
-    TLBELO0_OUT_HEX_NIBBLE 20
-    TLBELO0_OUT_HEX_NIBBLE 16
-    TLBELO0_OUT_HEX_NIBBLE 12
-    TLBELO0_OUT_HEX_NIBBLE 8
-    TLBELO0_OUT_HEX_NIBBLE 4
-    TLBELO0_OUT_HEX_NIBBLE 0
-
-    # Output TLBELO1[31:28], [27:24], ..., [3:0]
-    TLBELO1_OUT_HEX_NIBBLE 28
-    TLBELO1_OUT_HEX_NIBBLE 24
-    TLBELO1_OUT_HEX_NIBBLE 20
-    TLBELO1_OUT_HEX_NIBBLE 16
-    TLBELO1_OUT_HEX_NIBBLE 12
-    TLBELO1_OUT_HEX_NIBBLE 8
-    TLBELO1_OUT_HEX_NIBBLE 4
-    TLBELO1_OUT_HEX_NIBBLE 0
-
-    # Output TLBIDX[31:28], [27:24], ..., [3:0]
-    TLBIDX_OUT_HEX_NIBBLE 28
-    TLBIDX_OUT_HEX_NIBBLE 24
-    TLBIDX_OUT_HEX_NIBBLE 20
-    TLBIDX_OUT_HEX_NIBBLE 16
-    TLBIDX_OUT_HEX_NIBBLE 12
-    TLBIDX_OUT_HEX_NIBBLE 8
-    TLBIDX_OUT_HEX_NIBBLE 4
-    TLBIDX_OUT_HEX_NIBBLE 0
+//    # Output TLBELO0[31:28], [27:24], ..., [3:0]
+//    TLBELO0_OUT_HEX_NIBBLE 28
+//    TLBELO0_OUT_HEX_NIBBLE 24
+//    TLBELO0_OUT_HEX_NIBBLE 20
+//    TLBELO0_OUT_HEX_NIBBLE 16
+//    TLBELO0_OUT_HEX_NIBBLE 12
+//    TLBELO0_OUT_HEX_NIBBLE 8
+//    TLBELO0_OUT_HEX_NIBBLE 4
+//    TLBELO0_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBELO1[31:28], [27:24], ..., [3:0]
+//    TLBELO1_OUT_HEX_NIBBLE 28
+//    TLBELO1_OUT_HEX_NIBBLE 24
+//    TLBELO1_OUT_HEX_NIBBLE 20
+//    TLBELO1_OUT_HEX_NIBBLE 16
+//    TLBELO1_OUT_HEX_NIBBLE 12
+//    TLBELO1_OUT_HEX_NIBBLE 8
+//    TLBELO1_OUT_HEX_NIBBLE 4
+//    TLBELO1_OUT_HEX_NIBBLE 0
+//
+//    # Output TLBIDX[31:28], [27:24], ..., [3:0]
+//    TLBIDX_OUT_HEX_NIBBLE 28
+//    TLBIDX_OUT_HEX_NIBBLE 24
+//    TLBIDX_OUT_HEX_NIBBLE 20
+//    TLBIDX_OUT_HEX_NIBBLE 16
+//    TLBIDX_OUT_HEX_NIBBLE 12
+//    TLBIDX_OUT_HEX_NIBBLE 8
+//    TLBIDX_OUT_HEX_NIBBLE 4
+//    TLBIDX_OUT_HEX_NIBBLE 0
 
 	# uty: test
 	#csrrd   t1, LOONGARCH_CSR_BADV
@@ -1032,24 +1032,24 @@ SYM_FUNC_START(handle_tlb_refill)
 
 	tlbfill
 
-        # ---- 串口输出字符 'r' ----
-        li.w    t0, 0x20000           # 串口物理地址
-        li.w    t1, 0x72
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
-
-    # Output KS0[31:28], [27:24], ..., [3:0]
-    KS0_OUT_HEX_NIBBLE 28
-    KS0_OUT_HEX_NIBBLE 24
-    KS0_OUT_HEX_NIBBLE 20
-    KS0_OUT_HEX_NIBBLE 16
-    KS0_OUT_HEX_NIBBLE 12
-    KS0_OUT_HEX_NIBBLE 8
-    KS0_OUT_HEX_NIBBLE 4
-    KS0_OUT_HEX_NIBBLE 0
+//        # ---- 串口输出字符 'r' ----
+//        li.w    t0, 0x20000           # 串口物理地址
+//        li.w    t1, 0x72
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
+//
+//    # Output KS0[31:28], [27:24], ..., [3:0]
+//    KS0_OUT_HEX_NIBBLE 28
+//    KS0_OUT_HEX_NIBBLE 24
+//    KS0_OUT_HEX_NIBBLE 20
+//    KS0_OUT_HEX_NIBBLE 16
+//    KS0_OUT_HEX_NIBBLE 12
+//    KS0_OUT_HEX_NIBBLE 8
+//    KS0_OUT_HEX_NIBBLE 4
+//    KS0_OUT_HEX_NIBBLE 0
 
 	csrrd	t0, LOONGARCH_CSR_KS0
 	csrrd   t1, LOONGARCH_CSR_KS1

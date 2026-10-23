@@ -65,15 +65,15 @@ SYM_FUNC_START(handle_sys)
 	CLI
 	//
 
-        // uty: test
-        # ---- 串口输出字符 'Z' ----
-        li.w    t0, 0xa0020000           # 串口物理地址
-        li.w    t1, 0x5A
-        st.b    t1, t0, 0
-	li.w    t0, 0xa0020004           # 串口状态寄存器
-1:
-        ld.w    t1, t0, 0                # 读状态
-        bnez    t1, 1b                   # 非 0 则继续等待
+//        // uty: test
+//        # ---- 串口输出字符 'Z' ----
+//        li.w    t0, 0xa0020000           # 串口物理地址
+//        li.w    t1, 0x5A
+//        st.b    t1, t0, 0
+//	li.w    t0, 0xa0020004           # 串口状态寄存器
+//1:
+//        ld.w    t1, t0, 0                # 读状态
+//        bnez    t1, 1b                   # 非 0 则继续等待
 
 
 	/* save the initial A0 value (needed in signal handlers) */

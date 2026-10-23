@@ -36,10 +36,34 @@
 //}
 
 // uty: test
+//void mach_irq_dispatch(unsigned int pending)
+//{
+//        if (pending & 0x8) // SOC2, IS[3] is timer interrupt
+//                do_IRQ(LOONGSON_TIMER_IRQ);
+//        else if (pending & 0x10) {
+//                unsigned char c = readl((void __iomem *)0xa0020000) & 0xff;  // clears uart_intr
+//                printk("uart rx: %02x\n", c);
+//        }
+//}
+
+#ifdef CONFIG_SERIAL_SOC2
+extern void soc2_uart_interrupt(void);
+#endif
+
 void mach_irq_dispatch(unsigned int pending)
 {
-        if (pending & 0x8) // SOC2, IS[3] is timer interrupt
+        if (pending & 0x8)              // SOC2, IS[3] is timer interrupt
                 do_IRQ(LOONGSON_TIMER_IRQ);
+
+        if (pending & 0x10) {           // SOC2, IS[4] is UART RX
+#ifdef CONFIG_SERIAL_SOC2
+                irq_enter();
+                soc2_uart_interrupt();
+                irq_exit();
+#else
+                readl((void __iomem *)0xa0020000);   // just clear it
+#endif
+        }
 }
 
 //asmlinkage void plat_irq_dispatch(int irq)
@@ -68,7 +92,7 @@ asmlinkage void plat_irq_dispatch(int irq)
                 epc = read_csr_epc();
                 tcfg = read_csr_tcfg();
                 estat = read_csr_estat();
-                printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
+                //printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
         }
         //pending = read_csr_estat() & read_csr_ecfg();
         pending = read_csr_estat(); // ecfg not implemented yet

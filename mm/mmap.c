@@ -204,8 +204,8 @@ SYSCALL_DEFINE1(brk, unsigned long, brk)
 	LIST_HEAD(uf);
 
 	// uty: test
-	printk("brk() brk=0x%lx\n", brk);
-        printk("brk() brk=0x%lx, user r3(sp)=0x%lx\n", brk, current_pt_regs()->regs[3]);
+//	printk("brk() brk=0x%lx\n", brk);
+//        printk("brk() brk=0x%lx, user r3(sp)=0x%lx\n", brk, current_pt_regs()->regs[3]);
 
 
 	if (mmap_write_lock_killable(mm))

@@ -957,7 +957,7 @@ SYSCALL_DEFINE0(getuid)
 SYSCALL_DEFINE0(geteuid)
 {
 	// uty: test
-	printk("geteuid\n");
+	//printk("geteuid\n");
 	/* Only we change this so SMP safe */
 	return from_kuid_munged(current_user_ns(), current_euid());
 }
