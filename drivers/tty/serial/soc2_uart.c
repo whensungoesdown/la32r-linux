@@ -8,8 +8,9 @@
  *   0x4  STATUS  bit 0: TX busy
  *
  * A received byte raises ESTAT.IS bit 4 (level, cleared by reading DR).
- * There is no TX interrupt and no FIFO, so transmit is polled. The line is
- * fixed at 115200 8N1 in hardware.
+ * The interrupt is enabled through ECFG.LIE bit 4 only while the port is
+ * open. There is no TX interrupt and no FIFO, so transmit is polled. The
+ * line is fixed at 115200 8N1 in hardware.
  */
 #include <linux/console.h>
 #include <linux/init.h>
@@ -18,11 +19,14 @@
 #include <linux/serial_core.h>
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
+#include <asm/loongarchregs.h>
 
 #define SOC2_UART_BASE		0xa0020000
 #define SOC2_UART_DR		0x0
 #define SOC2_UART_STATUS	0x4
 #define SOC2_UART_TX_BUSY	0x1
+
+#define SOC2_ECFG_UART		(1 << 4)	/* ECFG.LIE / ESTAT.IS bit 4 */
 
 #define SOC2_UART_BAUD		115200
 #define PORT_SOC2		200	/* any value other than PORT_UNKNOWN */
@@ -105,8 +109,10 @@ static void soc2_start_tx(struct uart_port *port)
 	uart_write_wakeup(port);
 }
 
+/* called with port->lock held and interrupts off */
 static void soc2_stop_rx(struct uart_port *port)
 {
+	clear_csr_ecfg(SOC2_ECFG_UART);
 }
 
 static void soc2_break_ctl(struct uart_port *port, int break_state)
@@ -115,11 +121,24 @@ static void soc2_break_ctl(struct uart_port *port, int break_state)
 
 static int soc2_startup(struct uart_port *port)
 {
+	unsigned long flags;
+
+	/* set_csr_ecfg() is a read-modify-write of ECFG */
+	local_irq_save(flags);
+	/* drop a byte received while the port was closed, clears the interrupt */
+	readl(port->membase + SOC2_UART_DR);
+	set_csr_ecfg(SOC2_ECFG_UART);
+	local_irq_restore(flags);
 	return 0;
 }
 
 static void soc2_shutdown(struct uart_port *port)
 {
+	unsigned long flags;
+
+	local_irq_save(flags);
+	clear_csr_ecfg(SOC2_ECFG_UART);
+	local_irq_restore(flags);
 }
 
 static void soc2_set_termios(struct uart_port *port, struct ktermios *termios,

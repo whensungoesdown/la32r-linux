@@ -35,33 +35,30 @@
 //#endif
 //}
 
-// uty: test
-//void mach_irq_dispatch(unsigned int pending)
-//{
-//        if (pending & 0x8) // SOC2, IS[3] is timer interrupt
-//                do_IRQ(LOONGSON_TIMER_IRQ);
-//        else if (pending & 0x10) {
-//                unsigned char c = readl((void __iomem *)0xa0020000) & 0xff;  // clears uart_intr
-//                printk("uart rx: %02x\n", c);
-//        }
-//}
+/*
+ * SoC2 interrupt sources, as ESTAT.IS / ECFG.LIE bits (not the LA32R
+ * manual positions): bit 3 timer, bit 4 HWI0 = UART RX.
+ */
+#define SOC2_IRQ_TIMER		(1 << 3)
+#define SOC2_IRQ_UART		(1 << 4)
 
 #ifdef CONFIG_SERIAL_SOC2
 extern void soc2_uart_interrupt(void);
 #endif
 
+// uty: test
 void mach_irq_dispatch(unsigned int pending)
 {
-        if (pending & 0x8)              // SOC2, IS[3] is timer interrupt
+        if (pending & SOC2_IRQ_TIMER)
                 do_IRQ(LOONGSON_TIMER_IRQ);
 
-        if (pending & 0x10) {           // SOC2, IS[4] is UART RX
+        if (pending & SOC2_IRQ_UART) {
 #ifdef CONFIG_SERIAL_SOC2
                 irq_enter();
                 soc2_uart_interrupt();
                 irq_exit();
 #else
-                readl((void __iomem *)0xa0020000);   // just clear it
+                readl((void __iomem *)0xa0020000);	/* just clear it */
 #endif
         }
 }
@@ -75,27 +72,27 @@ void mach_irq_dispatch(unsigned int pending)
 //}
 
 // uty: test
-static unsigned int irq_counter = 0;
+//static unsigned int irq_counter = 0;
 
 asmlinkage void plat_irq_dispatch(int irq)
 {
         unsigned int pending;
-        unsigned int epc = 0;
-        unsigned int tcfg = 0;
-        unsigned int estat = 0;
+        //unsigned int epc = 0;
+        //unsigned int tcfg = 0;
+        //unsigned int estat = 0;
 
 
         // uty: test
-        if (++irq_counter >= 600)
-        {
-                irq_counter = 0;
-                epc = read_csr_epc();
-                tcfg = read_csr_tcfg();
-                estat = read_csr_estat();
-                //printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
-        }
-        //pending = read_csr_estat() & read_csr_ecfg();
-        pending = read_csr_estat(); // ecfg not implemented yet
+        //if (++irq_counter >= 600)
+        //{
+        //        irq_counter = 0;
+        //        epc = read_csr_epc();
+        //        tcfg = read_csr_tcfg();
+        //        estat = read_csr_estat();
+        //        printk("===== plat_irq_dispatch() epc=0x%x, tcfg=0x%x, estat=0x%x =====\n", epc, tcfg, estat);
+        //}
+        /* ESTAT.IS shows every pending source, ECFG.LIE the enabled ones */
+        pending = read_csr_estat() & read_csr_ecfg();
 
         /* machine-specific plat_irq_dispatch */
         mach_irq_dispatch(pending);
@@ -113,5 +110,11 @@ void __init arch_init_irq(void)
 
 	setup_IRQ();
 
-	set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2 | ECFGF_IP3| ECFGF_IPI | ECFGF_PC);
+	//set_csr_ecfg(ECFGF_IP0 | ECFGF_IP1 |ECFGF_IP2 | ECFGF_IP3| ECFGF_IPI | ECFGF_PC);
+	/*
+	 * Enable only the timer here. The UART interrupt is enabled by the
+	 * serial driver when the port is opened, so a byte received before
+	 * that cannot raise an interrupt nobody handles.
+	 */
+	set_csr_ecfg(SOC2_IRQ_TIMER);
 }
