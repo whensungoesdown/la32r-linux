@@ -15,6 +15,34 @@
 #include <asm/pgtable.h>
 #include <asm/tlb.h>
 
+/* SoC2 debug: report the first bad TLB state, mm/soc2_tlbcheck.c */
+extern void soc2_tlb_check_quiet(void);
+
+/*
+ * SoC2 debug: rule out the TLB as the cause of corrupted user data.
+ *
+ * SOC2_FULL_FLUSH       local_flush_tlb_page/range/mm invalidate all G=0
+ *                       (user) entries instead of the targeted ones
+ * SOC2_UPDATE_TLB_FLUSH __update_tlb() only invalidates all user entries,
+ *                       no tlbsrch/tlbwr/tlbfill; the next access refills
+ *                       from the page table. With this, the refill
+ *                       handler is the only writer of user TLB entries.
+ *
+ * Slow; set both to 0 to get the normal behaviour back.
+ */
+#define SOC2_FULL_FLUSH		0
+#define SOC2_UPDATE_TLB_FLUSH	0
+
+/* INVTLB op 3: all G=0 entries; acts on both the ITLB and the DTLB */
+static inline void soc2_flush_user(void)
+{
+	unsigned long flags;
+
+	local_irq_save(flags);
+	invtlb_all(INVTLB_CURRENT_GFALSE, 0, 0);
+	local_irq_restore(flags);
+}
+
 void local_flush_tlb_all(void)
 {
         // uty: test
@@ -30,6 +58,11 @@ EXPORT_SYMBOL(local_flush_tlb_all);
 void local_flush_tlb_mm(struct mm_struct *mm)
 {
 	int cpu;
+
+#if SOC2_FULL_FLUSH
+	soc2_flush_user();
+	return;
+#endif
 
 	preempt_disable();
 
@@ -48,6 +81,11 @@ void local_flush_tlb_range(struct vm_area_struct *vma, unsigned long start,
 {
 	struct mm_struct *mm = vma->vm_mm;
 	int cpu = smp_processor_id();
+
+#if SOC2_FULL_FLUSH
+	soc2_flush_user();
+	return;
+#endif
 
 	if (asid_valid(mm, cpu)) {
 		unsigned long size, flags;
@@ -107,6 +145,11 @@ void local_flush_tlb_kernel_range(unsigned long start, unsigned long end)
 void local_flush_tlb_page(struct vm_area_struct *vma, unsigned long page)
 {
 	int cpu = smp_processor_id();
+
+#if SOC2_FULL_FLUSH
+	soc2_flush_user();
+	return;
+#endif
 
 	if (asid_valid(vma->vm_mm, cpu)) {
 		int newpid;
@@ -172,6 +215,11 @@ void __update_tlb(struct vm_area_struct *vma, unsigned long address, pte_t *ptep
 	if (current->active_mm != vma->vm_mm)
 		return;
 
+#if SOC2_UPDATE_TLB_FLUSH
+	soc2_flush_user();	/* the refill handler loads the new PTE */
+	return;
+#endif
+
 #ifdef CONFIG_HUGETLB_PAGE
 	if (pte_val(*ptep) & _PAGE_HUGE)
 		return __update_hugetlb(vma, address, ptep);
@@ -197,6 +245,9 @@ void __update_tlb(struct vm_area_struct *vma, unsigned long address, pte_t *ptep
 	else
 		tlb_write_indexed();
 	local_irq_restore(flags);
+
+	// uty: test
+	soc2_tlb_check_quiet();	/* catch a duplicate or stale entry when it is created */
 }
 
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE

@@ -5,6 +5,7 @@
 #include <linux/context_tracking.h>
 #include <linux/signal.h>
 #include <linux/sched.h>
+#include <linux/sched/debug.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
 #include <linux/errno.h>
@@ -26,6 +27,12 @@
 
 int show_unhandled_signals = 1;
 
+/* SoC2 debug: dump and check the ITLB/DTLB, mm/soc2_tlbcheck.c */
+extern void soc2_tlb_check(void);
+extern void soc2_dump_user_words(unsigned long va, int n);
+extern void soc2_scan_user_words(unsigned long start, unsigned long len,
+				 u32 mask, u32 value);
+
 /*
  * This routine handles page faults.  It determines the address,
  * and the problem, and then passes it off to one of the appropriate
@@ -46,6 +53,18 @@ static void __kprobes __do_page_fault(struct pt_regs *regs, unsigned long write,
 
 	// uty: test
 //	printk("__do_page_fault: address=0x%x, write=0x%x, regs->csr_epc=0x%x, regs->csr_badvaddr=0x%x, r4=0x%x, r12=0x%x\n", (int)address, (int)write, (int)(regs->csr_epc), (int)(regs->csr_badvaddr), (int)(regs->regs[4]), (int)(regs->regs[12]));
+
+	// uty: test
+	/*
+	 * SoC2 debug: for an instruction fetch fault (PIF) ERA must be the
+	 * fetch address. If it is not, the fault returns to ERA and the
+	 * instruction at the faulting address, for example the first
+	 * instruction of a called function, never runs.
+	 */
+	if (user_mode(regs) && read_csr_excode() == EXCCODE_TLBI &&
+	    regs->csr_epc != address)
+		pr_err("SOC2 PIF: era %08lx != badv %08lx (ra %08lx)\n",
+		       regs->csr_epc, address, regs->regs[1]);
 
 	si_code = SEGV_MAPERR;
 
@@ -179,6 +198,22 @@ bad_area:
 bad_area_nosemaphore:
 	/* User mode accesses just cause a SIGSEGV */
 	if (user_mode(regs)) {
+		// uty: test
+		soc2_tlb_check();	/* TLB contents at the crash */
+		show_regs(regs);	/* all GPRs at the crash */
+		/*
+		 * ld.so call_init(): r23 points one past the .init_array entry
+		 * that was read as 0, r24 at the end of the array.
+		 * libc vfprintf: r26 is the FILE, word 0 is _flags.
+		 */
+		pr_info("words at r23-4 (ld.so .init_array):\n");
+		soc2_dump_user_words(regs->regs[23] - 4, 8);
+		pr_info("words at r26 (libc FILE):\n");
+		soc2_dump_user_words(regs->regs[26], 48);
+		/* a FILE _flags word missing from r26 may have been stored elsewhere */
+		pr_info("words 0xfbadxxxx (FILE _flags) near the stack pointer:\n");
+		soc2_scan_user_words((regs->regs[3] & PAGE_MASK) - PAGE_SIZE,
+				     3 * PAGE_SIZE, 0xffff0000, 0xfbad0000);
 		tsk->thread.csr_badvaddr = address;
 		tsk->thread.error_code = write;
 		if (show_unhandled_signals &&
